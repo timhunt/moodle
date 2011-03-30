@@ -58,9 +58,14 @@ M.mod_quiz.timer = {
      * @param Y the YUI object
      * @param timeleft, the time remaining, in seconds.
      */
-    init: function(Y, timeleft) {
+    init: function(Y, timeleft, endtime) {
         M.mod_quiz.timer.Y = Y;
-        M.mod_quiz.timer.endtime = new Date().getTime() + timeleft*1000;
+        var timenow = new Date().getTime());
+        M.mod_quiz.timer.endtime = new Date().getTime() + timeleft * 1000;
+        if (endtime != 0) {
+            M.mod_quiz.timer.endtime = Math.max(timenow + 1000,
+                    Math.min(M.mod_quiz.timer.endtime, endtime * 1000));
+        }
         M.mod_quiz.timer.update();
         Y.one('#quiz-timer').setStyle('display', 'block');
     },
@@ -71,6 +76,10 @@ M.mod_quiz.timer = {
     stop: function(e) {
         if (M.mod_quiz.timer.timeoutid) {
             clearTimeout(M.mod_quiz.timer.timeoutid);
+        }
+        var el = document.getElementById('clienttime');
+        if (el) {
+            el.value = (new Date().getTime()) / 1000;
         }
     },
 

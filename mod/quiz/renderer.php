@@ -462,6 +462,8 @@ class mod_quiz_renderer extends plugin_renderer_base {
                 'value' => $nextpage));
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'timeup',
                 'value' => '0', 'id' => 'timeup'));
+        $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'clienttime',
+                'value' => '0', 'id' => 'timeup'));
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey',
                 'value' => sesskey()));
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'scrollpos',
@@ -485,8 +487,15 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @param int $timerstartvalue time remaining, in seconds.
      */
     public function initialise_timer($timerstartvalue) {
+        global $SESSION;
+
+        $endtime = 0;
+        if (!empty($SESSION->clienttime)) {
+            $endtime = $SESSION->clienttime + $timeleft;
+        }
+
         $this->page->requires->js_init_call('M.mod_quiz.timer.init',
-                array($timerstartvalue), false, quiz_get_js_module());
+                array($timerstartvalue, $endtime), false, quiz_get_js_module());
     }
 
     /**

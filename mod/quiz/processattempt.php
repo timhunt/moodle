@@ -44,6 +44,8 @@ $nextpage = optional_param('nextpage', 0, PARAM_INT);
 $finishattempt = optional_param('finishattempt', false, PARAM_BOOL);
 $timeup = optional_param('timeup', 0, PARAM_BOOL); // True if form was submitted by timer.
 $scrollpos = optional_param('scrollpos', '', PARAM_RAW);
+$clienttime = optional_param('clienttime', 0, PARAM_INT);
+$SESSION->clienttime = $clienttime;
 
 $transaction = $DB->start_delegated_transaction();
 $attemptobj = quiz_attempt::create($attemptid);
