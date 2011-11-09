@@ -193,6 +193,7 @@ class HTML_QuickForm_Renderer_Tableless extends HTML_QuickForm_Renderer_Default
                                              $element_html,
                                              1);
             }
+            $html = str_replace('{id}', $id, $html);
             $this->_html .= str_replace('{element}', $element_html, $html);
         } elseif (!empty($this->_groupElementTemplate)) {
             $html = str_replace('{label}', $element->getLabel(), $this->_groupElementTemplate);
