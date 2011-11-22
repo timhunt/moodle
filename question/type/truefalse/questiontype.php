@@ -115,17 +115,20 @@ class qtype_truefalse extends question_type {
         global $DB, $OUTPUT;
         // Get additional information from database
         // and attach it to the question object
-        if (!$question->options = $DB->get_record('question_truefalse',
-                array('question' => $question->id))) {
-            echo $OUTPUT->notification('Error: Missing question options!');
-            return false;
-        }
+        $question->options = $DB->get_record('question_truefalse',
+                array('question' => $question->id), '*', MUST_EXIST);
+
         // Load the answers
-        if (!$question->options->answers = $DB->get_records('question_answers',
-                array('question' =>  $question->id), 'id ASC')) {
-            echo $OUTPUT->notification('Error: Missing question answers for truefalse question ' .
-                    $question->id . '!');
-            return false;
+        $question->options->answers = $DB->get_records('question_answers',
+                array('question' =>  $question->id), 'id ASC');
+
+        if (!array_key_exists($question->options->trueanswer, $question->options->answers)) {
+            // Generate the appropriate exception.
+            $DB->get_record('question_answers', array('id' => $question->options->trueanswer), '*', MUST_EXIST);
+        }
+        if (!array_key_exists($question->options->falseanswer, $question->options->answers)) {
+            // Generate the appropriate exception.
+            $DB->get_record('question_answers', array('id' => $question->options->falseanswer), '*', MUST_EXIST);
         }
 
         return true;
