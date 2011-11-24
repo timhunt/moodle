@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the blackboard_six question imort format.
+ * Version information for the examview_bbsixplus import format.
  *
  * @package    qformat
- * @subpackage blackboard_six
+ * @subpackage examview_bbsixplus
  * @copyright  2011 Jean-Michel Vedrine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'qformat_blackboard_six';
+$plugin->component = 'qformat_examview_bbsixplus';
 $plugin->version   = 2011112400;
 
 $plugin->requires  = 2011112400;

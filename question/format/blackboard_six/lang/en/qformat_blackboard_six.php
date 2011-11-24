@@ -24,4 +24,7 @@
  */
 
 $string['pluginname'] = 'Blackboard V6+';
-$string['pluginname_help'] = 'Blackboard V6+ format enables questions saved in Blackboard\'s export format to be imported via zip file. It provides limited support for Blackboard Version 6 and 7.';
+$string['blackboard_six'] = 'Blackboard V6+';
+$string['blackboard_six_help'] = 'Blackboard V6+ format enables questions saved in Blackboard\'s export format to be imported via zip file. It provides limited support for Blackboard Version 6 and 7.';
+$string['errormanifest'] = 'Error while parsing the IMS manifest document';
+$string['imagenotfound'] = 'import image file at path {$a} does not exist';
