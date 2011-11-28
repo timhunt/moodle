@@ -270,13 +270,13 @@ background-color:#fff;
 }
 
 .path-grade-report-grader div.userpic {
+display: inline;
 margin-right:10px;
-float:left;
 }
 
 .path-grade-report-grader div.userpic img {
 border:3px double #cecece;
-vertical-align:middle;
+vertical-align:top;
 width:2.7em;
 height:2.7em;
 }
