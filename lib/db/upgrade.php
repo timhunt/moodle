@@ -358,6 +358,18 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2012032300.02);
     }
 
+    if ($oldversion < 2012040500.02) {
+
+        if (!empty($CFG->dbsessions)) {
+            set_config('sessionhandler', 'database_session');
+        } else {
+            set_config('sessionhandler', 'legacy_file_session');
+        }
+
+        unset_config('dbsessions');
+
+        upgrade_main_savepoint(true, 2012040500.02);
+    }
 
     return true;
 }

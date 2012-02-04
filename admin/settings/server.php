@@ -37,7 +37,7 @@ $ADMIN->add('server', $temp);
 
 // "sessionhandling" settingpage
 $temp = new admin_settingpage('sessionhandling', new lang_string('sessionhandling', 'admin'));
-$temp->add(new admin_setting_configcheckbox('dbsessions', new lang_string('dbsessions', 'admin'), new lang_string('configdbsessions', 'admin'), 1));
+$temp->add(new admin_setting_session_handler('sessionhandler', new lang_string('sessionhandling', 'admin'), new lang_string('sessionhandling_desc', 'admin'), 'database_session'));
 $temp->add(new admin_setting_configselect('sessiontimeout', new lang_string('sessiontimeout', 'admin'), new lang_string('configsessiontimeout', 'admin'), 7200, array(14400 => new lang_string('numhours', '', 4),
                                                                                                                                                       10800 => new lang_string('numhours', '', 3),
                                                                                                                                                       7200 => new lang_string('numhours', '', 2),
@@ -50,6 +50,7 @@ $temp->add(new admin_setting_configselect('sessiontimeout', new lang_string('ses
 $temp->add(new admin_setting_configtext('sessioncookie', new lang_string('sessioncookie', 'admin'), new lang_string('configsessioncookie', 'admin'), '', PARAM_ALPHANUM));
 $temp->add(new admin_setting_configtext('sessioncookiepath', new lang_string('sessioncookiepath', 'admin'), new lang_string('configsessioncookiepath', 'admin'), '', PARAM_RAW));
 $temp->add(new admin_setting_configtext('sessioncookiedomain', new lang_string('sessioncookiedomain', 'admin'), new lang_string('configsessioncookiedomain', 'admin'), '', PARAM_RAW, 50));
+$temp->add(new admin_setting_configtext('memcachesessionhosts', new lang_string('memcachesessionhosts', 'admin'), new lang_string('memcachesessionhosts_desc', 'admin'), '', PARAM_RAW));
 $ADMIN->add('server', $temp);
 
 

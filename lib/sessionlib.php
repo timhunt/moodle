@@ -42,27 +42,29 @@ function session_get_instance() {
     static $session = null;
 
     if (is_null($session)) {
+        if (!empty($CFG->sessionhandler)) {
+            $sessionclass = $CFG->sessionhandler;
+        } else {
+            $sessionclass = 'database_session';
+        }
         if (empty($CFG->sessiontimeout)) {
             $CFG->sessiontimeout = 7200;
         }
 
         try {
             if (defined('SESSION_CUSTOM_CLASS')) {
-                // this is a hook for webservices, key based login, etc.
+                // This is a hook for webservices, key based login, etc.
                 if (defined('SESSION_CUSTOM_FILE')) {
-                    require_once($CFG->dirroot.SESSION_CUSTOM_FILE);
+                    require_once($CFG->dirroot . SESSION_CUSTOM_FILE);
                 }
-                $session_class = SESSION_CUSTOM_CLASS;
-                $session = new $session_class();
-
-            } else if ((!isset($CFG->dbsessions) or $CFG->dbsessions) and $DB->session_lock_supported()) {
-                // default recommended session type
-                $session = new database_session();
-
-            } else {
-                // legacy limited file based storage - some features and auth plugins will not work, sorry
-                $session = new legacy_file_session();
+                $sessionclass = SESSION_CUSTOM_CLASS;
             }
+
+            if (!$sessionclass::can_work()) {
+                $sessionclass = 'legacy_file_session';
+            }
+
+            $session = new $sessionclass();
         } catch (Exception $ex) {
             // prevent repeated inits
             $session = new emergency_session();
@@ -434,6 +436,11 @@ class legacy_file_session extends session_stub {
         }
         ini_set('session.save_path', $CFG->dataroot .'/sessions');
     }
+
+    public static function can_work() {
+        return true;
+    }
+
     /**
      * Check for existing session with id $sid
      * @param unknown_type $sid
@@ -467,8 +474,19 @@ class database_session extends session_stub {
     /** @var bool $failed session read/init failed, do not write back to DB */
     protected $failed   = false;
 
+    public static function can_work() {
+        global $DB;
+        return $DB->session_lock_supported();
+    }
+
     public function __construct() {
         global $DB;
+
+        if (!self::can_work()) {
+            throw new coding_exeption('Cannot initiailise database sessions. ' .
+                    'The database does not support locking.');
+        }
+
         $this->database = $DB;
         parent::__construct();
 
@@ -777,12 +795,95 @@ class database_session extends session_stub {
 
 
 /**
+ * Memcache sessions.
+ *
+ * All we really need to do is to tell PHP to use its memcache session handler.
+ * Then we need to implement session_exists($sid) for memcache.
+ *
+ * There is also a static method to confirm whether memcache sessions can be
+ * used, in other words that the required libraries are installed.
+ *
+ * @copyright 2011 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class memcache_session extends session_stub {
+
+    /**
+     * @return bool can memcache sessions work?
+     */
+    public static function can_work() {
+        global $CFG;
+        return extension_loaded('memcached') && !empty($CFG->memcachesessionhosts);
+    }
+
+    protected function init_session_storage() {
+        if (!self::can_work()) {
+            throw new coding_exeption('Cannot initiailise memcache sessions. Memcache is ' .
+                    'not installed, or not properly configured.');
+        }
+        ini_set('session.save_handler', 'memcache');
+        ini_set('memcache.hash_strategy', 'consistent');
+        $savepaths = array();
+        foreach ($this->get_memcache_hosts() as $host => $port) {
+            $savepaths[] = "tcp://{$host}:{$port}";
+        }
+        ini_set('session.save_path', implode(',', $savepaths));
+    }
+
+    public function session_exists($sid) {
+
+        $sid = clean_param($sid, PARAM_FILE);
+
+        // Create memcache object
+        $memcache_obj = new Memcache;
+
+        // Get the memcache hosts
+        $hostlist = ini_get('session.save_path');
+        $hostarray = explode(",", $hostlist);
+
+        // Add all the memcache server to the memcache object to make sure we
+        // are checking them all
+        foreach ($this->get_memcache_hosts() as $host => $port) {
+            $memcache_obj->addServer($host, $port);
+        }
+
+        // See if the session exists.
+        return (bool) $memcache_obj->get($sid);
+    }
+
+    /**
+     * Parse the $CFG->memcachesessionhosts setting.
+     * @return array of the hosts, hostname => port number.
+     */
+    protected function get_memcache_hosts() {
+        global $CFG;
+
+        if (empty($CFG->memcachesessionhosts)) {
+            return array();
+        }
+
+        $hosts = array();
+        foreach (explode(',', $CFG->memcachesessionhosts) as $hostname) {
+            if (strpos($hostname, ':') !== false) {
+                list($host, $port) = explode(':', $hostname, 2);
+            } else {
+                $host = $hostname;
+                $port = 11211;
+            }
+            $hosts[$host] = $port;
+        }
+
+        return $hosts;
+    }
+}
+
+
+/**
  * returns true if legacy session used.
  * @return bool true if legacy(==file) based session used
  */
 function session_is_legacy() {
-    global $CFG, $DB;
-    return ((isset($CFG->dbsessions) and !$CFG->dbsessions) or !$DB->session_lock_supported());
+    return session_get_instance() instanceof legacy_file_session;
 }
 
 /**

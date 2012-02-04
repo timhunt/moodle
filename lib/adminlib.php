@@ -3911,6 +3911,41 @@ class admin_setting_pickroles extends admin_setting_configmulticheckbox {
 
 
 /**
+ * Admin setting for the various session handling options.
+ *
+ * @copyright 2012 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class admin_setting_session_handler extends admin_setting_configselect {
+    /**
+     * @param string $name name of config variable
+     * @param string $visiblename display name
+     * @param string $description description
+     * @param string $default default.
+     */
+    public function __construct($name, $visiblename, $description, $default) {
+        parent::__construct($name, $visiblename, $description, $default, NULL);
+    }
+
+    /**
+     * Load list of behaviours as choices
+     * @return bool true => success, false => error.
+     */
+    public function load_choices() {
+        $this->choices = array();
+        if (database_session::can_work()) {
+            $this->choices['database_session'] = get_string('dbsessions', 'admin');
+        }
+        $this->choices['legacy_file_session'] = get_string('legacyfilesessions', 'admin');
+        if (memcache_session::can_work()) {
+            $this->choices['memcache_session'] = get_string('memcachesessions', 'admin');
+        }
+        return true;
+    }
+}
+
+
+/**
  * Text field with an advanced checkbox, that controls a additional $name.'_adv' setting.
  *
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
