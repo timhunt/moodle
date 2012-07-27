@@ -2,3 +2,6 @@
 #page-mod-quiz-report #manualgradingform.mform br {clear: none;}
 #page-mod-quiz-report #manualgradingform.mform .clearfix:after {clear: none;}
 #page-mod-quiz-report #manualgradingform .que {margin-bottom: 0.7em;}
+#page-mod-quiz-report #manualgradingform.all .que.requiresgrading .comment {
+    border-left: 5px solid #080;
+}

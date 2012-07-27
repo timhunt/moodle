@@ -50,6 +50,7 @@ class qbehaviour_manualgraded extends question_behaviour_with_save {
             // Hide all feedback except genfeedback and manualcomment.
             $save = clone($options);
             $options->hide_all_feedback();
+            $options->correctness = $save->correctness;
             $options->generalfeedback = $save->generalfeedback;
             $options->manualcomment = $save->manualcomment;
         }

@@ -399,7 +399,7 @@ class quiz_grading_report extends quiz_default_report {
         $qubaidlist = implode(',', $qubaids);
         echo html_writer::start_tag('form', array('method' => 'post',
                 'action' => $this->grade_question_url($slot, $questionid, $grade, $page),
-                'class' => 'mform', 'id' => 'manualgradingform')) .
+                'class' => 'mform ' . $grade, 'id' => 'manualgradingform')) .
                 html_writer::start_tag('div') .
                 html_writer::input_hidden_params(new moodle_url('', array(
                 'qubaids' => $qubaidlist, 'slots' => $slot, 'sesskey' => $sesskey)));
@@ -409,6 +409,7 @@ class quiz_grading_report extends quiz_default_report {
             $quba = question_engine::load_questions_usage_by_activity($qubaid);
             $displayoptions = quiz_get_review_options($this->quiz, $attempt, $this->context);
             $displayoptions->hide_all_feedback();
+            $displayoptions->correctness = question_display_options::VISIBLE;
             $displayoptions->history = question_display_options::HIDDEN;
             $displayoptions->manualcomment = question_display_options::EDITABLE;
 
@@ -581,6 +582,7 @@ class quiz_grading_report extends quiz_default_report {
                     $orderby = "u.firstname, u.lastname";
                     break;
             }
+            $orderby .= ', quiza.attempt';
         }
 
         return $dm->load_questions_usages_where_question_in_state($qubaids, $summarystate,
