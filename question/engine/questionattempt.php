@@ -1224,7 +1224,7 @@ class question_attempt {
 
         $i = 0;
         while ($record && $record->questionattemptid == $questionattemptid && !is_null($record->attemptstepid)) {
-            $qa->steps[$i] = question_attempt_step::load_from_records($records, $record->attemptstepid);
+            $qa->steps[$i] = question_attempt_step::load_from_records($records, $record->attemptstepid, $qa->get_question()->get_type_name(), $record->contextid);
             if ($i == 0) {
                 $question->apply_attempt_state($qa->steps[0]);
             }
