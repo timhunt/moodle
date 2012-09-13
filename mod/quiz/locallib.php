@@ -187,6 +187,19 @@ function quiz_delete_previews($quiz, $userid = null) {
     }
 }
 
+function quiz_user_deleted_handler($eventdata) {
+    global $DB;
+
+    question_engine::delete_questions_usage_by_activities(new qubaid_join(
+            '{quiz_attempts} quiza', 'quiza.uniqueid', 'quiza.userid = :deleteduserid',
+            array('deleteduserid' => $eventdata->id)));
+    $DB->delete_records('quiz_attempts', array('userid' => $eventdata->id));
+    $DB->delete_records('quiz_grades', array('userid' => $eventdata->id));
+    $DB->delete_records('quiz_overrides', array('userid' => $eventdata->id));
+
+    return true;
+}
+
 /**
  * @param int $quizid The quiz id.
  * @return bool whether this quiz has any (non-preview) attempts.
