@@ -149,7 +149,7 @@ class qformat_xml extends qformat_default {
         return $xml;
     }
 
-    protected function import_text_with_files($data, $path, $defaultvalue = '', $defaultformat = 'html') {
+    public function import_text_with_files($data, $path, $defaultvalue = '', $defaultformat = 'html') {
         $text = $this->getpath($data,
                 array_merge($path, array('#', 'text', 0, '#')), $defaultvalue, true);
         $format = $this->trans_format($this->getpath($data,
@@ -164,7 +164,7 @@ class qformat_xml extends qformat_default {
         return $field;
     }
 
-    protected function import_files_as_draft($xml) {
+    public function import_files_as_draft($xml) {
         global $USER;
 
         $fs = get_file_storage();

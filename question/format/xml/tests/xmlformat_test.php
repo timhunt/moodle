@@ -1401,4 +1401,30 @@ END;
 
         $this->assert_same_xml($expectedxml, $xml);
     }
+
+    public function test_import_files_as_draft() {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $xml = <<<END
+<questiontext format="html">
+    <text><![CDATA[<p><a href="@@PLUGINFILE@@/moodle.txt">This text file</a> contains the word 'Moodle'.</p>]]></text>
+    <file name="moodle.txt" encoding="base64">TW9vZGxl</file>
+</questiontext>
+END;
+
+        $textxml = xmlize($xml);
+        $qo = new stdClass();
+
+        $importer = new qformat_xml();
+        $draftitemid = $importer->import_files_as_draft($textxml['questiontext']['#']['file']);
+        $files = file_get_drafarea_files($draftitemid);
+
+        $this->assertEquals(1, count($files->list));
+
+        $file = $files->list[0];
+        $this->assertEquals('moodle.txt', $file->filename);
+        $this->assertEquals('/',          $file->filepath);
+        $this->assertEquals(6,            $file->size);
+    }
 }
