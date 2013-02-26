@@ -61,7 +61,7 @@ function cron_run() {
 
     // Start output log
     $timenow  = time();
-    mtrace("Server Time: ".date('r',$timenow)."\n\n");
+    mtrace("Server Time: ".date('r', $timenow)."\n\n");
 
 
     // Run cleanup core cron jobs, but not every time since they aren't too important.
@@ -71,6 +71,7 @@ function cron_run() {
     $random100 = rand(0,100);
     if ($random100 < 20) {     // Approximately 20% of the time.
         mtrace("Running clean-up tasks...");
+        cron_trace_time_and_memory();
 
         // Delete users who haven't confirmed within required period
         if (!empty($CFG->deleteunconfirmed)) {
@@ -193,6 +194,7 @@ function cron_run() {
     // because it might add users that will be needed in enrol plugins
     $auths = get_enabled_auth_plugins();
     mtrace("Running auth crons if required...");
+    cron_trace_time_and_memory();
     foreach ($auths as $auth) {
         $authplugin = get_auth_plugin($auth);
         if (method_exists($authplugin, 'cron')) {
@@ -237,6 +239,7 @@ function cron_run() {
             continue;
         }
         mtrace("Running cron for enrol_$ename...");
+        cron_trace_time_and_memory();
         $enrol->cron();
         $enrol->set_config('lastcron', time());
     }
@@ -253,6 +256,7 @@ function cron_run() {
                 $cron_function = $mod->name."_cron";
                 if (function_exists($cron_function)) {
                     mtrace("Processing module function $cron_function ...", '');
+                    cron_trace_time_and_memory();
                     $pre_dbqueries = null;
                     $pre_dbqueries = $DB->perf_get_queries();
                     $pre_time      = microtime(1);
@@ -286,6 +290,7 @@ function cron_run() {
                 $blockobj = new $classname;
                 if (method_exists($blockobj,'cron')) {
                     mtrace("Processing cron function for ".$block->name.'....','');
+                    cron_trace_time_and_memory();
                     if ($blockobj->cron()) {
                         $DB->set_field('block', 'lastcron', $timenow, array('id'=>$block->id));
                     }
@@ -306,11 +311,13 @@ function cron_run() {
 
 
     mtrace('Starting main gradebook job...');
+    cron_trace_time_and_memory();
     grade_cron();
     mtrace('done.');
 
 
     mtrace('Starting processing the event queue...');
+    cron_trace_time_and_memory();
     events_cron();
     mtrace('done.');
 
@@ -318,6 +325,7 @@ function cron_run() {
     if ($CFG->enablecompletion) {
         // Completion cron
         mtrace('Starting the completion cron...');
+        cron_trace_time_and_memory();
         require_once($CFG->dirroot.'/completion/cron.php');
         completion_cron();
         mtrace('done');
@@ -327,6 +335,7 @@ function cron_run() {
     if ($CFG->enableportfolios) {
         // Portfolio cron
         mtrace('Starting the portfolio cron...');
+        cron_trace_time_and_memory();
         require_once($CFG->libdir . '/portfoliolib.php');
         portfolio_cron();
         mtrace('done');
@@ -358,6 +367,7 @@ function cron_run() {
     if (!empty($CFG->enableblogs) && $CFG->useexternalblogs) {
         require_once($CFG->dirroot . '/blog/lib.php');
         mtrace("Fetching external blog entries...", '');
+        cron_trace_time_and_memory();
         $sql = "timefetched < ? OR timefetched = 0";
         $externalblogs = $DB->get_records_select('blog_external', $sql, array(time() - $CFG->externalblogcrontime));
 
@@ -371,6 +381,7 @@ function cron_run() {
         require_once($CFG->dirroot . '/blog/lib.php');
         // delete entries whose contextids no longer exists
         mtrace("Deleting blog associations linked to non-existent contexts...", '');
+        cron_trace_time_and_memory();
         $DB->delete_records_select('blog_association', 'contextid NOT IN (SELECT id FROM {context})');
         mtrace('done.');
     }
@@ -378,6 +389,7 @@ function cron_run() {
 
     // Run question bank clean-up.
     mtrace("Starting the question bank cron...", '');
+    cron_trace_time_and_memory();
     require_once($CFG->libdir . '/questionlib.php');
     question_bank::cron();
     mtrace('done.');
@@ -385,6 +397,7 @@ function cron_run() {
 
     //Run registration updated cron
     mtrace(get_string('siteupdatesstart', 'hub'));
+    cron_trace_time_and_memory();
     require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
     $registrationmanager = new registration_manager();
     $registrationmanager->cron();
@@ -400,6 +413,7 @@ function cron_run() {
     //cleanup old session linked tokens
     //deletes the session linked tokens that are over a day old.
     mtrace("Deleting session linked tokens more than one day old...", '');
+    cron_trace_time_and_memory();
     $DB->delete_records_select('external_tokens', 'lastaccess < :onedayago AND tokentype = :tokentype',
                     array('onedayago' => time() - DAYSECS, 'tokentype' => EXTERNAL_TOKEN_EMBEDDED));
     mtrace('done.');
@@ -471,6 +485,8 @@ function cron_run() {
 
     mtrace("Cron script completed correctly");
 
+    gc_collect_cycles();
+    mtrace('Cron completed at ' . date('H:i:s') . '. Memory used ' . display_size(memory_get_usage()) . '.');
     $difftime = microtime_diff($starttime, microtime());
     mtrace("Execution took ".$difftime." seconds");
 }
@@ -523,6 +539,7 @@ function cron_execute_plugin_type($plugintype, $description = null) {
         }
 
         mtrace('Processing cron function for ' . $component . '...');
+        cron_trace_time_and_memory();
         $pre_dbqueries = $DB->perf_get_queries();
         $pre_time = microtime(true);
 
@@ -601,6 +618,15 @@ function cron_bc_hack_plugin_functions($plugintype, $plugins) {
     return $plugins;
 }
 
+/**
+ * Output some standard information during cron runs. Specifically current time
+ * and memory usage. This method also does gc_collect_cycles() (before displaying
+ * memory usage) to try to help PHP manage memory better.
+ */
+function cron_trace_time_and_memory() {
+    gc_collect_cycles();
+    mtrace('... started ' . date('H:i:s') . '. Current memory use ' . display_size(memory_get_usage()) . '.');
+}
 
 /**
  * Notify admin users or admin user of any failed logins (since last notification).
