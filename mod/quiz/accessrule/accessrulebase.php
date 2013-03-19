@@ -205,19 +205,13 @@ abstract class quiz_access_rule_base {
     }
 
     /**
-     * @return boolean whether this rule requires that the attemp (and review)
-     *      pages must be displayed in a pop-up window.
+     * Sets up the view page with any special extra properties required by this
+     * rule. securewindow rule is an example of where this is used.
+     *
+     * @param moodle_page $page the page object to initialise.
      */
-    public function attempt_must_be_in_popup() {
-        return false;
-    }
-
-    /**
-     * @return array any options that are required for showing the attempt page
-     *      in a popup window.
-     */
-    public function get_popup_options() {
-        return array();
+    public function setup_view_page($page) {
+        // Do nothing by default.
     }
 
     /**

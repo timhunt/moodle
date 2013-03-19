@@ -415,6 +415,18 @@ class quiz_access_manager {
     }
 
     /**
+     * Sets up the view page with any special extra properties required by this
+     * rule. securewindow rule is an example of where this is used.
+     *
+     * @param moodle_page $page the page object to initialise.
+     */
+    public function setup_view_page($page) {
+        foreach ($this->rules as $rule) {
+            $rule->setup_view_page($page);
+        }
+    }
+
+    /**
      * Sets up the attempt (review or summary) page with any properties required
      * by the access rules.
      *
@@ -476,60 +488,13 @@ class quiz_access_manager {
     }
 
     /**
-     * @return array any options that are required for showing the attempt page
-     *      in a popup window.
+     * @deprecated since Moodle 2.5. This was only used by the secure window rule
+     * and now that has been refactored.
+     * @return array empty array.
      */
     public function get_popup_options() {
-        $options = array();
-        foreach ($this->rules as $rule) {
-            $options += $rule->get_popup_options();
-        }
-        return $options;
-    }
-
-    /**
-     * Send the user back to the quiz view page. Normally this is just a redirect, but
-     * If we were in a secure window, we close this window, and reload the view window we came from.
-     *
-     * This method does not return;
-     *
-     * @param mod_quiz_renderer $output the quiz renderer.
-     * @param string $message optional message to output while redirecting.
-     */
-    public function back_to_view_page($output, $message = '') {
-        if ($this->attempt_must_be_in_popup()) {
-            echo $output->close_attempt_popup($this->quizobj->view_url(), $message);
-            die();
-        } else {
-            redirect($this->quizobj->view_url(), $message);
-        }
-    }
-
-    /**
-     * Make some text into a link to review the quiz, if that is appropriate.
-     *
-     * @param string $linktext some text.
-     * @param object $attempt the attempt object
-     * @return string some HTML, the $linktext either unmodified or wrapped in a
-     *      link to the review page.
-     */
-    public function make_review_link($attempt, $reviewoptions, $output) {
-
-        // If the attempt is still open, don't link.
-        if (in_array($attempt->state, array(quiz_attempt::IN_PROGRESS, quiz_attempt::OVERDUE))) {
-            return $output->no_review_message('');
-        }
-
-        $when = quiz_attempt_state($this->quizobj->get_quiz(), $attempt);
-        $reviewoptions = mod_quiz_display_options::make_from_quiz(
-                $this->quizobj->get_quiz(), $when);
-
-        if (!$reviewoptions->attempt) {
-            return $output->no_review_message($this->quizobj->cannot_review_message($when, true));
-
-        } else {
-            return $output->review_link($this->quizobj->review_url($attempt->id),
-                    $this->attempt_must_be_in_popup(), $this->get_popup_options());
-        }
+        throw new coding_exception('Do not use quiz_access_manager::get_popup_options '.
+                'any more. The fix for MDL-38539 may indicate what to do instead.');
+        return array();
     }
 }

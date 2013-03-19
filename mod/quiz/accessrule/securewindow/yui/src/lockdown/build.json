@@ -1,0 +1,10 @@
+{
+  "name": "moodle-quizaccess_securewindow-lockdown",
+  "builds": {
+    "moodle-quizaccess_securewindow-lockdown": {
+      "jsfiles": [
+        "lockdown.js"
+      ]
+    }
+  }
+}

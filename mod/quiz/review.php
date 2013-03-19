@@ -67,8 +67,31 @@ if ($attemptobj->is_own_attempt()) {
         redirect($attemptobj->attempt_url(null, $page));
 
     } else if (!$options->attempt) {
-        $accessmanager->back_to_view_page($PAGE->get_renderer('mod_quiz'),
-                $attemptobj->cannot_review_message());
+        if ($this->attempt_must_be_in_popup()) {
+            // TODO
+            $message = $attemptobj->cannot_review_message();
+            $output = '';
+            $output .= $this->header();
+            $output .= $this->box_start();
+    
+            if ($message) {
+                $output .= html_writer::tag('p', $message);
+                $output .= html_writer::tag('p', get_string('windowclosing', 'quiz'));
+                $delay = 5;
+            } else {
+                $output .= html_writer::tag('p', get_string('pleaseclose', 'quiz'));
+                $delay = 0;
+            }
+            $this->page->requires->js_init_call('M.quizaccess_securewindow.lockdown.close',
+                    array($url, $delay), false, quiz_get_js_module());
+    
+            $output .= $this->box_end();
+            $output .= $this->footer();
+            echo $output;
+            die();
+        }
+
+        redirect($attemptobj->view_url(), $attemptobj->cannot_review_message());
     }
 
 } else if (!$attemptobj->is_review_allowed()) {

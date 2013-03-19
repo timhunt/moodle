@@ -61,12 +61,13 @@ class quizaccess_securewindow extends quiz_access_rule_base {
         return new self($quizobj, $timenow);
     }
 
-    public function attempt_must_be_in_popup() {
-        return !$this->quizobj->is_preview_user();
-    }
+    public function setup_view_page($page) {
+        if ($this->quizobj->is_preview_user()) {
+            return;
+        }
 
-    public function get_popup_options() {
-        return self::$popupoptions;
+        $page->requires->yui_module(array('moodle-quizaccess_securewindow-lockdown'),
+                'M.quizaccess_securewindow.lockdown.init_view_page');
     }
 
     public function setup_attempt_page($page) {
@@ -80,8 +81,8 @@ class quizaccess_securewindow extends quiz_access_rule_base {
         }
 
         $page->add_body_class('quiz-secure-window');
-        $page->requires->js_init_call('M.mod_quiz.secure_window.init',
-                null, false, quiz_get_js_module());
+        $page->requires->yui_module(array('moodle-quizaccess_securewindow-lockdown'),
+                'M.quizaccess_securewindow.lockdown.init_attempt_page');
     }
 
     /**

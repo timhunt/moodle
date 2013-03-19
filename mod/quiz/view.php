@@ -59,7 +59,6 @@ require_capability('mod/quiz:view', $context);
 
 // Cache some other capabilities we use several times.
 $canattempt = has_capability('mod/quiz:attempt', $context);
-$canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);
 $canpreview = has_capability('mod/quiz:preview', $context);
 
 // Create an object to manage all the other (non-roles) access rules.
@@ -87,7 +86,7 @@ $PAGE->set_url('/mod/quiz/view.php', array('id' => $cm->id));
 // Create view object which collects all the information the renderer will need.
 $viewobj = new mod_quiz_view_object();
 $viewobj->accessmanager = $accessmanager;
-$viewobj->canreviewmine = $canreviewmine;
+$viewobj->canreviewmine = has_capability('mod/quiz:reviewmyattempts', $context);;
 
 // Get this user's attempts.
 $attempts = quiz_get_user_attempts($quiz->id, $USER->id, 'finished', true);
@@ -148,6 +147,7 @@ if (!empty($grading_info->items)) {
 $title = $course->shortname . ': ' . format_string($quiz->name);
 $PAGE->set_title($title);
 $PAGE->set_heading($course->fullname);
+$accessmanager->setup_view_page($PAGE);
 $output = $PAGE->get_renderer('mod_quiz');
 
 // Print table with existing attempts.
@@ -178,8 +178,6 @@ $viewobj->editurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $cm->id
 $viewobj->backtocourseurl = new moodle_url('/course/view.php', array('id' => $course->id));
 $viewobj->startattempturl = $quizobj->start_attempt_url();
 $viewobj->startattemptwarning = $quizobj->confirm_start_attempt_message($unfinished);
-$viewobj->popuprequired = $accessmanager->attempt_must_be_in_popup();
-$viewobj->popupoptions = $accessmanager->get_popup_options();
 
 // Display information about this quiz.
 $viewobj->infomessages = $viewobj->accessmanager->describe_rules();

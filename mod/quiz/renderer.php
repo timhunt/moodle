@@ -230,18 +230,8 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @param quiz_attempt $attemptobj instance of quiz_attempt
      */
     public function finish_review_link(quiz_attempt $attemptobj) {
-        $url = $attemptobj->view_url();
-
-        if ($attemptobj->get_access_manager(time())->attempt_must_be_in_popup()) {
-            $this->page->requires->js_init_call('M.mod_quiz.secure_window.init_close_button',
-                    array($url), quiz_get_js_module());
-            return html_writer::empty_tag('input', array('type' => 'button',
-                    'value' => get_string('finishreview', 'quiz'),
-                    'id' => 'secureclosebutton'));
-
-        } else {
-            return html_writer::link($url, get_string('finishreview', 'quiz'));
-        }
+        return html_writer::link($attemptobj->view_url(), get_string('finishreview', 'quiz'),
+                array('id' => 'finishreviewlink'));
     }
 
     /**
@@ -507,34 +497,6 @@ class mod_quiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Output a page with an optional message, and JavaScript code to close the
-     * current window and redirect the parent window to a new URL.
-     * @param moodle_url $url the URL to redirect the parent window to.
-     * @param string $message message to display before closing the window. (optional)
-     * @return string HTML to output.
-     */
-    public function close_attempt_popup($url, $message = '') {
-        $output = '';
-        $output .= $this->header();
-        $output .= $this->box_start();
-
-        if ($message) {
-            $output .= html_writer::tag('p', $message);
-            $output .= html_writer::tag('p', get_string('windowclosing', 'quiz'));
-            $delay = 5;
-        } else {
-            $output .= html_writer::tag('p', get_string('pleaseclose', 'quiz'));
-            $delay = 0;
-        }
-        $this->page->requires->js_init_call('M.mod_quiz.secure_window.close',
-                array($url, $delay), false, quiz_get_js_module());
-
-        $output .= $this->box_end();
-        $output .= $this->footer();
-        return $output;
-    }
-
-    /**
      * Print each message in an array, surrounded by &lt;p>, &lt;/p> tags.
      *
      * @param array $messages the array of message strings.
@@ -720,8 +682,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
 
         if ($viewobj->buttontext) {
             $output .= $this->start_attempt_button($viewobj->buttontext,
-                    $viewobj->startattempturl, $viewobj->startattemptwarning,
-                    $viewobj->popuprequired, $viewobj->popupoptions);
+                    $viewobj->startattempturl, $viewobj->startattemptwarning);
 
         }
 
@@ -744,36 +705,17 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @param mod_quiz_view_object $viewobj
      * @param string $buttontext
      */
-    public function start_attempt_button($buttontext, moodle_url $url,
-            $startattemptwarning, $popuprequired, $popupoptions) {
+    public function start_attempt_button($buttontext, moodle_url $url, $startattemptwarning) {
 
         $button = new single_button($url, $buttontext);
         $button->class .= ' quizstartbuttondiv';
 
-        $warning = '';
-        if ($popuprequired) {
-            $this->page->requires->js_module(quiz_get_js_module());
-            $this->page->requires->js('/mod/quiz/module.js');
-            $popupaction = new popup_action('click', $url, 'quizpopup', $popupoptions);
-
-            $button->class .= ' quizsecuremoderequired';
-            $button->add_action(new component_action('click',
-                    'M.mod_quiz.secure_window.start_attempt_action', array(
-                        'url' => $url->out(false),
-                        'windowname' => 'quizpopup',
-                        'options' => $popupaction->get_js_options(),
-                        'fullscreen' => true,
-                        'startattemptwarning' => $startattemptwarning,
-                    )));
-
-            $warning = html_writer::tag('noscript', $this->heading(get_string('noscript', 'quiz')));
-
-        } else if ($startattemptwarning) {
+        if ($startattemptwarning) {
             $button->add_action(new confirm_action($startattemptwarning, null,
                     get_string('startattempt', 'quiz')));
         }
 
-        return $this->render($button) . $warning;
+        return $this->render($button);
     }
 
     /**
@@ -985,8 +927,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
             }
 
             if ($viewobj->canreviewmine) {
-                $row[] = $viewobj->accessmanager->make_review_link($attemptobj->get_attempt(),
-                        $attemptoptions, $this);
+                $row[] = $this->review_link($attemptobj);
             }
 
             if ($viewobj->feedbackcolumn && $attemptobj->is_finished()) {
@@ -1092,35 +1033,30 @@ class mod_quiz_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Output either a link to the review page for an attempt, or a button to
-     * open the review in a popup window.
+     * Make a link to review a particular attempt, if that is appropriate.
      *
-     * @param moodle_url $url of the target page.
-     * @param bool $reviewinpopup whether a pop-up is required.
-     * @param array $popupoptions options to pass to the popup_action constructor.
-     * @return string HTML to output.
+     * @param quiz_attempt $attemptobj the attempt object.
+     * @return string some HTML, the $linktext either unmodified or wrapped in a
+     *      link to the review page.
      */
-    public function review_link($url, $reviewinpopup, $popupoptions) {
-        if ($reviewinpopup) {
-            $button = new single_button($url, get_string('review', 'quiz'));
-            $button->add_action(new popup_action('click', $url, 'quizpopup', $popupoptions));
-            return $this->render($button);
+    protected function review_link(quiz_attempt $attemptobj) {
 
-        } else {
-            return html_writer::link($url, get_string('review', 'quiz'),
-                    array('title' => get_string('reviewthisattempt', 'quiz')));
+        if (!$attemptobj->is_finished()) {
+            // If the attempt is still open, don't link.
+            return '';
         }
-    }
 
-    /**
-     * Displayed where there might normally be a review link, to explain why the
-     * review is not available at this time.
-     * @param string $message optional message explaining why the review is not possible.
-     * @return string HTML to output.
-     */
-    public function no_review_message($message) {
-        return html_writer::nonempty_tag('span', $message,
-                array('class' => 'noreviewmessage'));
+        if (!$attemptobj->get_display_options(true)->attempt) {
+            // If review is not allowed, don't link, but explain if a rewview
+            // will be possible later.
+            return html_writer::nonempty_tag('span',
+                    $attemptobj->cannot_review_message(true),
+                    array('class' => 'noreviewmessage'));
+        }
+
+        // We can link.
+        return html_writer::link($attemptobj->review_url(), get_string('review', 'quiz'),
+                array('class' => 'quizreviewlink', 'title' => get_string('reviewthisattempt', 'quiz')));
     }
 
     /**

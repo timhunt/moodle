@@ -1,0 +1,10 @@
+{
+  "moodle-quizaccess_securewindow-lockdown": {
+    "requires": [
+        "base",
+        "node",
+        "event",
+        "dom"
+    ]
+  }
+}

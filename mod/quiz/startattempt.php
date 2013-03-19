@@ -137,7 +137,7 @@ if ($accessmanager->is_preflight_check_required($currentattemptid)) {
             $quizobj->start_attempt_url($page), $currentattemptid);
 
     if ($mform->is_cancelled()) {
-        $accessmanager->back_to_view_page($output);
+        redirect($this->quizobj->view_url());
 
     } else if (!$mform->get_data()) {
 
