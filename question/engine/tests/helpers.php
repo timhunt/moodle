@@ -649,12 +649,26 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
         $this->slot = $this->quba->add_question($question, $maxmark);
         $this->quba->start_question($this->slot, $variant);
     }
+
     protected function process_submission($data) {
         $this->quba->process_action($this->slot, $data);
     }
 
     protected function manual_grade($comment, $mark, $commentformat = null) {
         $this->quba->manual_grade($this->slot, $comment, $mark, $commentformat);
+    }
+
+    protected function save_quba() {
+        question_engine::save_questions_usage_by_activity($this->quba);
+    }
+
+    protected function load_quba() {
+        $this->quba = question_engine::load_questions_usage_by_activity($this->quba->get_id());
+    }
+
+    protected function delete_quba() {
+        question_engine::delete_questions_usage_by_activity($this->quba->get_id());
+        $this->quba = null;
     }
 
     protected function check_current_state($state) {
@@ -682,6 +696,36 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
      */
     protected function render() {
         $this->currentoutput = $this->quba->render_question($this->slot, $this->displayoptions);
+    }
+
+    protected function check_output_contains_text_input($name, $value = null, $enabled = true) {
+        $attributes = array(
+            'type' => 'text',
+            'name' => $this->quba->get_field_prefix($this->slot) . $name,
+        );
+        if (!is_null($value)) {
+            $attributes['value'] = $value;
+        }
+        if (!$enabled) {
+            $attributes['readonly'] = 'readonly';
+        }
+        $matcher = $this->get_tag_matcher('input', $attributes);
+        $this->assertTag($matcher, $this->currentoutput,
+                'Looking for an input with attributes ' . html_writer::attributes($attributes) . ' in ' . $this->currentoutput);
+
+        if ($enabled) {
+            $matcher['attributes']['readonly'] = 'readonly';
+            $this->assertNotTag($matcher, $this->currentoutput,
+                    'input with attributes ' . html_writer::attributes($attributes) .
+                    ' should not be read-only in ' . $this->currentoutput);
+        }
+    }
+
+    protected function get_tag_matcher($tag, $attributes) {
+        return array(
+            'tag' => $tag,
+            'attributes' => $attributes,
+        );
     }
 
     /**
