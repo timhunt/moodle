@@ -77,6 +77,7 @@ if ($attemptobj->is_finished()) {
 // Check the access rules.
 $accessmanager = $attemptobj->get_access_manager(time());
 $accessmanager->setup_attempt_page($PAGE);
+$PAGE->requires->yui_module('moodle-mod_quiz-autosave', 'M.mod_quiz.autosave.init');
 $output = $PAGE->get_renderer('mod_quiz');
 $messages = $accessmanager->prevent_access();
 if (!$attemptobj->is_preview_user() && $messages) {
