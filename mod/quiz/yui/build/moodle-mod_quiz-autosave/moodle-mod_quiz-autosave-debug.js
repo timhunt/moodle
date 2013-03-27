@@ -65,6 +65,7 @@ M.mod_quiz.autosave = {
 
         this.form.delegate('valuechange', this.value_changed, 'input, textarea', this);
         this.form.delegate('change',      this.value_changed, 'input, select',   this);
+        this.form.on('submit', this.stop_autosaving, this);
 
         this.init_tinymce(this.TINYMCE_DETECTION_REPEATS);
 
@@ -176,7 +177,7 @@ M.mod_quiz.autosave = {
 
         if (this.is_time_nearly_over()) {
             Y.log('No more saving, time is nearly over.');
-            this.delay_timeout_handle = true;
+            this.stop_autosaving();
             return;
         }
 
@@ -202,6 +203,14 @@ M.mod_quiz.autosave = {
     is_time_nearly_over: function() {
         return M.mod_quiz.timer && M.mod_quiz.timer.endtime &&
                 new Date().getTime() + 2*this.delay > M.mod_quiz.timer.endtime;
+    },
+
+    stop_autosaving: function() {
+        this.cancel_delay();
+        this.delay_timeout_handle = true;
+        if (this.save_transaction) {
+            this.save_transaction.abort();
+        }
     }
 };
 
