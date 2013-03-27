@@ -654,6 +654,10 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
         $this->quba->process_action($this->slot, $data);
     }
 
+    protected function process_autosave($data) {
+        $this->quba->process_autosave($this->slot, $data);
+    }
+
     protected function manual_grade($comment, $mark, $commentformat = null) {
         $this->quba->manual_grade($this->slot, $comment, $mark, $commentformat);
     }

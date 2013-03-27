@@ -67,19 +67,18 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
-//         $this->check_output_contains_text_input('answer', 'first response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
         $this->delete_quba();
     }
@@ -112,31 +111,31 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
-//         // Process a second autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'third response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process a second autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'third response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'third response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'third response');
 
         $this->delete_quba();
     }
@@ -169,37 +168,37 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
-//         $stepid = $this->quba->get_question_attempt($this->slot)->get_last_step()->get_id();
+        $stepid = $this->quba->get_question_attempt($this->slot)->get_last_step()->get_id();
 
-//         // Process a second autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process a second autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Try to check it is really the same step
-//         $newstepid = $this->quba->get_question_attempt($this->slot)->get_last_step()->get_id();
-//         $this->assertEquals($stepid, $newstepid);
+        // Try to check it is really the same step
+        $newstepid = $this->quba->get_question_attempt($this->slot)->get_last_step()->get_id();
+        $this->assertEquals($stepid, $newstepid);
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
         $this->delete_quba();
     }
@@ -232,32 +231,32 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(2);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
-//         // Process a second autosave saving the original response.
-//         // This should remove the autosave step.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'first response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(1);
-//         $this->save_quba();
+        // Process a second autosave saving the original response.
+        // This should remove the autosave step.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'first response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(2);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'first response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'first response');
 
         $this->delete_quba();
     }
@@ -290,18 +289,18 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(3);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
         // Now save for real a third response.
         $this->process_submission(array('answer' => 'third response'));
@@ -344,18 +343,18 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(3);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
         // Now save for real of the same response.
         $this->process_submission(array('answer' => 'second response'));
@@ -398,18 +397,18 @@ class question_usage_autosave_test extends qbehaviour_walkthrough_test_base {
         $this->render();
         $this->check_output_contains_text_input('answer', 'first response');
 
-//         // Process an autosave.
-//         $this->load_quba();
-//         $this->process_autosave(array('answer' => 'second response'));
-//         $this->check_current_state(question_state::$complete);
-//         $this->check_current_mark(null);
-//         $this->check_step_count(3);
-//         $this->save_quba();
+        // Process an autosave.
+        $this->load_quba();
+        $this->process_autosave(array('answer' => 'second response'));
+        $this->check_current_state(question_state::$complete);
+        $this->check_current_mark(null);
+        $this->check_step_count(3);
+        $this->save_quba();
 
-//         // Now check how that is re-displayed.
-//         $this->load_quba();
-//         $this->render();
-//         $this->check_output_contains_text_input('answer', 'second response');
+        // Now check how that is re-displayed.
+        $this->load_quba();
+        $this->render();
+        $this->check_output_contains_text_input('answer', 'second response');
 
         // Now submit a third response.
         $this->process_submission(array('answer' => 'third response'));
