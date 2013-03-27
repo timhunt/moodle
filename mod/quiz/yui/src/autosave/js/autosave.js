@@ -24,7 +24,7 @@
 
 M.mod_quiz = M.mod_quiz || {};
 M.mod_quiz.autosave = {
-    TINYMCE_DETECTION_DELAY:  100,
+    TINYMCE_DETECTION_DELAY:  500,
     TINYMCE_DETECTION_REPEATS: 20,
     WATCH_HIDDEN_DELAY:      1000,
 
@@ -62,7 +62,7 @@ M.mod_quiz.autosave = {
         this.delay = delay * 1000;
 
         this.form.delegate('valuechange', this.value_changed, 'input, textarea', this);
-        this.form.delegate('change',      this.value_changed, 'select',   this);
+        this.form.delegate('change',      this.value_changed, 'input, select',   this);
 
         this.init_tinymce(this.TINYMCE_DETECTION_REPEATS);
 
@@ -106,7 +106,6 @@ M.mod_quiz.autosave = {
      */
     init_tinymce: function(repeatcount) {
         if (typeof tinymce === 'undefined') {
-            Y.log('No TinyMCE yet.');
             if (repeatcount > 0) {
                 var self = this;
                 setTimeout(function() { self.init_tinymce(repeatcount - 1); },
@@ -134,6 +133,9 @@ M.mod_quiz.autosave = {
     },
 
     value_changed: function(e) {
+        if (e.target.get('name') === 'thispage') {
+            return; // Not interesting.
+        }
         Y.log('Detected a value change in element ' + e.target.get('name') + '.');
         this.start_save_timer_if_necessary();
     },
@@ -196,6 +198,7 @@ M.mod_quiz.autosave = {
     },
 
     is_time_nearly_over: function() {
-        return M.mod_quiz.timer && new Date().getTime() + 2*this.delay > M.mod_quiz.timer.endtime;
+        return M.mod_quiz.timer && M.mod_quiz.timer.endtime &&
+                new Date().getTime() + 2*this.delay > M.mod_quiz.timer.endtime;
     }
 };
