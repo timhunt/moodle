@@ -30,6 +30,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 // Remember the current time as the time any responses were submitted
 // (so as to make sure students don't get penalized for slow processing on this page).
 $timenow = time();
+require_sesskey();
 
 // Get submitted parameters.
 $attemptid = required_param('attempt',  PARAM_INT);
@@ -40,7 +41,6 @@ $attemptobj = quiz_attempt::create($attemptid);
 
 // Check login.
 require_login($attemptobj->get_course(), false, $attemptobj->get_cm());
-require_sesskey();
 
 // Check that this attempt belongs to this user.
 if ($attemptobj->get_userid() != $USER->id) {

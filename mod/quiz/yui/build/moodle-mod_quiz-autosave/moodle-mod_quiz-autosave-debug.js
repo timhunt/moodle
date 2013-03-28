@@ -26,9 +26,21 @@ YUI.add('moodle-mod_quiz-autosave', function (Y, NAME) {
 
 M.mod_quiz = M.mod_quiz || {};
 M.mod_quiz.autosave = {
+    /** Delays and repeat counts. */
     TINYMCE_DETECTION_DELAY:  500,
     TINYMCE_DETECTION_REPEATS: 20,
     WATCH_HIDDEN_DELAY:      1000,
+
+    /** Selectors. */
+    SELECTORS: {
+        QUIZ_FORM:             '#responseform',
+        VALUE_CHANGE_ELEMENTS: 'input, textarea',
+        CHANGE_ELEMENTS:       'input, select',
+        HIDDEN_INPUTS:         'input[type=hidden]'
+    },
+
+    /** Script that handles the auto-saves. */
+    AUTOSAVE_HANDLER: M.cfg.wwwroot + '/mod/quiz/autosave.ajax.php',
 
     /** The delay between a change being made, and it being auto-saved. */
     delay: 120000,
@@ -39,14 +51,14 @@ M.mod_quiz.autosave = {
     /** Whether the form has been modified since the last save started. */
     dirty: false,
 
-    /** Timer handle for the delay between form modifaction and the save starting. */
-    delay_timeout_handle: null,
+    /** Timer object for the delay between form modifaction and the save starting. */
+    delay_timer: null,
 
     /** Y.io transaction for the save ajax request. */
     save_transaction: null,
 
     /** Properly bound key change handler. */
-    editor_change_hander: null,
+    editor_change_handler: null,
 
     hidden_field_values: {},
 
@@ -56,15 +68,16 @@ M.mod_quiz.autosave = {
      * a save happening.
      */
     init: function(delay) {
-        this.form = Y.one('#responseform');
+        this.form = Y.one(this.SELECTORS.QUIZ_FORM);
         if (!this.form) {
+            Y.log('No response form found. Why did you try to set up autosave?');
             return;
         }
 
         this.delay = delay * 1000;
 
-        this.form.delegate('valuechange', this.value_changed, 'input, textarea', this);
-        this.form.delegate('change',      this.value_changed, 'input, select',   this);
+        this.form.delegate('valuechange', this.value_changed, this.SELECTORS.VALUE_CHANGE_ELEMENTS, this);
+        this.form.delegate('change',      this.value_changed, this.SELECTORS.CHANGE_ELEMENTS,       this);
         this.form.on('submit', this.stop_autosaving, this);
 
         this.init_tinymce(this.TINYMCE_DETECTION_REPEATS);
@@ -74,7 +87,7 @@ M.mod_quiz.autosave = {
     },
 
     save_hidden_field_values: function() {
-        this.form.all('input[type=hidden]').each(function(hidden) {
+        this.form.all(this.SELECTORS.HIDDEN_INPUTS).each(function(hidden) {
             var name  = hidden.get('name');
             if (!name) {
                 return;
@@ -85,17 +98,17 @@ M.mod_quiz.autosave = {
 
     watch_hidden_fields: function() {
         this.detect_hidden_field_changes();
-        setTimeout(Y.bind(this.watch_hidden_fields, this), this.WATCH_HIDDEN_DELAY);
+        Y.later(this.WATCH_HIDDEN_DELAY, this, this.watch_hidden_fields);
     },
 
     detect_hidden_field_changes: function() {
-        this.form.all('input[type=hidden]').each(function(hidden) {
+        this.form.all(this.SELECTORS.HIDDEN_INPUTS).each(function(hidden) {
             var name  = hidden.get('name'),
                 value = hidden.get('value');
             if (!name) {
                 return;
             }
-            if (value !== this.hidden_field_values[name]) {
+            if (!(name in this.hidden_field_values) || value !== this.hidden_field_values[name]) {
                 this.hidden_field_values[name] = value;
                 this.value_changed({target: hidden});
             }
@@ -110,15 +123,13 @@ M.mod_quiz.autosave = {
     init_tinymce: function(repeatcount) {
         if (typeof tinymce === 'undefined') {
             if (repeatcount > 0) {
-                var self = this;
-                setTimeout(function() { self.init_tinymce(repeatcount - 1); },
-                        this.TINYMCE_DETECTION_DELAY);
+                Y.later(this.TINYMCE_DETECTION_DELAY, this, self.init_tinymce,repeatcount - 1);
             }
             return;
         }
 
         Y.log('Found TinyMCE.');
-        this.editor_change_hander = Y.bind(this.editor_changed, this);
+        this.editor_change_handler = Y.bind(this.editor_changed, this);
         tinyMCE.onAddEditor.add(Y.bind(this.init_tinymce_editor, this));
     },
 
@@ -129,10 +140,10 @@ M.mod_quiz.autosave = {
      */
     init_tinymce_editor: function(notused, editor) {
         Y.log('Found TinyMCE editor ' + editor.id + '.');
-        editor.onChange.add(this.editor_change_hander);
-        editor.onRedo.add(this.editor_change_hander);
-        editor.onUndo.add(this.editor_change_hander);
-        editor.onKeyDown.add(this.editor_change_hander);
+        editor.onChange.add(this.editor_change_handler);
+        editor.onRedo.add(this.editor_change_handler);
+        editor.onUndo.add(this.editor_change_handler);
+        editor.onKeyDown.add(this.editor_change_handler);
     },
 
     value_changed: function(e) {
@@ -151,7 +162,7 @@ M.mod_quiz.autosave = {
     start_save_timer_if_necessary: function() {
         this.dirty = true;
 
-        if (this.delay_timeout_handle || this.save_transaction) {
+        if (this.delay_timer || this.save_transaction) {
             // Already counting down or daving.
             return;
         }
@@ -161,14 +172,14 @@ M.mod_quiz.autosave = {
 
     start_save_timer: function() {
         this.cancel_delay();
-        this.delay_timeout_handle = setTimeout(Y.bind(this.save_changes, this), this.delay);
+        this.delay_timer = Y.later(this.delay, this, this.save_changes);
     },
 
     cancel_delay: function() {
-        if (this.delay_timeout_handle) {
-            clearTimeout(this.delay_timeout_handle);
+        if (this.delay_timer) {
+            this.delay_timer.cancel();
         }
-        this.delay_timeout_handle = null;
+        this.delay_timer = null;
     },
 
     save_changes: function() {
@@ -182,7 +193,7 @@ M.mod_quiz.autosave = {
         }
 
         Y.log('Doing a save.');
-        this.save_transaction = Y.io(M.cfg.wwwroot + '/mod/quiz/autosave.php', {
+        this.save_transaction = Y.io(this.AUTOSAVE_HANDLER, {
             method:  'POST',
             form:    {id: this.form},
             on:      {complete: this.save_done},
@@ -202,12 +213,12 @@ M.mod_quiz.autosave = {
 
     is_time_nearly_over: function() {
         return M.mod_quiz.timer && M.mod_quiz.timer.endtime &&
-                new Date().getTime() + 2*this.delay > M.mod_quiz.timer.endtime;
+                (new Date().getTime() + 2*this.delay) > M.mod_quiz.timer.endtime;
     },
 
     stop_autosaving: function() {
         this.cancel_delay();
-        this.delay_timeout_handle = true;
+        this.delay_timer = true;
         if (this.save_transaction) {
             this.save_transaction.abort();
         }

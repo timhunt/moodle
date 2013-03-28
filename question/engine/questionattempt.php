@@ -1085,7 +1085,7 @@ class question_attempt {
      * @param array $submitteddata the submitted data the determines the action.
      * @param int $timestamp the time to record for the action. (If not given, use now.)
      * @param int $userid the user to attribute the action to. (If not given, use the current user.)
-     * @param int $existingstepid use by the regrade code.
+     * @param int $existingstepid used by the regrade code.
      */
     public function process_action($submitteddata, $timestamp = null, $userid = null, $existingstepid = null) {
         $pendingstep = new question_attempt_pending_step($submitteddata, $timestamp, $userid, $existingstepid);
