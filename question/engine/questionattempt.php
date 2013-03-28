@@ -1269,6 +1269,7 @@ class question_attempt {
 
         $qa->behaviour = question_engine::make_behaviour(
                 $record->behaviour, $qa, $preferredbehaviour);
+        $qa->observer = $observer;
 
         // If attemptstepid is null (which should not happen, but has happened
         // due to corrupt data, see MDL-34251) then the current pointer in $records
@@ -1280,12 +1281,20 @@ class question_attempt {
         }
 
         $i = 0;
+        $autosavedstep = null;
+        $autosavedsequencenumber = null;
         while ($record && $record->questionattemptid == $questionattemptid && !is_null($record->attemptstepid)) {
             $sequencenumber = $record->sequencenumber;
             $nextstep = question_attempt_step::load_from_records($records, $record->attemptstepid);
 
-            if ($sequencenumber < 0 && !$qa->has_autosaved_step()) {
-                $qa->autosavedstep = $nextstep;
+            if ($sequencenumber < 0) {
+                if (!$autosavedstep) {
+                    $autosavedstep = $nextstep;
+                    $autosavedsequencenumber = -$sequencenumber;
+                } else {
+                    // Old redundant data. Mark it for deletion.
+                    $qa->observer->notify_step_deleted($nextstep, $qa);
+                }
             } else {
                 $qa->steps[$i] = $nextstep;
                 if ($i == 0) {
@@ -1301,11 +1310,14 @@ class question_attempt {
             }
         }
 
-        if ($qa->has_autosaved_step()) {
-            $qa->steps[$i] = $qa->autosavedstep;
+        if ($autosavedstep) {
+            if ($autosavedsequencenumber >= $i) {
+                $qa->autosavedstep = $autosavedstep;
+                $qa->steps[$i] = $qa->autosavedstep;
+            } else {
+                $qa->observer->notify_step_deleted($autosavedstep, $qa);
+            }
         }
-
-        $qa->observer = $observer;
 
         return $qa;
     }
