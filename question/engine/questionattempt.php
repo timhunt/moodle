@@ -892,9 +892,8 @@ class question_attempt {
         $firststep = new question_attempt_step($submitteddata, $timestamp, $userid, $existingstepid);
         if ($submitteddata) {
             $firststep->set_state(question_state::$complete);
-            $this->question->apply_attempt_state($firststep);
+            $this->behaviour->apply_attempt_state($firststep);
         } else {
-            $firststep->set_state(question_state::$todo);
             $this->behaviour->init_first_step($firststep, $variant);
         }
         $this->add_step($firststep);
