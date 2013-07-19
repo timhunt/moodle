@@ -47,6 +47,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_question_text_expectation($tf),
@@ -62,6 +64,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('answersaved', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_tf_true_radio_expectation(true, true),
@@ -122,6 +126,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_does_not_contain_correctness_expectation(),
@@ -133,6 +139,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('answersaved', 'question');
         $this->check_current_mark(null);
         $this->check_current_output($this->get_does_not_contain_correctness_expectation(),
                 $this->get_contains_cbm_radio_expectation(1, true, true),
@@ -159,6 +167,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_does_not_contain_correctness_expectation(),
@@ -219,7 +229,9 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
         $this->quba->start_question_based_on($this->slot, $oldqa);
 
         // Verify.
-        $this->check_current_state(question_state::$todo);
+        $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('notchanged', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_mc_radio_expectation($wrongindex, true, true),
@@ -255,6 +267,8 @@ class qbehaviour_deferredcbm_walkthrough_test extends qbehaviour_walkthrough_tes
 
         // Verify.
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_does_not_contain_correctness_expectation(),

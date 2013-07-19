@@ -47,6 +47,8 @@ class qbehaviour_deferredfeedback_walkthrough_test extends qbehaviour_walkthroug
 
         // Check the initial state.
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output($this->get_contains_question_text_expectation($tf),
                 $this->get_does_not_contain_feedback_expectation());
@@ -60,6 +62,8 @@ class qbehaviour_deferredfeedback_walkthrough_test extends qbehaviour_walkthroug
         $this->process_submission(array('answer' => 1));
 
         $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('answersaved', 'question');
         $this->check_current_mark(null);
         $this->check_current_output($this->get_contains_tf_true_radio_expectation(true, true),
                 $this->get_does_not_contain_correctness_expectation(),
@@ -121,6 +125,8 @@ class qbehaviour_deferredfeedback_walkthrough_test extends qbehaviour_walkthroug
         $rightindex = $this->get_mc_right_answer_index($mc);
 
         $this->check_current_state(question_state::$todo);
+        $this->render();
+        $this->check_output_contains_lang_string('notyetanswered', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_question_text_expectation($mc),
@@ -134,6 +140,8 @@ class qbehaviour_deferredfeedback_walkthrough_test extends qbehaviour_walkthroug
 
         // Verify.
         $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('answersaved', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_mc_radio_expectation($rightindex, true, true),
@@ -193,7 +201,9 @@ class qbehaviour_deferredfeedback_walkthrough_test extends qbehaviour_walkthroug
         $this->quba->start_question_based_on($this->slot, $oldqa);
 
         // Verify.
-        $this->check_current_state(question_state::$todo);
+        $this->check_current_state(question_state::$complete);
+        $this->render();
+        $this->check_output_contains_lang_string('notchanged', 'question');
         $this->check_current_mark(null);
         $this->check_current_output(
                 $this->get_contains_mc_radio_expectation($wrongindex, true, true),
