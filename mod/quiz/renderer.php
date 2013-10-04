@@ -717,16 +717,12 @@ class mod_quiz_renderer extends plugin_renderer_base {
                     $viewobj->startattempturl, $viewobj->startattemptwarning,
                     $viewobj->popuprequired, $viewobj->popupoptions);
 
-        } else if ($viewobj->buttontext === '') {
-            require_once($CFG->dirroot . '/course/format/lib.php');
-            $courseformat = course_get_format($this->page->course);
-            if ($courseformat->has_view_page()) {
-                // We should show a 'back to the course' button.
-                $output .= $this->single_button($viewobj->backtocourseurl,
-                        get_string('backtocourse', 'quiz'), 'get',
-                        array('class' => 'continuebutton'));
-            }
+        }
 
+        if ($viewobj->showbacktocourse) {
+            $output .= $this->single_button($viewobj->backtocourseurl,
+                    get_string('backtocourse', 'quiz'), 'get',
+                    array('class' => 'continuebutton'));
         }
 
         return $output;
@@ -1226,6 +1222,8 @@ class mod_quiz_view_object {
     public $startattempturl;
     /** @var moodle_url $startattempturl URL for any Back to the course button. */
     public $backtocourseurl;
+    /** @var bool $showbacktocourse should we show a back to the course button? */
+    public $showbacktocourse;
     /** @var bool whether the attempt must take place in a popup window. */
     public $popuprequired;
     /** @var array options to use for the popup window, if required. */
