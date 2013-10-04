@@ -703,6 +703,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @return string HTML to output.
      */
     public function view_page_buttons(mod_quiz_view_object $viewobj) {
+        global $CFG;
         $output = '';
 
         if (!$viewobj->quizhasquestions) {
@@ -717,10 +718,15 @@ class mod_quiz_renderer extends plugin_renderer_base {
                     $viewobj->popuprequired, $viewobj->popupoptions);
 
         } else if ($viewobj->buttontext === '') {
-            // We should show a 'back to the course' button.
-            $output .= $this->single_button($viewobj->backtocourseurl,
-                    get_string('backtocourse', 'quiz'), 'get',
-                    array('class' => 'continuebutton'));
+            require_once($CFG->dirroot . '/course/format/lib.php');
+            $courseformat = course_get_format($this->page->course);
+            if ($courseformat->has_view_page()) {
+                // We should show a 'back to the course' button.
+                $output .= $this->single_button($viewobj->backtocourseurl,
+                        get_string('backtocourse', 'quiz'), 'get',
+                        array('class' => 'continuebutton'));
+            }
+
         }
 
         return $output;
