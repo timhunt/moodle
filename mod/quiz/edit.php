@@ -112,29 +112,18 @@ function module_specific_controls($totalnumber, $recurse, $category, $cmid, $cmo
 
 // These params are only passed from page request to request while we stay on
 // this page otherwise they would go in question_edit_setup.
-$quiz_reordertool = optional_param('reordertool', -1, PARAM_BOOL);
-$quiz_qbanktool = optional_param('qbanktool', -1, PARAM_BOOL);
 $scrollpos = optional_param('scrollpos', '', PARAM_INT);
 
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
         question_edit_setup('editq', '/mod/quiz/edit.php', true);
+$quiz->questions = quiz_clean_layout($quiz->questions);
+// \mod_quiz\structure::populate_structure($quiz);
+\mod_quiz\structure::update_quiz_structure_from_questions($quiz);
+\mod_quiz\structure::populate_structure($quiz);
+// \mod_quiz\structure::update_quiz_structure_from_questions($quiz);
 
 $defaultcategoryobj = question_make_default_categories($contexts->all());
 $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
-
-if ($quiz_qbanktool > -1) {
-    $thispageurl->param('qbanktool', $quiz_qbanktool);
-    set_user_preference('quiz_qbanktool_open', $quiz_qbanktool);
-} else {
-    $quiz_qbanktool = get_user_preferences('quiz_qbanktool_open', 0);
-}
-
-if ($quiz_reordertool > -1) {
-    $thispageurl->param('reordertool', $quiz_reordertool);
-    set_user_preference('quiz_reordertab', $quiz_reordertool);
-} else {
-    $quiz_reordertool = get_user_preferences('quiz_reordertab', 0);
-}
 
 $canaddrandom = $contexts->have_cap('moodle/question:useall');
 $canaddquestion = (bool) $contexts->having_add_and_use();
@@ -272,6 +261,10 @@ if ($remove && confirm_sesskey() && quiz_has_question_use($quiz, $remove)) {
     quiz_remove_slot($quiz, $remove);
     quiz_delete_previews($quiz);
     quiz_update_sumgrades($quiz);
+//     if ($DB->record_exists('question', array('id' => $remove))) {
+//         quiz_require_question_use($remove);
+//     }
+    quiz_remove_question_from_quiz($quiz, $remove);
     redirect($afteractionurl);
 }
 
@@ -429,6 +422,21 @@ $questionbank->process_actions($thispageurl, $cm);
 
 // End of process commands =====================================================
 
+$PAGE->set_pagelayout('incourse');
+$PAGE->set_pagetype('mod-quiz-edit');
+
+// Preload course format renderer before output starts.
+// This is a little hacky but necessary since
+// format.php is not included until after output starts
+require_once($CFG->dirroot.'/mod/quiz/editrenderer.php');
+if (class_exists('mod_quiz_edit_section_renderer')) {
+    // call get_renderer only if renderer is defined in format plugin
+    // otherwise an exception would be thrown
+//     $PAGE->get_renderer('quiz_edit_section');
+
+    $output = $PAGE->get_renderer('mod_quiz', 'edit_section');
+}
+
 $PAGE->requires->skip_link_to('questionbank',
         get_string('skipto', 'access', get_string('questionbank', 'question')));
 $PAGE->requires->skip_link_to('quizcontentsblock',
@@ -464,153 +472,64 @@ $module = array(
 );
 $PAGE->requires->js_init_call('quiz_edit_init', null, false, $module);
 
-// Print the tabs to switch mode.
-if ($quiz_reordertool) {
-    $currenttab = 'reorder';
-} else {
-    $currenttab = 'edit';
-}
-$tabs = array(array(
-    new tabobject('edit', new moodle_url($thispageurl,
-            array('reordertool' => 0)), get_string('editingquiz', 'quiz')),
-    new tabobject('reorder', new moodle_url($thispageurl,
-            array('reordertool' => 1)), get_string('orderingquiz', 'quiz')),
-));
-print_tabs($tabs, $currenttab);
+global $USER;
+$USER->editing = 1;
+// Prevent caching of this page to stop confusion when changing page after making AJAX changes
+    $PAGE->set_cacheable(false);
 
-if ($quiz_qbanktool) {
-    $bankclass = '';
-    $quizcontentsclass = '';
-} else {
-    $bankclass = 'collapsed ';
-    $quizcontentsclass = 'quizwhenbankcollapsed';
+$ajaxenabled = ajaxenabled();
+
+$completion = new completion_info($course);
+if ($completion->is_enabled() && $ajaxenabled) {
+    $PAGE->requires->string_for_js('completion-title-manual-y', 'completion');
+    $PAGE->requires->string_for_js('completion-title-manual-n', 'completion');
+    $PAGE->requires->string_for_js('completion-alt-manual-y', 'completion');
+    $PAGE->requires->string_for_js('completion-alt-manual-n', 'completion');
+
+    $PAGE->requires->js_init_call('M.core_completion.init');
 }
 
-echo '<div class="questionbankwindow ' . $bankclass . 'block">';
-echo '<div class="header"><div class="title"><h2>';
-echo get_string('questionbankcontents', 'quiz') .
-       '&nbsp;[<a href="' . $thispageurl->out(true, array('qbanktool' => '1')) .
-       '" id="showbankcmd">' . get_string('show').
-       '</a><a href="' . $thispageurl->out(true, array('qbanktool' => '0')) .
-       '" id="hidebankcmd">' . get_string('hide').
-       '</a>]';
-echo '</h2></div></div><div class="content">';
-
-echo '<span id="questionbank"></span>';
-echo '<div class="container">';
-echo '<div id="module" class="module">';
-echo '<div class="bd">';
-$questionbank->display('editq',
-        $pagevars['qpage'],
-        $pagevars['qperpage'],
-        $pagevars['cat'], $pagevars['recurse'], $pagevars['showhidden'],
-        $pagevars['qbshowtext']);
-echo '</div>';
-echo '</div>';
-echo '</div>';
-
-echo '</div></div>';
-
-echo '<div class="quizcontents ' . $quizcontentsclass . '" id="quizcontentsblock">';
-if ($quiz->shufflequestions) {
-    $repaginatingdisabledhtml = 'disabled="disabled"';
-    $repaginatingdisabled = true;
-} else {
-    $repaginatingdisabledhtml = '';
-    $repaginatingdisabled = false;
-}
-if ($quiz_reordertool) {
-    echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
-            $repaginatingdisabledhtml.'>'.
-            get_string('repaginatecommand', 'quiz').'...</button>';
-    echo '</div>';
+if ($completion->is_enabled() && $ajaxenabled) {
+    // This value tracks whether there has been a dynamic change to the page.
+    // It is used so that if a user does this - (a) set some tickmarks, (b)
+    // go to another page, (c) clicks Back button - the page will
+    // automatically reload. Otherwise it would start with the wrong tick
+    // values.
+    echo html_writer::start_tag('form', array('action'=>'.', 'method'=>'get'));
+    echo html_writer::start_tag('div');
+    echo html_writer::empty_tag('input', array('type'=>'hidden', 'id'=>'completion_dynamic_change', 'name'=>'completion_dynamic_change', 'value'=>'0'));
+    echo html_writer::end_tag('div');
+    echo html_writer::end_tag('form');
 }
 
-if ($quiz_reordertool) {
-    echo $OUTPUT->heading_with_help(get_string('orderingquizx', 'quiz', format_string($quiz->name)),
-            'orderandpaging', 'quiz');
-} else {
-    echo $OUTPUT->heading(get_string('editingquizx', 'quiz', format_string($quiz->name)), 2);
-    echo $OUTPUT->help_icon('editingquiz', 'quiz', get_string('basicideasofquiz', 'quiz'));
-}
-quiz_print_status_bar($quiz);
+// Course wrapper start.
+echo html_writer::start_tag('div', array('class'=>'course-content'));
 
-$tabindex = 0;
-quiz_print_grading_form($quiz, $thispageurl, $tabindex);
+$output->edit_page($course, $quiz, $cm, $contexts);
 
-$notifystrings = array();
-if ($quizhasattempts) {
-    $reviewlink = quiz_attempt_summary_link_to_reports($quiz, $cm, $contexts->lowest());
-    $notifystrings[] = get_string('cannoteditafterattempts', 'quiz', $reviewlink);
-}
-if ($quiz->shufflequestions) {
-    $updateurl = new moodle_url("$CFG->wwwroot/course/mod.php",
-            array('return' => 'true', 'update' => $quiz->cmid, 'sesskey' => sesskey()));
-    $updatelink = '<a href="'.$updateurl->out().'">' . get_string('updatethis', '',
-            get_string('modulename', 'quiz')) . '</a>';
-    $notifystrings[] = get_string('shufflequestionsselected', 'quiz', $updatelink);
-}
-if (!empty($notifystrings)) {
-    echo $OUTPUT->box('<p>' . implode('</p><p>', $notifystrings) . '</p>', 'statusdisplay');
-}
+// Content wrapper end.
+    echo html_writer::end_tag('div');
 
-if ($quiz_reordertool) {
-    $perpage = array();
-    $perpage[0] = get_string('allinone', 'quiz');
-    for ($i = 1; $i <= 50; ++$i) {
-        $perpage[$i] = $i;
-    }
-    $gostring = get_string('go');
-    echo '<div id="repaginatedialog"><div class="hd">';
-    echo get_string('repaginatecommand', 'quiz');
-    echo '</div><div class="bd">';
-    echo '<form action="edit.php" method="post">';
-    echo '<fieldset class="invisiblefieldset">';
-    echo html_writer::input_hidden_params($thispageurl);
-    echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
-    // YUI does not submit the value of the submit button so we need to add the value.
-    echo '<input type="hidden" name="repaginate" value="'.$gostring.'" />';
-    $attributes = array();
-    $attributes['disabled'] = $repaginatingdisabledhtml ? 'disabled' : null;
-    $select = html_writer::select(
-            $perpage, 'questionsperpage', $quiz->questionsperpage, null, $attributes);
-    print_string('repaginate', 'quiz', $select);
-    echo '<div class="quizquestionlistcontrols">';
-    echo ' <input type="submit" name="repaginate" value="'. $gostring . '" ' .
-            $repaginatingdisabledhtml.' />';
-    echo '</div></fieldset></form></div></div>';
-}
+// get information about course modules and existing module types
+// format.php in course formats may rely on presence of these variables
+$modinfo = get_fast_modinfo($course);
 
-if ($quiz_reordertool) {
-    echo '<div class="reorder">';
-} else {
-    echo '<div class="editq">';
+$modnamesused = $modinfo->get_used_module_names();
+$qtypes = question_bank::get_all_qtypes();
+$qtypenamesused = array();
+foreach ($qtypes as $qtypename => $qtypedata) {
+    $qtypenamesused[$qtypename] = $qtypename;
 }
+// Include course AJAX
+quiz_edit_include_ajax($course, $quiz, $qtypenamesused);
 
-quiz_print_question_list($quiz, $thispageurl, true, $quiz_reordertool, $quiz_qbanktool,
-        $quizhasattempts, $defaultcategoryobj, $canaddquestion, $canaddrandom);
+// Include course format js module
+$PAGE->requires->js('/mod/quiz/yui/edit.js');
+
 echo '</div>';
 
 // Close <div class="quizcontents">.
 echo '</div>';
 
-if (!$quiz_reordertool && $canaddrandom) {
-    $randomform = new quiz_add_random_form(new moodle_url('/mod/quiz/addrandom.php'), $contexts);
-    $randomform->set_data(array(
-        'category' => $pagevars['cat'],
-        'returnurl' => $thispageurl->out_as_local_url(false),
-        'cmid' => $cm->id,
-    ));
-    ?>
-    <div id="randomquestiondialog">
-    <div class="hd"><?php print_string('addrandomquestiontoquiz', 'quiz', $quiz->name); ?>
-    <span id="pagenumber"><!-- JavaScript will insert the page number here. -->
-    </span>
-    </div>
-    <div class="bd"><?php
-    $randomform->display();
-    ?></div>
-    </div>
-    <?php
-}
+
 echo $OUTPUT->footer();

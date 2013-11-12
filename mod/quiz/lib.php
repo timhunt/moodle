@@ -1792,53 +1792,180 @@ function quiz_get_navigation_options() {
     );
 }
 
+/**
+ * Returns the rename action.
+ *
+ * @param $question The question to produce editing buttons for
+ * @param int $sr The section to link back to (used for creating the links)
+ * @return The markup for the rename action, or an empty string if not available.
+ */
+function quiz_get_question_rename_action($question, $sr = null) {
+    global $PAGE, $COURSE, $OUTPUT;
+
+    static $str;
+    static $baseurl;
+
+    $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
+
+    if (!isset($str)) {
+        $str = get_strings(array('edittitle'));
+    }
+
+    if (!isset($baseurl)) {
+        $baseurl = new moodle_url('/quiz/question.php', array('sesskey' => sesskey()));
+    }
+
+    if ($sr !== null) {
+        $baseurl->param('sr', $sr);
+    }
+
+    // AJAX edit title.
+    if ($hasmanagequiz && course_ajax_enabled($COURSE)) {
+        return html_writer::span(
+            html_writer::link(
+                new moodle_url($baseurl, array('update' => $question->id)),
+                $OUTPUT->pix_icon('t/editstring', '', 'moodle', array('class' => 'iconsmall visibleifjs', 'title' => '')),
+                array(
+                    'class' => 'editing_title',
+                    'data-action' => 'edittitle',
+                    'title' => $str->edittitle,
+                )
+            )
+        );
+    }
+    return '';
+}
 
 /**
- * Obtains the automatic completion state for this quiz on any conditions
- * in quiz settings, such as if all attempts are used or a certain grade is achieved.
+ * Returns the move action.
  *
- * @param object $course Course
- * @param object $cm Course-module
- * @param int $userid User ID
- * @param bool $type Type of comparison (or/and; can be used as return value if no conditions)
- * @return bool True if completed, false if not. (If no conditions, then return
- *   value depends on comparison type)
+ * @param object $question The module to produce a move button for
+ * @param int $sr The section to link back to (used for creating the links)
+ * @return The markup for the move action, or an empty string if not available.
  */
-function quiz_get_completion_state($course, $cm, $userid, $type) {
-    global $DB;
-    global $CFG;
+function quiz_get_question_move($question, $sr = null) {
+    global $OUTPUT, $PAGE;
 
-    $quiz = $DB->get_record('quiz', array('id' => $cm->instance), '*', MUST_EXIST);
-    if (!$quiz->completionattemptsexhausted && !$quiz->completionpass) {
-        return $type;
+    static $str;
+    static $baseurl;
+
+    $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
+
+    if (!isset($str)) {
+        $str = get_strings(array('move'));
     }
 
-    // Check if the user has used up all attempts.
-    if ($quiz->completionattemptsexhausted) {
-        $attempts = quiz_get_user_attempts($quiz->id, $userid, 'finished', true);
-        if ($attempts) {
-            $lastfinishedattempt = end($attempts);
-            $context = context_module::instance($cm->id);
-            $quizobj = quiz::create($quiz->id, $userid);
-            $accessmanager = new quiz_access_manager($quizobj, time(),
-                    has_capability('mod/quiz:ignoretimelimits', $context, $userid, false));
-            if ($accessmanager->is_finished(count($attempts), $lastfinishedattempt)) {
-                return true;
-            }
+    if (!isset($baseurl)) {
+        $baseurl = new moodle_url('/course/mod.php', array('sesskey' => sesskey()));
+
+        if ($sr !== null) {
+            $baseurl->param('sr', $sr);
         }
     }
 
-    // Check for passing grade.
-    if ($quiz->completionpass) {
-        require_once($CFG->libdir . '/gradelib.php');
-        $item = grade_item::fetch(array('courseid' => $course->id, 'itemtype' => 'mod',
-                'itemmodule' => 'quiz', 'iteminstance' => $cm->instance));
-        if ($item) {
-            $grades = grade_grade::fetch_users_grades($item, array($userid), false);
-            if (!empty($grades[$userid])) {
-                return $grades[$userid]->is_passed($item);
-            }
-        }
+    if ($hasmanagequiz) {
+        $pixicon = 'i/dragdrop';
+
+        return html_writer::link(
+            new moodle_url($baseurl, array('copy' => $question->id)),
+            $OUTPUT->pix_icon($pixicon, $str->move, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            array('class' => 'editing_move', 'data-action' => 'move')
+        );
     }
-    return false;
+    return '';
+}
+
+/**
+ * Returns the list of all editing actions that current user can perform on the module
+ *
+ * @param object $question The module to produce editing buttons for
+ * @param int $indent The current indenting (default -1 means no move left-right actions)
+ * @param int $sr The section to link back to (used for creating the links)
+ * @return array array of action_link or pix_icon objects
+ */
+function quiz_get_question_edit_actions($quiz, $question, $indent = -1, $sr = null) {
+    global $COURSE, $SITE, $PAGE;
+
+    static $str;
+
+    // No permission to edit anything.
+    $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
+
+    if (!isset($str)) {
+        $str = get_strings(array('delete', 'move', 'moveright', 'moveleft',
+            'editsettings', 'duplicate', 'hide', 'show'), 'moodle');
+        $str->assign         = get_string('assignroles', 'role');
+        $str->groupsnone     = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsnone"));
+        $str->groupsseparate = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsseparate"));
+        $str->groupsvisible  = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsvisible"));
+    }
+
+//     $baseurl = new moodle_url('/course/mod.php', array('sesskey' => sesskey()));
+    $baseurl = mod_quiz_renderer::quiz_question_get_url($quiz, $question);
+
+    if ($sr !== null) {
+        $baseurl->param('sr', $sr);
+    }
+    $actions = array();
+
+    // Update.
+    if ($hasmanagequiz) {
+        $actions['update'] = new action_menu_link_secondary(
+            new moodle_url($baseurl, array('update' => $question->id)),
+            new pix_icon('t/edit', $str->editsettings, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $str->editsettings,
+            array('class' => 'editing_update', 'data-action' => 'update')
+        );
+    }
+
+    // Indent.
+    if ($hasmanagequiz) {
+        $indentlimits = new stdClass();
+        $indentlimits->min = 0;
+        $indentlimits->max = 16;
+        if (right_to_left()) {   // Exchange arrows on RTL
+            $rightarrow = 't/left';
+            $leftarrow  = 't/right';
+        } else {
+            $rightarrow = 't/right';
+            $leftarrow  = 't/left';
+        }
+
+        if ($indent >= $indentlimits->max) {
+            $enabledclass = 'hidden';
+        } else {
+            $enabledclass = '';
+        }
+        $actions['moveright'] = new action_menu_link_secondary(
+            new moodle_url($baseurl, array('id' => $question->id, 'indent' => '1')),
+            new pix_icon($rightarrow, $str->moveright, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $str->moveright,
+            array('class' => 'editing_moveright ' . $enabledclass, 'data-action' => 'moveright', 'data-keepopen' => true)
+        );
+
+        if ($indent <= $indentlimits->min) {
+            $enabledclass = 'hidden';
+        } else {
+            $enabledclass = '';
+        }
+        $actions['moveleft'] = new action_menu_link_secondary(
+            new moodle_url($baseurl, array('id' => $question->id, 'indent' => '-1')),
+            new pix_icon($leftarrow, $str->moveleft, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $str->moveleft,
+            array('class' => 'editing_moveleft ' . $enabledclass, 'data-action' => 'moveleft', 'data-keepopen' => true)
+        );
+
+    }
+
+    // Delete.
+    if ($hasmanagequiz) {
+        $actions['delete'] = new action_menu_link_secondary(
+            new moodle_url($baseurl, array('delete' => $question->id)),
+            new pix_icon('t/delete', $str->delete, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $str->delete,
+            array('class' => 'editing_delete', 'data-action' => 'delete')
+        );
+    }
+
+    return $actions;
 }

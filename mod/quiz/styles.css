@@ -1325,3 +1325,4 @@ bank window's title is prominent enough*/
     margin-left: 0;
     margin-right: 1em;
 }
+.path-mod-quiz li.activity > div {position:relative;}

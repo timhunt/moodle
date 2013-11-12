@@ -1177,6 +1177,771 @@ class mod_quiz_renderer extends plugin_renderer_base {
         return html_writer::tag('div', $warning, array('id' => 'connection-error', 'style' => 'display: none;', 'role' => 'alert')) .
                 html_writer::tag('div', $ok, array('id' => 'connection-ok', 'style' => 'display: none;', 'role' => 'alert'));
     }
+
+    /**
+     * Renders html to display a name with the link to the question on a quiz edit page
+     *
+     * If question is unavailable for the user but still needs to be displayed
+     * in the list, just the name is returned without a link
+     *
+     * Note, that for question that never have separate pages (i.e. labels)
+     * this function returns an empty string
+     *
+     * @param question $question
+     * @param array $displayoptions
+     * @return string
+     */
+    public function quiz_section_question_name($quiz, $question, $displayoptions = array()) {
+        global $CFG;
+        $output = '';
+//         if (!$question->uservisible &&
+//                 (empty($question->showavailability) || empty($question->availableinfo))) {
+//             // nothing to be displayed to the user
+//             return $output;
+//         }
+        $url = '';
+        $url = mod_quiz_renderer::quiz_question_get_url($quiz, $question);
+
+//         $this->url = $modviews[$this->modname]
+//                 ? new moodle_url('/mod/' . $this->modname . '/view.php', array('id'=>$this->id))
+//                 : null;
+        if (!$url) {
+            return $output;
+        }
+
+        //Accessibility: for files get description via icon, this is very ugly hack!
+        $instancename = format_string($question->name);
+        $altname = $question->name;
+        // Avoid unnecessary duplication: if e.g. a forum name already
+        // includes the word forum (or Forum, etc) then it is unhelpful
+        // to include that in the accessible description that is added.
+        if (false !== strpos(core_text::strtolower($instancename),
+                core_text::strtolower($altname))) {
+            $altname = '';
+        }
+        // File type after name, for alphabetic lists (screen reader).
+        if ($altname) {
+            $altname = get_accesshide(' '.$altname);
+        }
+
+        // For items which are hidden but available to current user
+        // ($question->uservisible), we show those as dimmed only if the user has
+        // viewhiddenactivities, so that teachers see 'items which might not
+        // be available to some students' dimmed but students do not see 'item
+        // which is actually available to current student' dimmed.
+        $linkclasses = '';
+        $accesstext = '';
+        $textclasses = '';
+//         if ($question->uservisible) {
+//             $conditionalhidden = $this->is_question_conditionally_hidden($question);
+//             $accessiblebutdim = (!$question->visible || $conditionalhidden) &&
+//                 has_capability('moodle/course:viewhiddenactivities',
+//                         context_course::instance($question->course));
+//             if ($accessiblebutdim) {
+//                 $linkclasses .= ' dimmed';
+//                 $textclasses .= ' dimmed_text';
+//                 if ($conditionalhidden) {
+//                     $linkclasses .= ' conditionalhidden';
+//                     $textclasses .= ' conditionalhidden';
+//                 }
+//                 // Show accessibility note only if user can access the module himself.
+//                 $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $question->modfullname);
+//             }
+//         } else {
+//             $linkclasses .= ' dimmed';
+//             $textclasses .= ' dimmed_text';
+//         }
+
+        // Get on-click attribute value if specified and decode the onclick - it
+        // has already been encoded for display (puke).
+        $onclick = ''; //htmlspecialchars_decode($question->get_on_click(), ENT_QUOTES);
+
+        $groupinglabel = '';
+//         if (!empty($question->groupingid) && has_capability('moodle/course:managegroups', context_course::instance($question->course))) {
+//             $groupings = groups_get_all_groupings($question->course);
+//             $groupinglabel = html_writer::tag('span', '('.format_string($groupings[$question->groupingid]->name).')',
+//                     array('class' => 'groupinglabel '.$textclasses));
+//         }
+
+        $qtype = question_bank::get_qtype($question->qtype, false);
+        $namestr = $qtype->local_name();
+
+        $icon = $this->pix_icon('icon', $namestr, $qtype->plugin_name(), array('title' => $namestr,
+                'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation'));
+        // Display link itself.
+        $activitylink = $icon . $accesstext .
+                html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
+//         if ($question->uservisible) {
+            $output .= html_writer::link($url, $activitylink, array('class' => $linkclasses, 'onclick' => $onclick)) .
+                    $groupinglabel;
+//         }
+//         else {
+//             // We may be displaying this just in order to show information
+//             // about visibility, without the actual link ($question->uservisible)
+//             $output .= html_writer::tag('div', $activitylink, array('class' => $textclasses)) .
+//                     $groupinglabel;
+//         }
+        return $output;
+    }
+
+    /**
+     * Renders HTML to display one question in a quiz section
+     *
+     * This includes link, content, availability, completion info and additional information
+     * that module type wants to display (i.e. number of unread forum posts)
+     *
+     * This function calls:
+     * {@link mod_quiz_renderer::quiz_section_question_name()}
+     * {@link cm_info::get_after_link()}
+     * {@link mod_quiz_renderer::quiz_section_question_text()}
+     * {@link core_course_renderer::course_section_question_availability()}
+     * {@link core_course_renderer::course_section_question_completion()}
+     * {@link question_get_question_edit_actions()}
+     * {@link mod_quiz_renderer::quiz_section_question_edit_actions()}
+     *
+     * @param stdClass $course
+     * @param completion_info $completioninfo
+     * @param cm_info $question
+     * @param int|null $sectionreturn
+     * @param array $displayoptions
+     * @return string
+     */
+    public function quiz_section_question($quiz, $course, &$completioninfo, $question, $sectionreturn, $displayoptions = array()) {
+        $output = '';
+        // We return empty string (because quiz question will not be displayed at all)
+        // if:
+        // 1) The activity is not visible to users
+        // and
+        // 2a) The 'showavailability' option is not set (if that is set,
+        //     we need to display the activity so we can show
+        //     availability info)
+        // or
+        // 2b) The 'availableinfo' is empty, i.e. the activity was
+        //     hidden in a way that leaves no info, such as using the
+        //     eye icon.
+//         if (!$question->uservisible &&
+//             (empty($question->showavailability) || empty($question->availableinfo))) {
+//             return $output;
+//         }
+
+        $indentclasses = 'mod-indent';
+        if (!empty($question->indent)) {
+            $indentclasses .= ' mod-indent-'.$question->indent;
+            if ($question->indent > 15) {
+                $indentclasses .= ' mod-indent-huge';
+            }
+        }
+
+        $output .= html_writer::start_tag('div');
+
+        if ($this->page->user_is_editing()) {
+            $output .= quiz_get_question_move($question, $sectionreturn);
+        }
+
+        $output .= html_writer::start_tag('div', array('class' => 'mod-indent-outer'));
+
+        // This div is used to indent the content.
+        $output .= html_writer::div('', $indentclasses);
+
+        // Start a wrapper for the actual content to keep the indentation consistent
+        $output .= html_writer::start_tag('div');
+
+        // Display the link to the question (or do nothing if question has no url)
+        $cmname = $this->quiz_section_question_name($quiz, $question, $displayoptions);
+
+        if (!empty($cmname)) {
+            // Start the div for the activity title, excluding the edit icons.
+            $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
+            $output .= $cmname;
+
+            if ($this->page->user_is_editing()) {
+                $output .= ' ' . quiz_get_question_rename_action($question, $sectionreturn);
+            }
+
+            // Module can put text after the link (e.g. forum unread)
+//             $output .= $question->get_after_link();
+
+            // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
+            $output .= html_writer::end_tag('div'); // .activityinstance
+        }
+
+        // If there is content but NO link (eg label), then display the
+        // content here (BEFORE any icons). In this case cons must be
+        // displayed after the content so that it makes more sense visually
+        // and for accessibility reasons, e.g. if you have a one-line label
+        // it should work similarly (at least in terms of ordering) to an
+        // activity.
+        $contentpart = $this->quiz_section_question_text($quiz, $question, $displayoptions);
+        $url = mod_quiz_renderer::quiz_question_get_url($quiz, $question);
+        if (empty($url)) {
+            $output .= $contentpart;
+        }
+
+        $questionicons = '';
+        if ($this->page->user_is_editing()) {
+            $editactions = quiz_get_question_edit_actions($quiz, $question, null, $sectionreturn);
+            $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question, $displayoptions);
+//             $questionicons .= $question->get_after_edit_icons();
+        }
+
+//         $questionicons .= $this->course_section_question_completion($course, $completioninfo, $question, $displayoptions);
+
+        if (!empty($questionicons)) {
+            $output .= html_writer::span($questionicons, 'actions');
+        }
+
+        // If there is content AND a link, then display the content here
+        // (AFTER any icons). Otherwise it was displayed before
+        if (!empty($url)) {
+            $output .= $contentpart;
+        }
+
+        // show availability info (if module is not available)
+//         $output .= $this->course_section_question_availability($question, $displayoptions);
+
+        $output .= html_writer::end_tag('div'); // $indentclasses
+
+        // End of indentation div.
+        $output .= html_writer::end_tag('div');
+
+        $output .= html_writer::end_tag('div');
+
+        return $output;
+    }
+
+    /**
+     * Renders HTML for displaying the sequence of quiz question editing buttons
+     *
+     * @see quiz_get_question_edit_actions()
+     *
+     * @param action_link[] $actions Array of action_link objects
+     * @param $question The question we are displaying actions for.
+     * @param array $displayoptions additional display options:
+     *     ownerselector => A JS/CSS selector that can be used to find an cm node.
+     *         If specified the owning node will be given the class 'action-menu-shown' when the action
+     *         menu is being displayed.
+     *     constraintselector => A JS/CSS selector that can be used to find the parent node for which to constrain
+     *         the action menu to when it is being displayed.
+     *     donotenhance => If set to true the action menu that gets displayed won't be enhanced by JS.
+     * @return string
+     */
+    public function quiz_section_question_edit_actions($actions, $question = null, $displayoptions = array()) {
+        global $CFG;
+
+        if (empty($actions)) {
+            return '';
+        }
+
+        if (isset($displayoptions['ownerselector'])) {
+            $ownerselector = $displayoptions['ownerselector'];
+        } else if ($question) {
+            $ownerselector = '#module-'.$question->id;
+        } else {
+            debugging('You should upgrade your call to '.__FUNCTION__.' and provide $question', DEBUG_DEVELOPER);
+            $ownerselector = 'li.activity';
+        }
+
+        if (isset($displayoptions['constraintselector'])) {
+            $constraint = $displayoptions['constraintselector'];
+        } else {
+            $constraint = '.course-content';
+        }
+
+        $menu = new action_menu();
+        $menu->set_owner_selector($ownerselector);
+        $menu->set_constraint($constraint);
+        $menu->set_alignment(action_menu::TR, action_menu::BR);
+        $menu->set_menu_trigger(get_string('edit'));
+        if (isset($CFG->modeditingmenu) && !$CFG->modeditingmenu || !empty($displayoptions['donotenhance'])) {
+            $menu->do_not_enhance();
+
+            // Swap the left/right icons.
+            // Normally we have have right, then left but this does not
+            // make sense when modactionmenu is disabled.
+            $moveright = null;
+            $_actions = array();
+            foreach ($actions as $key => $value) {
+                if ($key === 'moveright') {
+
+                    // Save moveright for later.
+                    $moveright = $value;
+                } else if ($moveright) {
+
+                    // This assumes that the order was moveright, moveleft.
+                    // If we have a moveright, then we should place it immediately after the current value.
+                    $_actions[$key] = $value;
+                    $_actions['moveright'] = $moveright;
+
+                    // Clear the value to prevent it being used multiple times.
+                    $moveright = null;
+                } else {
+
+                    $_actions[$key] = $value;
+                }
+            }
+            $actions = $_actions;
+            unset($_actions);
+        }
+        foreach ($actions as $action) {
+            if ($action instanceof action_menu_link) {
+                $action->add_class('cm-edit-action');
+            }
+            $menu->add($action);
+        }
+        $menu->attributes['class'] .= ' section-cm-edit-actions commands';
+
+        // Prioritise the menu ahead of all other actions.
+        $menu->prioritise = true;
+
+        return $this->render($menu);
+    }
+
+    /**
+     * Renders html to display the question content on the quiz edit page (i.e. text of the labels)
+     *
+     * @param object $question
+     * @param array $displayoptions
+     * @return string
+     */
+    public function quiz_section_question_text($quiz, $question, $displayoptions = array()) {
+        $output = '';
+//         if (!$question->uservisible &&
+//                 (empty($question->showavailability) || empty($question->availableinfo))) {
+//             // nothing to be displayed to the user
+//             return $output;
+//         }
+        $content = format_text($question->questiontext, FORMAT_HTML);
+//         $content = $question->get_formatted_content(array('overflowdiv' => true, 'noclean' => true));
+        $accesstext = '';
+        $textclasses = '';
+//         if ($question->uservisible) {
+// //             $conditionalhidden = $this->is_question_conditionally_hidden($question);
+//             $accessiblebutdim = (!$question->visible) &&
+//                 has_capability('moodle/course:viewhiddenactivities',
+//                         context_course::instance($question->course));
+//             if ($accessiblebutdim) {
+//                 $textclasses .= ' dimmed_text';
+//                 // Show accessibility note only if user can access the module himself.
+//                 $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $question->modfullname);
+//             }
+//         } else {
+//             $textclasses .= ' dimmed_text';
+//         }
+
+        $output .= $content;
+        return $output;
+    }
+
+    static public function quiz_question_get_url($quiz, $question) {
+        global $PAGE;
+        $questionparams = array(
+                        'returnurl' => $PAGE->url->out_as_local_url(),
+                        'cmid' => $quiz->cmid,
+                        'id' => $question->id);
+        $url = new moodle_url('/question/question.php', $questionparams);
+        return $url;
+    }
+
+    /**
+     * Renders HTML to display one course module for display within a section.
+     *
+     * This function calls:
+     * {@link core_course_renderer::quiz_section_question()}
+     *
+     * @param stdClass $course
+     * @param completion_info $completioninfo
+     * @param cm_info $question
+     * @param int|null $sectionreturn
+     * @param array $displayoptions
+     * @return String
+     */
+    public function quiz_section_question_list_item($quiz, $course, &$completioninfo, $question, $sectionreturn, $displayoptions = array()) {
+        $output = '';
+        if ($questiontypehtml = $this->quiz_section_question($quiz, $course, $completioninfo, $question, $sectionreturn, $displayoptions)) {
+            $questionclasses = 'activity ' . $question->qtype . ' qtype_' . $question->qtype;
+            $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $question->id));
+        }
+        return $output;
+    }
+
+    /**
+     * Renders HTML to display a list of course modules in a course section
+     * Also displays "move here" controls in Javascript-disabled mode
+     *
+     * This function calls {@link core_course_renderer::quiz_section_question()}
+     *
+     * @param stdClass $course course object
+     * @param int|stdClass|section_info $section relative section number or section object
+     * @param int $sectionreturn section number to return to
+     * @param int $displayoptions
+     * @return void
+     */
+    public function quiz_section_question_list($quiz, $course, $section, $sectionreturn = null, $displayoptions = array()) {
+        global $USER;
+
+        $output = '';
+//         $modinfo = get_fast_modinfo($course);
+//         $questions = array();
+//         if (is_object($section)) {
+//             $section = $questions->get_section_info($section->section);
+//         } else {
+//             $section = $questions->get_section_info($section);
+//         }
+//         $completioninfo = new completion_info($course);
+
+        // check if we are currently in the process of moving a module with JavaScript disabled
+        $ismoving = $this->page->user_is_editing() && ismoving($course->id);
+        if ($ismoving) {
+            $movingpix = new pix_icon('movehere', get_string('movehere'), 'moodle', array('class' => 'movetarget'));
+            $strmovefull = strip_tags(get_string("movefull", "", "'$USER->activitycopyname'"));
+        }
+
+        // Get the list of question types visible to user (excluding the question type being moved if there is one)
+        $questionshtml = array();
+        $sections = explode(',', $quiz->questions);
+        $slots = \mod_quiz\structure::get_quiz_slots($quiz);
+        $sectiontoslotids = $quiz->sectiontoslotids;
+        if (!empty($sectiontoslotids[$section->id])) {
+            /*
+             * During prototyping questions and sections are treated as the same thing.
+             * When the underlying data structure and related classes support sections
+             * these can be properly implemented here.
+             */
+//             foreach ($sections[$section->section] as $questionnumber => $questionid) {
+            foreach ($sectiontoslotids[$section->id] as $slotid) {
+                $slot =  $slots[$slotid];
+                $questionnumber = $slot->questionid;
+                $question = $quiz->fullquestions[$questionnumber];
+
+                if ($ismoving and $question->id == $USER->activitycopy) {
+                    // do not display moving question type
+                    continue;
+                }
+
+                if ($questiontypehtml = $this->quiz_section_question_list_item($quiz, $course,
+                        $completioninfo, $question, $sectionreturn, $displayoptions)) {
+                    $questionshtml[$questionnumber] = $questiontypehtml;
+                }
+            }
+        }
+
+        $sectionoutput = '';
+        if (!empty($questionshtml) || $ismoving) {
+            foreach ($questionshtml as $questionnumber => $questiontypehtml) {
+                if ($ismoving) {
+                    $movingurl = new moodle_url('/course/mod.php', array('moveto' => $questionnumber, 'sesskey' => sesskey()));
+                    $sectionoutput .= html_writer::tag('li', html_writer::link($movingurl, $this->output->render($movingpix)),
+                            array('class' => 'movehere', 'title' => $strmovefull));
+                }
+
+                $sectionoutput .= $questiontypehtml;
+            }
+
+            if ($ismoving) {
+                $movingurl = new moodle_url('/course/mod.php', array('movetosection' => $section->id, 'sesskey' => sesskey()));
+                $sectionoutput .= html_writer::tag('li', html_writer::link($movingurl, $this->output->render($movingpix)),
+                        array('class' => 'movehere', 'title' => $strmovefull));
+            }
+        }
+
+        // Always output the section module list.
+        $output .= html_writer::tag('ul', $sectionoutput, array('class' => 'section img-text'));
+
+        return $output;
+    }
+
+    /**
+     * Renders HTML for the menus to add activities and resources to the current course
+     *
+     * Note, if theme overwrites this function and it does not use modchooser,
+     * see also {@link core_course_renderer::add_modchoosertoggle()}
+     *
+     * @param stdClass $course
+     * @param int $section relative section number (field quiz_sections.section)
+     * @param int $sectionreturn The section to link back to
+     * @param array $displayoptions additional display options, for example blocks add
+     *     option 'inblock' => true, suggesting to display controls vertically
+     * @return string
+     */
+    function quiz_section_add_question_control($quiz, $course, $section, $sectionreturn = null, $displayoptions = array()) {
+        global $CFG, $PAGE;
+
+        $vertical = !empty($displayoptions['inblock']);
+
+        $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
+        // check to see if user can add menus and there are modules to add
+        if (!has_capability('mod/quiz:manage', $PAGE->cm->context)
+                || !$this->page->user_is_editing()
+                || !($questionnames = get_module_types_names()) || empty($questionnames)) {
+            return '';
+        }
+
+        // Retrieve all modules with associated metadata
+        $questions = get_module_metadata($course, $questionnames, $sectionreturn);
+        $urlparams = array('section' => $section);
+
+        // We'll sort resources and activities into two lists
+        $activities = array(MOD_CLASS_ACTIVITY => array(), MOD_CLASS_RESOURCE => array());
+
+        foreach ($questions as $question) {
+            if (isset($question->types)) {
+                // This module has a subtype
+                // NOTE: this is legacy stuff, module subtypes are very strongly discouraged!!
+                $subtypes = array();
+                foreach ($question->types as $subtype) {
+                    $link = $subtype->link->out(true, $urlparams);
+                    $subtypes[$link] = $subtype->title;
+                }
+
+                // Sort module subtypes into the list
+                $activityclass = MOD_CLASS_ACTIVITY;
+                if ($question->archetype == MOD_CLASS_RESOURCE) {
+                    $activityclass = MOD_CLASS_RESOURCE;
+                }
+                if (!empty($question->title)) {
+                    // This grouping has a name
+                    $activities[$activityclass][] = array($question->title => $subtypes);
+                } else {
+                    // This grouping does not have a name
+                    $activities[$activityclass] = array_merge($activities[$activityclass], $subtypes);
+                }
+            } else {
+                // This module has no subtypes
+                $activityclass = MOD_CLASS_ACTIVITY;
+                if ($question->archetype == MOD_ARCHETYPE_RESOURCE) {
+                    $activityclass = MOD_CLASS_RESOURCE;
+                } else if ($question->archetype === MOD_ARCHETYPE_SYSTEM) {
+                    // System modules cannot be added by user, do not add to dropdown
+                    continue;
+                }
+                $link = $question->link->out(true, $urlparams);
+                $activities[$activityclass][$link] = $question->title;
+            }
+        }
+
+        $straddactivity = get_string('addactivity');
+        $straddresource = get_string('addresource');
+        $sectionname = get_section_name($course, $section);
+        $strresourcelabel = get_string('addresourcetosection', null, $sectionname);
+        $stractivitylabel = get_string('addactivitytosection', null, $sectionname);
+
+        $output = html_writer::start_tag('div', array('class' => 'section_add_menus', 'id' => 'add_menus-section-' . $section->id));
+
+        if (!$vertical) {
+            $output .= html_writer::start_tag('div', array('class' => 'horizontal'));
+        }
+
+        if (!empty($activities[MOD_CLASS_RESOURCE])) {
+            $select = new url_select($activities[MOD_CLASS_RESOURCE], '', array(''=>$straddresource), "ressection$section");
+            $select->set_help_icon('resources');
+            $select->set_label($strresourcelabel, array('class' => 'accesshide'));
+            $output .= $this->output->render($select);
+        }
+
+        if (!empty($activities[MOD_CLASS_ACTIVITY])) {
+            $select = new url_select($activities[MOD_CLASS_ACTIVITY], '', array(''=>$straddactivity), "section$section");
+            $select->set_help_icon('activities');
+            $select->set_label($stractivitylabel, array('class' => 'accesshide'));
+            $output .= $this->output->render($select);
+        }
+
+        if (!$vertical) {
+            $output .= html_writer::end_tag('div');
+        }
+
+        $output .= html_writer::end_tag('div');
+
+        if (course_ajax_enabled($course) && $course->id == $this->page->course->id) {
+            // modchooser can be added only for the current course set on the page!
+            $straddeither = get_string('addresourceoractivity');
+            // The module chooser link
+            $modchooser = html_writer::start_tag('div', array('class' => 'mdl-right'));
+            $modchooser.= html_writer::start_tag('div', array('class' => 'section-modchooser'));
+            $icon = $this->output->pix_icon('t/add', '');
+            $span = html_writer::tag('span', $straddeither, array('class' => 'section-modchooser-text'));
+            $modchooser .= html_writer::tag('span', $icon . $span, array('class' => 'section-modchooser-link'));
+            $modchooser.= html_writer::end_tag('div');
+            $modchooser.= html_writer::end_tag('div');
+
+            // Wrap the normal output in a noscript div
+            $usemodchooser = get_user_preferences('usemodchooser', $CFG->modchooserdefault);
+            if ($usemodchooser) {
+                $output = html_writer::tag('div', $output, array('class' => 'hiddenifjs addresourcedropdown'));
+                $modchooser = html_writer::tag('div', $modchooser, array('class' => 'visibleifjs addresourcemodchooser'));
+            } else {
+                // If the module chooser is disabled, we need to ensure that the dropdowns are shown even if javascript is disabled
+                $output = html_writer::tag('div', $output, array('class' => 'show addresourcedropdown'));
+                $modchooser = html_writer::tag('div', $modchooser, array('class' => 'hide addresourcemodchooser'));
+            }
+            $output = $this->course_modchooser($questions, $course) . $modchooser . $output;
+        }
+
+        return $output;
+    }
+
+/**
+     * Build the HTML for the module chooser javascript popup
+     *
+     * @param array $modules A set of modules as returned form @see
+     * get_module_metadata
+     * @param object $course The course that will be displayed
+     * @return string The composed HTML for the module
+     */
+    public function course_modchooser($modules, $course) {
+        static $isdisplayed = false;
+        if ($isdisplayed) {
+            return '';
+        }
+        $isdisplayed = true;
+
+        // Add the module chooser
+        $this->page->requires->yui_module('moodle-course-modchooser',
+        'M.course.init_chooser',
+        array(array('courseid' => $course->id, 'closeButtonTitle' => get_string('close', 'editor')))
+        );
+        $this->page->requires->strings_for_js(array(
+                'addresourceoractivity',
+                'modchooserenable',
+                'modchooserdisable',
+        ), 'moodle');
+
+        // Add the header
+        $header = html_writer::tag('div', get_string('addresourceoractivity', 'moodle'),
+                array('class' => 'hd choosertitle'));
+
+        $formcontent = html_writer::start_tag('form', array('action' => new moodle_url('/course/jumpto.php'),
+                'id' => 'chooserform', 'method' => 'post'));
+        $formcontent .= html_writer::start_tag('div', array('id' => 'typeformdiv'));
+        $formcontent .= html_writer::tag('input', '', array('type' => 'hidden', 'id' => 'course',
+                'name' => 'course', 'value' => $course->id));
+        $formcontent .= html_writer::tag('input', '',
+                array('type' => 'hidden', 'class' => 'jump', 'name' => 'jump', 'value' => ''));
+        $formcontent .= html_writer::tag('input', '', array('type' => 'hidden', 'name' => 'sesskey',
+                'value' => sesskey()));
+        $formcontent .= html_writer::end_tag('div');
+
+        // Put everything into one tag 'options'
+        $formcontent .= html_writer::start_tag('div', array('class' => 'options'));
+        $formcontent .= html_writer::tag('div', get_string('selectmoduletoviewhelp', 'moodle'),
+                array('class' => 'instruction'));
+        // Put all options into one tag 'alloptions' to allow us to handle scrolling
+        $formcontent .= html_writer::start_tag('div', array('class' => 'alloptions'));
+
+         // Activities
+        $activities = array_filter($modules, create_function('$mod', 'return ($mod->archetype !== MOD_ARCHETYPE_RESOURCE && $mod->archetype !== MOD_ARCHETYPE_SYSTEM);'));
+        if (count($activities)) {
+            $formcontent .= $this->course_modchooser_title('activities');
+            $formcontent .= $this->course_modchooser_module_types($activities);
+        }
+
+        // Resources
+        $resources = array_filter($modules, create_function('$mod', 'return ($mod->archetype === MOD_ARCHETYPE_RESOURCE);'));
+        if (count($resources)) {
+            $formcontent .= $this->course_modchooser_title('resources');
+            $formcontent .= $this->course_modchooser_module_types($resources);
+        }
+
+        $formcontent .= html_writer::end_tag('div'); // modoptions
+        $formcontent .= html_writer::end_tag('div'); // types
+
+        $formcontent .= html_writer::start_tag('div', array('class' => 'submitbuttons'));
+        $formcontent .= html_writer::tag('input', '',
+                array('type' => 'submit', 'name' => 'submitbutton', 'class' => 'submitbutton', 'value' => get_string('add')));
+        $formcontent .= html_writer::tag('input', '',
+                array('type' => 'submit', 'name' => 'addcancel', 'class' => 'addcancel', 'value' => get_string('cancel')));
+        $formcontent .= html_writer::end_tag('div');
+        $formcontent .= html_writer::end_tag('form');
+
+        // Wrap the whole form in a div
+        $formcontent = html_writer::tag('div', $formcontent, array('id' => 'chooseform'));
+
+        // Put all of the content together
+        $content = $formcontent;
+
+        $content = html_writer::tag('div', $content, array('class' => 'choosercontainer'));
+        return $header . html_writer::tag('div', $content, array('class' => 'chooserdialoguebody'));
+    }
+
+    /**
+     * Build the HTML for a specified set of modules
+     *
+     * @param array $modules A set of modules as used by the
+     * course_modchooser_module function
+     * @return string The composed HTML for the module
+     */
+    protected function course_modchooser_module_types($modules) {
+        $return = '';
+        foreach ($modules as $module) {
+            if (!isset($module->types)) {
+                $return .= $this->course_modchooser_module($module);
+            } else {
+                $return .= $this->course_modchooser_module($module, array('nonoption'));
+                foreach ($module->types as $type) {
+                    $return .= $this->course_modchooser_module($type, array('option', 'subtype'));
+                }
+            }
+        }
+        return $return;
+    }
+
+    /**
+     * Return the HTML for the specified module adding any required classes
+     *
+     * @param object $module An object containing the title, and link. An
+     * icon, and help text may optionally be specified. If the module
+     * contains subtypes in the types option, then these will also be
+     * displayed.
+     * @param array $classes Additional classes to add to the encompassing
+     * div element
+     * @return string The composed HTML for the module
+     */
+    protected function course_modchooser_module($module, $classes = array('option')) {
+        $output = '';
+        $output .= html_writer::start_tag('div', array('class' => implode(' ', $classes)));
+        $output .= html_writer::start_tag('label', array('for' => 'module_' . $module->name));
+        if (!isset($module->types)) {
+            $output .= html_writer::tag('input', '', array('type' => 'radio',
+                    'name' => 'jumplink', 'id' => 'module_' . $module->name, 'value' => $module->link));
+        }
+
+        $output .= html_writer::start_tag('span', array('class' => 'modicon'));
+        if (isset($module->icon)) {
+            // Add an icon if we have one
+            $output .= $module->icon;
+        }
+        $output .= html_writer::end_tag('span');
+
+        $output .= html_writer::tag('span', $module->title, array('class' => 'typename'));
+        if (!isset($module->help)) {
+            // Add help if found
+            $module->help = get_string('nohelpforactivityorresource', 'moodle');
+        }
+
+        // Format the help text using markdown with the following options
+        $options = new stdClass();
+        $options->trusted = false;
+        $options->noclean = false;
+        $options->smiley = false;
+        $options->filter = false;
+        $options->para = true;
+        $options->newlines = false;
+        $options->overflowdiv = false;
+        $module->help = format_text($module->help, FORMAT_MARKDOWN, $options);
+        $output .= html_writer::tag('span', $module->help, array('class' => 'typesummary'));
+        $output .= html_writer::end_tag('label');
+        $output .= html_writer::end_tag('div');
+
+        return $output;
+    }
+
+    protected function course_modchooser_title($title, $identifier = null) {
+        $module = new stdClass();
+        $module->name = $title;
+        $module->types = array();
+        $module->title = get_string($title, $identifier);
+        $module->help = '';
+        return $this->course_modchooser_module($module, array('moduletypetitle'));
+    }
 }
 
 class mod_quiz_links_to_other_attempts implements renderable {

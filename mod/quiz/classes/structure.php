@@ -62,13 +62,22 @@ class structure {
         $quiz->sections = $sections;
     }
 
+    public static function get_quiz_section_heading($section) {
+        if(!property_exists($section, 'heading')){
+            return '';
+        }
+        return $section->heading;
+    }
+
     public static function populate_structure($quiz) {
         self::update_quiz_structure_from_questions($quiz);
         self::populate_quiz_sections($quiz);
+        self::populate_slot_to_sectionids($quiz);
+        self::populate_slots_with_sectionids($quiz);
     }
 
     /**
-     * Get quiz sections from the database
+     * Populate quiz sections with dummy data while the database is waiting
      * to be changed
      * @param object $quiz
      * @return array
@@ -100,8 +109,7 @@ class structure {
     }
 
     /**
-     * Populate quiz sections with dummy data while the database is waiting
-     * to be changed
+     * Update the quiz slots field using the questions field
      * @param object $quiz
      * @return array
      */
@@ -151,6 +159,76 @@ class structure {
         }
 
         return $records;
+    }
+
+    public static function convert_slots_to_new_slot_objects($attemptobj, $oldslots) {
+        global $DB;
+        $slots = array();
+        $sequesnce = 1;
+        Foreach ($oldslots as $key => $oldslot) {
+            $slot = new \stdClass();
+            $slot->id = $sequesnce;
+            $slot->quizid = $attemptobj->get_quizid();
+            $slot->sectionid = 1;
+            $slot->slot = $oldslot;
+            $slot->page = $key;
+            $slot->questionid = $attemptobj->get_questionid($oldslot);
+            $slot->questioncategoryid = $attemptobj->get_question_categoryid($slot->questionid);
+            $slot->includesubcategories = true;
+            $slot->maxmark = $attemptobj->get_question_mark($oldslot);
+            $slot->requireprevious = false;
+            if ($slot->slot == 5) { // TODO: This would not be hardcoded
+                $slot->requireprevious = true;
+            }
+            $slots[] = $slot;
+            $sequesnce++;
+        }
+        return $slots;
+    }
+
+    public static function get_slot_object($attemptobj, $oldslotid) {
+        $slots = self::convert_slots_to_new_slot_objects($attemptobj, $attemptobj->get_slots());
+        if (!$slots) {
+            return null;
+        }
+        foreach ($slots as $slot) {
+            if ($slot->slot == $oldslotid) {
+                return $slot;
+            }
+        }
+        return null;
+    }
+
+    public static function populate_slot_to_sectionids($quiz) {
+        $sections = self::get_quiz_sections($quiz);
+        $slottosectionids = array();
+
+        foreach ($sections as $section) {
+            $slottosectionids[$section->firstslot] = $section->id;
+        }
+
+        $quiz->slottosectionids = $slottosectionids;
+    }
+
+    public static function populate_slots_with_sectionids($quiz) {
+        $slots = self::get_quiz_slots($quiz);
+        $sectionid = 0;
+        $sectiontoslotids = array();
+        $currentslottosectionid = 1;
+        foreach ($slots as $slot) {
+            if(array_key_exists($slot->slot, $quiz->slottosectionids)) {
+                $sectionid = $quiz->slottosectionids[$slot->slot];
+            }
+
+            $slot->sectionid = $sectionid;
+            if(!array_key_exists($slot->sectionid, $sectiontoslotids)) {
+                $sectiontoslotids[$slot->sectionid] = array();
+            }
+
+            $sectiontoslotids[$slot->sectionid][] = $slot->id;
+        }
+
+        $quiz->sectiontoslotids = $sectiontoslotids;
     }
 
 }

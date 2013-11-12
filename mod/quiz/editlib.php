@@ -1354,3 +1354,139 @@ function quiz_print_status_bar($quiz) {
 
     echo html_writer::tag('div', implode(' | ', $bits), array('class' => 'statusbar'));
 }
+
+/**
+ * Include the relevant javascript and language strings for the resource
+ * toolbox YUI module
+ *
+ * @param integer $id The ID of the course being applied to
+ * @param array $usedqtypes An array containing the names of the modules in use on the page
+ * @param array $enabledmodules An array containing the names of the enabled (visible) modules on this site
+ * @param stdClass $config An object containing configuration parameters for ajax modules including:
+ *          * resourceurl   The URL to post changes to for resource changes
+ *          * sectionurl    The URL to post changes to for section changes
+ *          * pageparams    Additional parameters to pass through in the post
+ * @return bool
+ */
+function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledmodules = null, $config = null) {
+    global $CFG, $PAGE, $SITE;
+
+    // Ensure that ajax should be included
+    if (!course_ajax_enabled($course)) {
+        return false;
+    }
+
+    if (!$config) {
+        $config = new stdClass();
+    }
+
+    // The URL to use for resource changes
+    if (!isset($config->resourceurl)) {
+        $config->resourceurl = '/mod/quiz/rest.php';
+    }
+
+    // The URL to use for section changes
+    if (!isset($config->sectionurl)) {
+        $config->sectionurl = '/mod/quiz/rest.php';
+    }
+
+    // Any additional parameters which need to be included on page submission
+    if (!isset($config->pageparams)) {
+        $config->pageparams = array();
+    }
+
+    // Include toolboxes
+    $PAGE->requires->yui_module('moodle-mod_quiz-toolboxes',
+            'M.mod_quiz.init_resource_toolbox',
+            array(array(
+                'courseid' => $course->id,
+                'quizid' => $quiz->id,
+                'ajaxurl' => $config->resourceurl,
+                'config' => $config,
+            ))
+    );
+    $PAGE->requires->yui_module('moodle-mod_quiz-toolboxes',
+            'M.mod_quiz.init_section_toolbox',
+            array(array(
+                'courseid' => $course->id,
+                'quizid' => $quiz->id,
+                'format' => $course->format,
+                'ajaxurl' => $config->sectionurl,
+                'config' => $config,
+            ))
+    );
+
+    // Include course dragdrop
+    if ($course->id != $SITE->id) {
+        $PAGE->requires->yui_module('moodle-mod_quiz-dragdrop', 'M.mod_quiz.init_section_dragdrop',
+            array(array(
+                'courseid' => $course->id,
+                'quizid' => $quiz->id,
+                'ajaxurl' => $config->sectionurl,
+                'config' => $config,
+            )), null, true);
+
+        $PAGE->requires->yui_module('moodle-mod_quiz-dragdrop', 'M.mod_quiz.init_resource_dragdrop',
+            array(array(
+                'courseid' => $course->id,
+                'quizid' => $quiz->id,
+                'ajaxurl' => $config->resourceurl,
+                'config' => $config,
+            )), null, true);
+    }
+
+    // Require various strings for the command toolbox
+    $PAGE->requires->strings_for_js(array(
+            'moveleft',
+            'deletechecktype',
+            'deletechecktypename',
+            'edittitle',
+            'edittitleinstructions',
+            'show',
+            'hide',
+            'groupsnone',
+            'groupsvisible',
+            'groupsseparate',
+            'clicktochangeinbrackets',
+            'markthistopic',
+            'markedthistopic',
+            'move',
+            'movesection',
+            'movecontent',
+            'tocontent',
+            'emptydragdropregion'
+        ), 'moodle');
+
+    // Include format-specific strings
+//     if ($course->id != $SITE->id) {
+//         $PAGE->requires->strings_for_js(array(
+//                 'showfromothers',
+//                 'hidefromothers',
+//             ), 'format_' . $course->format);
+//     }
+
+    // For confirming resource deletion we need the name of the module in question
+    foreach ($usedqtypes as $module => $modname) {
+        $PAGE->requires->string_for_js('pluginname', 'qtype_'.$module);
+    }
+
+    // Load drag and drop upload AJAX.
+//     require_once($CFG->dirroot.'/course/dnduploadlib.php');
+//     dndupload_add_to_course($course, $enabledmodules);
+
+    return true;
+}
+
+function quiz_remove_question_from_quiz($quiz, $questionid){
+    global $DB;
+    // Remove a question from the quiz.
+    // We require the user to have the 'use' capability on the question,
+    // so that then can add it back if they remove the wrong one by mistake,
+    // but, if the question is missing, it can always be removed.
+    if ($DB->record_exists('question', array('id' => $questionid))) {
+        quiz_require_question_use($questionid);
+    }
+    quiz_remove_question($quiz, $questionid);
+    quiz_delete_previews($quiz);
+    quiz_update_sumgrades($quiz);
+}
