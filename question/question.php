@@ -258,7 +258,8 @@ if ($mform->is_cancelled()) {
         // A wizardpage from multipe pages questiontype like calculated may not
         // allow editing the question tags, hence the isset($fromform->tags) test.
         require_once($CFG->dirroot.'/tag/lib.php');
-        tag_set('question', $question->id, $fromform->tags);
+        (empty($module)) ? $component = 'core' : $component = $module;
+        tag_set('question', $question->id, $fromform->tags, $component, $thiscontext->id);
     }
 
     // Purge this question from the cache.
