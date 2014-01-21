@@ -1326,3 +1326,24 @@ bank window's title is prominent enough*/
     margin-right: 1em;
 }
 .path-mod-quiz li.activity > div {position:relative;}
+
+#page-mod-quiz-edit .add-menu {
+    float: left;
+    text-align: right;
+}
+/** Edit Quiz **/
+.path-mod-quiz ul.slots li.section {border: 0;}
+.path-mod-quiz ul.slots li.section .content {background-color:#FAFAFA;padding:5px 10px;}
+.path-mod-quiz ul.slots li.section .content h3 {margin:0;color:#777;font-weight: normal;}
+.path-mod-quiz ul.slots li.section .left {padding:4px 0;}
+.path-mod-quiz ul.slots li.section .right {padding:4px 0;}
+
+.path-mod-quiz ul.slots {margin:0;}
+.path-mod-quiz ul.slots li.section {list-style: none;margin:0 0 5px 0;padding:0;}
+.path-mod-quiz ul.slots li.section .content {margin:0 40px;}
+.path-mod-quiz ul.slots li.section .left {float:left;}
+.path-mod-quiz ul.slots li.section .right {float:right;}
+.path-mod-quiz ul.slots li.section .left,
+.path-mod-quiz ul.slots li.section .right {width:40px;text-align:center;padding: 6px 0;}
+.path-mod-quiz ul.slots li.section .right img.icon { padding: 0 0 4px 0;}
+.path-mod-quiz ul.slots li.section .left .section-handle img.icon { padding:0; vertical-align: baseline; }

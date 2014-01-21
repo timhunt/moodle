@@ -89,8 +89,8 @@ class structure {
         $uniqueid = 1;
         // Rows are in the format array(id, quizid, firstslot, heading, shuffle)
         $data[] = array($uniqueid++, $quiz->id, 1, 'Section 1', true);
-        $data[] = array($uniqueid++, $quiz->id, 3, 'Section 2', false);
-        $data[] = array($uniqueid++, $quiz->id, 5, 'Section 3', true);
+//         $data[] = array($uniqueid++, $quiz->id, 3, 'Section 2', false);
+//         $data[] = array($uniqueid++, $quiz->id, 5, 'Section 3', true);
         $records = array();
 
         // Temp: create number of sections.

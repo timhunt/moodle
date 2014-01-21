@@ -1361,20 +1361,10 @@ class mod_quiz_renderer extends plugin_renderer_base {
             // Module can put text after the link (e.g. forum unread)
 //             $output .= $question->get_after_link();
 
+            $output .= quiz_question_preview_button($quiz, $question);
+
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
             $output .= html_writer::end_tag('div'); // .activityinstance
-        }
-
-        // If there is content but NO link (eg label), then display the
-        // content here (BEFORE any icons). In this case cons must be
-        // displayed after the content so that it makes more sense visually
-        // and for accessibility reasons, e.g. if you have a one-line label
-        // it should work similarly (at least in terms of ordering) to an
-        // activity.
-        $contentpart = $this->quiz_section_question_text($quiz, $question, $displayoptions);
-        $url = mod_quiz_renderer::quiz_question_get_url($quiz, $question);
-        if (empty($url)) {
-            $output .= $contentpart;
         }
 
         $questionicons = '';
@@ -1382,18 +1372,8 @@ class mod_quiz_renderer extends plugin_renderer_base {
             $editactions = quiz_get_question_edit_actions($quiz, $question, null, $sectionreturn);
             $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question, $displayoptions);
 //             $questionicons .= $question->get_after_edit_icons();
-        }
 
-//         $questionicons .= $this->course_section_question_completion($course, $completioninfo, $question, $displayoptions);
-
-        if (!empty($questionicons)) {
             $output .= html_writer::span($questionicons, 'actions');
-        }
-
-        // If there is content AND a link, then display the content here
-        // (AFTER any icons). Otherwise it was displayed before
-        if (!empty($url)) {
-            $output .= $contentpart;
         }
 
         // show availability info (if module is not available)
@@ -1494,42 +1474,6 @@ class mod_quiz_renderer extends plugin_renderer_base {
         $menu->prioritise = true;
 
         return $this->render($menu);
-    }
-
-    /**
-     * Renders html to display the question content on the quiz edit page (i.e. text of the labels)
-     *
-     * @param object $question
-     * @param array $displayoptions
-     * @return string
-     */
-    public function quiz_section_question_text($quiz, $question, $displayoptions = array()) {
-        $output = '';
-//         if (!$question->uservisible &&
-//                 (empty($question->showavailability) || empty($question->availableinfo))) {
-//             // nothing to be displayed to the user
-//             return $output;
-//         }
-        $content = format_text($question->questiontext, FORMAT_HTML);
-//         $content = $question->get_formatted_content(array('overflowdiv' => true, 'noclean' => true));
-        $accesstext = '';
-        $textclasses = '';
-//         if ($question->uservisible) {
-// //             $conditionalhidden = $this->is_question_conditionally_hidden($question);
-//             $accessiblebutdim = (!$question->visible) &&
-//                 has_capability('moodle/course:viewhiddenactivities',
-//                         context_course::instance($question->course));
-//             if ($accessiblebutdim) {
-//                 $textclasses .= ' dimmed_text';
-//                 // Show accessibility note only if user can access the module himself.
-//                 $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $question->modfullname);
-//             }
-//         } else {
-//             $textclasses .= ' dimmed_text';
-//         }
-
-        $output .= $content;
-        return $output;
     }
 
     static public function quiz_question_get_url($quiz, $question) {

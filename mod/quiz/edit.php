@@ -117,10 +117,7 @@ $scrollpos = optional_param('scrollpos', '', PARAM_INT);
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
         question_edit_setup('editq', '/mod/quiz/edit.php', true);
 $quiz->questions = quiz_clean_layout($quiz->questions);
-// \mod_quiz\structure::populate_structure($quiz);
-\mod_quiz\structure::update_quiz_structure_from_questions($quiz);
 \mod_quiz\structure::populate_structure($quiz);
-// \mod_quiz\structure::update_quiz_structure_from_questions($quiz);
 
 $defaultcategoryobj = question_make_default_categories($contexts->all());
 $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
@@ -525,11 +522,5 @@ quiz_edit_include_ajax($course, $quiz, $qtypenamesused);
 
 // Include course format js module
 $PAGE->requires->js('/mod/quiz/yui/edit.js');
-
-echo '</div>';
-
-// Close <div class="quizcontents">.
-echo '</div>';
-
 
 echo $OUTPUT->footer();

@@ -60,7 +60,7 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
      * @return string HTML to output.
      */
     protected function start_section_list() {
-        return html_writer::start_tag('ul', array('class' => 'weeks'));
+        return html_writer::start_tag('ul', array('class' => 'slots'));
     }
 
     /**
@@ -155,31 +155,6 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
         $rightcontent = $this->section_right_content($section, $course, $onsectionpage);
         $o.= html_writer::tag('div', $rightcontent, array('class' => 'right side'));
         $o.= html_writer::start_tag('div', array('class' => 'content'));
-
-        // When not on a section page, we display the section titles except the general section if null
-//         $hasnamenotsecpg = (!$onsectionpage && ($section->section != 0 || !is_null($section->heading)));
-
-        // When on a section page, we only display the general section title, if title is not the default one
-//         $hasnamesecpg = ($onsectionpage && ($section->section == 0 && !is_null($section->name)));
-
-        $classes = ' accesshide';
-//         if ($hasnamenotsecpg || $hasnamesecpg) {
-//             $classes = '';
-//         }
-        $o.= $this->output->heading($this->section_heading($section, $course), 3, 'sectionname' . $classes);
-
-        $o.= html_writer::start_tag('div', array('class' => 'summary'));
-        $o.= $this->format_summary_text($section);
-
-        $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
-        if ($PAGE->user_is_editing() && $hasmanagequiz) {
-            $url = new moodle_url('/course/editsection.php', array('id'=>$section->id, 'sr'=>$sectionreturn));
-            $o.= html_writer::link($url,
-                html_writer::empty_tag('img', array('src' => $this->output->pix_url('t/edit'),
-                    'class' => 'iconsmall edit', 'alt' => get_string('edit'))),
-                array('title' => get_string('editsummary')));
-        }
-        $o.= html_writer::end_tag('div');
 
         return $o;
     }
@@ -363,6 +338,31 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
         echo $completioninfo->display_help_icon();
         echo $this->output->heading($this->page_title(), 2, 'accesshide');
 
+        echo $this->heading(get_string('editingquizx', 'quiz', format_string($quiz->name)), 2);
+        echo $this->help_icon('editingquiz', 'quiz', get_string('basicideasofquiz', 'quiz'));
+        // Show status bar.
+        quiz_print_status_bar($quiz);
+
+        $tabindex = 0;
+        quiz_print_grading_form($quiz, $PAGE->url, $tabindex);
+
+        $notifystrings = array();
+        if (quiz_has_attempts($quiz->id)) {
+            $reviewlink = quiz_attempt_summary_link_to_reports($quiz, $cm, $context);
+            $notifystrings[] = get_string('cannoteditafterattempts', 'quiz', $reviewlink);
+        }
+
+        if ($quiz->shufflequestions) {
+            $updateurl = new moodle_url("$CFG->wwwroot/course/mod.php",
+                    array('return' => 'true', 'update' => $quiz->cmid, 'sesskey' => sesskey()));
+            $updatelink = '<a href="'.$updateurl->out().'">' . get_string('updatethis', '',
+                    get_string('modulename', 'quiz')) . '</a>';
+            $notifystrings[] = get_string('shufflequestionsselected', 'quiz', $updatelink);
+        }
+        if (!empty($notifystrings)) {
+            echo $this->box('<p>' . implode('</p><p>', $notifystrings) . '</p>', 'statusdisplay');
+        }
+
         $slots = \mod_quiz\structure::get_quiz_slots($quiz);
         $sections = \mod_quiz\structure::get_quiz_sections($quiz);
         //$sectiontoslotids = $quiz->sectiontoslotids;
@@ -430,36 +430,7 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
             echo $this->section_footer();
         }
 
-        if ($PAGE->user_is_editing() and has_capability('moodle/course:update', $context)) {
-
             echo $this->end_section_list();
-
-            echo html_writer::start_tag('div', array('id' => 'changenumsections', 'class' => 'mdl-right'));
-
-            // Increase number of sections.
-            $straddsection = get_string('increasesections', 'moodle');
-            $url = new moodle_url('/course/changenumsections.php',
-                array('courseid' => $course->id,
-                      'increase' => true,
-                      'sesskey' => sesskey()));
-            $icon = $this->output->pix_icon('t/switch_plus', $straddsection);
-            echo html_writer::link($url, $icon.get_accesshide($straddsection), array('class' => 'increase-sections'));
-
-            if ($course->numsections > 0) {
-                // Reduce number of sections sections.
-                $strremovesection = get_string('reducesections', 'moodle');
-                $url = new moodle_url('/course/changenumsections.php',
-                    array('courseid' => $course->id,
-                          'increase' => false,
-                          'sesskey' => sesskey()));
-                $icon = $this->output->pix_icon('t/switch_minus', $strremovesection);
-                echo html_writer::link($url, $icon.get_accesshide($strremovesection), array('class' => 'reduce-sections'));
-            }
-
-            echo html_writer::end_tag('div');
-        } else {
-            echo $this->end_section_list();
-        }
 
     }
 }
