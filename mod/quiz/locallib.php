@@ -1255,6 +1255,19 @@ function quiz_question_preview_button($quiz, $question, $label = false) {
 }
 
 /**
+ * @param object $quiz The quiz object of the quiz in question
+ * @param object $question the question
+ * @return the HTML for a marked out of question grade field.
+ */
+function quiz_question_marked_out_of_field($quiz, $question) {
+    $output = '';
+    $maxmark= html_writer::tag('span', (0 + $question->maxmark), array('class' => 'instancemaxmark'));
+    $output .= html_writer::tag('span', $maxmark, array('class' => '', 'onclick' => ''));
+    return $output;
+}
+
+
+/**
  * @param object $attempt the attempt.
  * @param object $context the quiz context.
  * @return int whether flags should be shown/editable to the current user for this attempt.

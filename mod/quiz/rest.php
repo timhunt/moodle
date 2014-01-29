@@ -45,8 +45,9 @@ $summary    = optional_param('summary', '', PARAM_RAW);
 $sequence   = optional_param('sequence', '', PARAM_SEQUENCE);
 $visible    = optional_param('visible', 0, PARAM_INT);
 $pageaction = optional_param('action', '', PARAM_ALPHA); // Used to simulate a DELETE command
-$title      = optional_param('title', '', PARAM_TEXT);
+$title      = optional_param('title', '', PARAM_FLOAT);
 
+global $Out;
 $PAGE->set_url('/mod/quiz/rest.php', array('courseId'=>$courseid,'quizId'=>$quizid,'class'=>$class));
 
 //NOTE: when making any changes here please make sure it is using the same access control as mod/quiz/edit.php !!
@@ -84,32 +85,36 @@ switch($requestmethod) {
 
             case 'resource':
                 switch ($field) {
-                    case 'gettitle':
+                    case 'move':
                         require_capability('mod/quiz:manage', $PAGE->cm->context);
-                        $question = $DB->get_record('question', array('id' => $id), '*', MUST_EXIST);
+                        if (!$slot = $DB->get_record('quiz_slots', array('quizid'=>$quiz->id, 'id'=>$id))) {
+                            throw new moodle_exception('AJAX commands.php: Bad slot ID '.$id);
+                        }
+                        \mod_quiz\structure::move_slot($quiz, $id, $beforeid);
+                        $isvisible = true;
+
+                        // Just something to tell the browser everything is ok.
+                        echo json_encode(array('visible' => (bool) $isvisible));
+                        break;
+                    case 'getmaxmark':
+                        require_capability('mod/quiz:manage', $PAGE->cm->context);
+                        $slot = $DB->get_record('quiz_slots', array('id' => $id), '*', MUST_EXIST);
 
                         // Don't pass edit strings through multilang filters - we need the entire string
-                        echo json_encode(array('instancename' => $question->name));
+                        echo json_encode(array('instancemaxmark' => (0+$slot->maxmark)));
                         break;
-                    case 'updatetitle':
+                    case 'updatemaxmark':
                         require_capability('mod/quiz:manage', $PAGE->cm->context);
-                        $question = $DB->get_record('question', array('id' => $id), '*', MUST_EXIST);
+                        $slot = $DB->get_record('quiz_slots', array('id' => $id), '*', MUST_EXIST);
 
                         // Escape strings as they would be by mform
-                        if (!empty($CFG->formatstringstriptags)) {
-                            $question->name = clean_param($title, PARAM_TEXT);
-                        } else {
-                            $question->name = clean_param($title, PARAM_CLEANHTML);
-                        }
+                        $slot->maxmark = clean_param($title, PARAM_FLOAT);
 
-                        if (!empty($question->name)) {
-                            $DB->update_record('question', $question);
-                        }
+//                         if (!empty($slot->maxmark)) {
+                            $DB->update_record('quiz_slots', $slot);
+//                         }
 
-                        // We need to return strings after they've been through filters for multilang
-                        $stringoptions = new stdClass;
-                        $stringoptions->context = $coursecontext;
-                        echo json_encode(array('instancename' => html_entity_decode(format_string($question->name, true,  $stringoptions))));
+                        echo json_encode(array('instancemaxmark' => $slot->maxmark));
                         break;
                 }
                 break;

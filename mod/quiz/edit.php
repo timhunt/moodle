@@ -116,7 +116,7 @@ $scrollpos = optional_param('scrollpos', '', PARAM_INT);
 
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
         question_edit_setup('editq', '/mod/quiz/edit.php', true);
-$quiz->questions = quiz_clean_layout($quiz->questions);
+// $quiz->questions = quiz_clean_layout($quiz->questions);
 \mod_quiz\structure::populate_structure($quiz);
 
 $defaultcategoryobj = question_make_default_categories($contexts->all());
@@ -135,6 +135,9 @@ if (!$course) {
     print_error('invalidcourseid', 'error');
 }
 
+// TODO: Following code related to questionbank needs to be removed from this file
+// since it has been moved to /question/questionbank.php and js related functionality
+// will be done in /question/yui/src/questionbank/js/questionbank.js
 $questionbank = new quiz_question_bank_view($contexts, $thispageurl, $course, $cm, $quiz);
 $questionbank->set_quiz_has_attempts($quizhasattempts);
 
@@ -422,17 +425,7 @@ $questionbank->process_actions($thispageurl, $cm);
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_pagetype('mod-quiz-edit');
 
-// Preload course format renderer before output starts.
-// This is a little hacky but necessary since
-// format.php is not included until after output starts
-require_once($CFG->dirroot.'/mod/quiz/editrenderer.php');
-if (class_exists('mod_quiz_edit_section_renderer')) {
-    // call get_renderer only if renderer is defined in format plugin
-    // otherwise an exception would be thrown
-//     $PAGE->get_renderer('quiz_edit_section');
-
-    $output = $PAGE->get_renderer('mod_quiz', 'edit_section');
-}
+$output = $PAGE->get_renderer('mod_quiz', 'edit');
 
 $PAGE->requires->skip_link_to('questionbank',
         get_string('skipto', 'access', get_string('questionbank', 'question')));
@@ -474,7 +467,7 @@ $USER->editing = 1;
 // Prevent caching of this page to stop confusion when changing page after making AJAX changes
     $PAGE->set_cacheable(false);
 
-$ajaxenabled = ajaxenabled();
+$ajaxenabled = true; // TODO MDL-40987.
 
 $completion = new completion_info($course);
 if ($completion->is_enabled() && $ajaxenabled) {

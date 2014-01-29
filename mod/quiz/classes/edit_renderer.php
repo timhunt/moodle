@@ -15,32 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base renderer for outputting edit quiz form.
+ * Renderer outputting the quiz editing UI.
  *
- * @package quiz
- * @copyright 2013 Colin Chambers
+ * @package mod_quiz
+ * @copyright 2013 The Open University.
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @since Moodle 2.6
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * This is a convenience renderer which can be used by section based formats
- * to reduce code duplication. It is not necessary for all course formats to
- * use this and its likely to change in future releases.
+ * Renderer outputting the quiz editing UI.
  *
- * @package core
- * @copyright 2012 Dan Poltawski
+ * @copyright 2013 The Open University.
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @since Moodle 2.3
+ * @since Moodle 2.7
  */
-class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
-/** @var contains instance of core course renderer */
+class mod_quiz_edit_renderer extends plugin_renderer_base {
+    /** @var contains instance of core course renderer. */
     protected $quizeditrenderer;
 
-/** @var contains instance of core course renderer */
+    /** @var contains instance of core course renderer. */
     protected $courserenderer;
 
     /**
@@ -299,18 +295,17 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
     protected function get_questions($quiz){
         global $DB;
         $questions = array();
-        if (!$quiz->questions) {
+        if (!$quiz->questionids) {
             return $questions;
         }
 
-        list($usql, $params) = $DB->get_in_or_equal(explode(',', $quiz->questions));
+        list($usql, $params) = $DB->get_in_or_equal($quiz->questionids);
         $params[] = $quiz->id;
         $questions = $DB->get_records_sql("SELECT q.*, qc.contextid, qqi.maxmark
                               FROM {question} q
                               JOIN {question_categories} qc ON qc.id = q.category
-                              JOIN {quiz_question_instances} qqi ON qqi.questionid = q.id
+                              JOIN {quiz_slots} qqi ON qqi.questionid = q.id
                              WHERE q.id $usql AND qqi.quizid = ?", $params);
-
         return $questions;
     }
 
@@ -365,7 +360,6 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
 
         $slots = \mod_quiz\structure::get_quiz_slots($quiz);
         $sections = \mod_quiz\structure::get_quiz_sections($quiz);
-        //$sectiontoslotids = $quiz->sectiontoslotids;
 
         // Get questions
         $questions = $this->get_questions($quiz);
@@ -394,6 +388,11 @@ class mod_quiz_edit_section_renderer extends mod_quiz_renderer {
             } else if ($questionid && !question_bank::qtype_exists($questions[$questionid]->qtype)) {
                 $questions[$questionid]->qtype = 'missingtype';
             }
+        }
+
+        // Display the add icon menu.
+        if (!$quiz->fullquestions) {
+            echo html_writer::tag('span', $this->quiz_add_menu_actions($quiz, ''));
         }
 
         // Get quiz question order

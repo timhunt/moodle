@@ -14,7 +14,7 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
         DIMCLASS : 'dimmed',
         DIMMEDTEXT : 'dimmed_text',
         EDITINSTRUCTIONS : 'editinstructions',
-        EDITINGTITLE: 'editor_displayed',
+        EDITINGMAXMARK: 'editor_displayed',
         HIDE : 'hide',
         MODINDENTCOUNT : 'mod-indent-',
         MODINDENTHUGE : 'mod-indent-huge',
@@ -28,20 +28,21 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
     SELECTOR = {
         ACTIONAREA: '.actions',
         ACTIONLINKTEXT : '.actionlinktext',
-        ACTIVITYACTION : 'a.cm-edit-action[data-action], a.editing_title',
+        ACTIVITYACTION : 'a.cm-edit-action[data-action], a.editing_maxmark',
         ACTIVITYFORM : '.' + CSS.ACTIVITYINSTANCE + ' form',
         ACTIVITYICON : 'img.activityicon',
         ACTIVITYINSTANCE : '.' + CSS.ACTIVITYINSTANCE,
         ACTIVITYLINK: '.' + CSS.ACTIVITYINSTANCE + ' > a',
         ACTIVITYLI : 'li.activity',
-        ACTIVITYTITLE : 'input[name=title]',
+        ACTIVITYTITLE : 'input[name=maxmark]',
         COMMANDSPAN : '.commands',
         CONTENTAFTERLINK : 'div.contentafterlink',
         CONTENTWITHOUTLINK : 'div.contentwithoutlink',
-        EDITTITLE: 'a.editing_title',
+        EDITMAXMARK: 'a.editing_maxmark',
         HIDE : 'a.editing_hide',
         HIGHLIGHT : 'a.editing_highlight',
         INSTANCENAME : 'span.instancename',
+        INSTANCEMAXMARK : 'span.instancemaxmark',
         MODINDENTDIV : '.mod-indent',
         MODINDENTOUTER : '.mod-indent-outer',
         PAGECONTENT : 'div#page-content',
@@ -204,13 +205,13 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
         GROUPS_VISIBLE  : 2,
 
         /**
-         * Events that were added when editing a title.
+         * Events that were added when editing a maxmark.
          * These should all be detached when editing is complete.
-         * @property edittitleevents
+         * @property editmaxmarkevents
          * @type {Event[]}
          * @protected
          */
-        edittitleevents : [],
+        editmaxmarkevents : [],
 
         /**
          * Initialize the resource toolbox
@@ -262,9 +263,9 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
 
             // Switch based upon the action and do the desired thing.
             switch (action) {
-                case 'edittitle' :
-                    // The user wishes to edit the title of the event.
-                    this.edit_title(ev, node, activity, action);
+                case 'editmaxmark' :
+                    // The user wishes to edit the maxmark of the event.
+                    this.edit_maxmark(ev, node, activity, action);
                     break;
                 case 'moveleft' :
                 case 'moveright' :
@@ -410,29 +411,29 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
         },
 
         /**
-         * Edit the title for the resource
+         * Edit the maxmark for the resource
          *
          * @protected
-         * @method edit_title
+         * @method edit_maxmark
          * @param {EventFacade} ev The event that was fired.
          * @param {Node} button The button that triggered this action.
          * @param {Node} activity The activity node that this action will be performed on.
          * @param {String} action The action that has been requested.
          * @return Boolean
          */
-        edit_title : function(ev, button, activity) {
+        edit_maxmark : function(ev, button, activity) {
             // Get the element we're working on
             var activityid = Y.Moodle.core_course.util.cm.getId(activity),
-                instancename  = activity.one(SELECTOR.INSTANCENAME),
+                instancemaxmark  = activity.one(SELECTOR.INSTANCEMAXMARK),
                 instance = activity.one(SELECTOR.ACTIVITYINSTANCE),
-                currenttitle = instancename.get('firstChild'),
-                oldtitle = currenttitle.get('data'),
-                titletext = oldtitle,
+                currentmaxmark = instancemaxmark.get('firstChild'),
+                oldmaxmark = currentmaxmark.get('data'),
+                maxmarktext = oldmaxmark,
                 thisevent,
-                anchor = instancename.ancestor('a'),// Grab the anchor so that we can swap it with the edit form.
+                anchor = instancemaxmark.ancestor('span'),// Grab the anchor so that we can swap it with the edit form.
                 data = {
                     'class'   : 'resource',
-                    'field'   : 'gettitle',
+                    'field'   : 'getmaxmark',
                     'id'      : activityid
                 };
 
@@ -445,8 +446,8 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
                 }
 
                 // Try to retrieve the existing string from the server
-                if (response.instancename) {
-                    titletext = response.instancename;
+                if (response.instancemaxmark) {
+                    maxmarktext = response.instancemaxmark;
                 }
 
                 // Create the editor and submit button
@@ -454,14 +455,13 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
                 var editinstructions = Y.Node.create('<span class="'+CSS.EDITINSTRUCTIONS+'" id="id_editinstructions" />')
                     .set('innerHTML', M.util.get_string('edittitleinstructions', 'moodle'));
                 var editor = Y.Node.create('<input name="title" type="text" class="'+CSS.TITLEEDITOR+'" />').setAttrs({
-                    'value' : titletext,
+                    'value' : maxmarktext,
                     'autocomplete' : 'off',
                     'aria-describedby' : 'id_editinstructions',
-                    'maxLength' : '255'
+                    'maxLength' : '4'
                 });
 
                 // Clear the existing content and put the editor in
-                editform.appendChild(activity.one(SELECTOR.ACTIVITYICON).cloneNode());
                 editform.appendChild(editor);
                 editform.setData('anchor', anchor);
                 instance.insert(editinstructions, 'before');
@@ -474,81 +474,81 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
                 }
 
                 // We hide various components whilst editing:
-                activity.addClass(CSS.EDITINGTITLE);
+                activity.addClass(CSS.EDITINGMAXMARK);
 
                 // Focus and select the editor text
                 editor.focus().select();
 
                 // Cancel the edit if we lose focus or the escape key is pressed.
-                thisevent = editor.on('blur', this.edit_title_cancel, this, activity, false);
-                this.edittitleevents.push(thisevent);
-                thisevent = editor.on('key', this.edit_title_cancel, 'esc', this, activity, true);
-                this.edittitleevents.push(thisevent);
+                thisevent = editor.on('blur', this.edit_maxmark_cancel, this, activity, false);
+                this.editmaxmarkevents.push(thisevent);
+                thisevent = editor.on('key', this.edit_maxmark_cancel, 'esc', this, activity, true);
+                this.editmaxmarkevents.push(thisevent);
 
                 // Handle form submission.
-                thisevent = editform.on('submit', this.edit_title_submit, this, activity, oldtitle);
-                this.edittitleevents.push(thisevent);
+                thisevent = editform.on('submit', this.edit_maxmark_submit, this, activity, oldmaxmark);
+                this.editmaxmarkevents.push(thisevent);
             });
         },
 
         /**
-         * Handles the submit event when editing the activity or resources title.
+         * Handles the submit event when editing the activity or resources maxmark.
          *
          * @protected
-         * @method edit_title_submit
+         * @method edit_maxmark_submit
          * @param {EventFacade} ev The event that triggered this.
-         * @param {Node} activity The activity whose title we are altering.
-         * @param {String} originaltitle The original title the activity or resource had.
+         * @param {Node} activity The activity whose maxmark we are altering.
+         * @param {String} originalmaxmark The original maxmark the activity or resource had.
          */
-        edit_title_submit : function(ev, activity, originaltitle) {
+        edit_maxmark_submit : function(ev, activity, originalmaxmark) {
             // We don't actually want to submit anything
             ev.preventDefault();
 
-            var newtitle = Y.Lang.trim(activity.one(SELECTOR.ACTIVITYFORM + ' ' + SELECTOR.ACTIVITYTITLE).get('value'));
-            this.edit_title_clear(activity);
+            var newmaxmark = Y.Lang.trim(activity.one(SELECTOR.ACTIVITYFORM + ' ' + SELECTOR.ACTIVITYTITLE).get('value'));
+            this.edit_maxmark_clear(activity);
             var spinner = this.add_spinner(activity);
-            if (newtitle != null && newtitle != "" && newtitle != originaltitle) {
+            if (newmaxmark != null && newmaxmark != "" && newmaxmark != originalmaxmark) {
                 var data = {
                     'class'   : 'resource',
-                    'field'   : 'updatetitle',
-                    'title'   : newtitle,
+                    'field'   : 'updatemaxmark',
+                    'title'   : newmaxmark,
                     'id'      : Y.Moodle.core_course.util.cm.getId(activity)
                 };
                 this.send_request(data, spinner, function(response) {
-                    if (response.instancename) {
-                        activity.one(SELECTOR.INSTANCENAME).setContent(response.instancename);
+                    if (response.instancemaxmark) {
+                        activity.one(SELECTOR.INSTANCEMAXMARK).setContent(response.instancemaxmark);
                     }
                 });
             }
         },
 
         /**
-         * Handles the cancel event when editing the activity or resources title.
+         * Handles the cancel event when editing the activity or resources maxmark.
          *
          * @protected
-         * @method edit_title_cancel
+         * @method edit_maxmark_cancel
          * @param {EventFacade} ev The event that triggered this.
-         * @param {Node} activity The activity whose title we are altering.
+         * @param {Node} activity The activity whose maxmark we are altering.
          * @param {Boolean} preventdefault If true we should prevent the default action from occuring.
          */
-        edit_title_cancel : function(ev, activity, preventdefault) {
+        edit_maxmark_cancel : function(ev, activity, preventdefault) {
             if (preventdefault) {
                 ev.preventDefault();
             }
-            this.edit_title_clear(activity);
+            this.edit_maxmark_clear(activity);
         },
 
         /**
          * Handles clearing the editing UI and returning things to the original state they were in.
          *
          * @protected
-         * @method edit_title_clear
-         * @param {Node} activity  The activity whose title we were altering.
+         * @method edit_maxmark_clear
+         * @param {Node} activity  The activity whose maxmark we were altering.
          */
-        edit_title_clear : function(activity) {
+        edit_maxmark_clear : function(activity) {
             // Detach all listen events to prevent duplicate triggers
             var thisevent;
-            while (thisevent = this.edittitleevents.shift()) {
+            while (thisevent = this.editmaxmarkevents.shift()) {
                 thisevent.detach();
             }
             var editform = activity.one(SELECTOR.ACTIVITYFORM),
@@ -561,11 +561,11 @@ YUI.add('moodle-mod_quiz-toolboxes', function(Y) {
             }
 
             // Remove the editing class again to revert the display.
-            activity.removeClass(CSS.EDITINGTITLE);
+            activity.removeClass(CSS.EDITINGMAXMARK);
 
             // Refocus the link which was clicked originally so the user can continue using keyboard nav.
             Y.later(100, this, function() {
-                activity.one(SELECTOR.EDITTITLE).focus();
+                activity.one(SELECTOR.EDITMAXMARK).focus();
             });
         },
     }, {

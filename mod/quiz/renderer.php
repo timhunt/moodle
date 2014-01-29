@@ -23,6 +23,8 @@
  */
 
 
+use calendartype_gregorian\structure;
+
 defined('MOODLE_INTERNAL') || die();
 
 
@@ -1210,7 +1212,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
         }
 
         //Accessibility: for files get description via icon, this is very ugly hack!
-        $instancename = format_string($question->name);
+        $instancename = quiz_question_tostring($question);
         $altname = $question->name;
         // Avoid unnecessary duplication: if e.g. a forum name already
         // includes the word forum (or Forum, etc) then it is unhelpful
@@ -1334,11 +1336,21 @@ class mod_quiz_renderer extends plugin_renderer_base {
 
         $output .= html_writer::start_tag('div');
 
+        // Print slot number.
+        // TODO: We have to write a function to deal with description questions.
+        // Currently there is a functionality that translates the slotnumber of a
+        // description question to 'i' for information. That could be confusing when
+        // you have lots of description questions, in particular if you have consecative
+        // description question types. We can either have the slot number prefixes the 'i'
+        // or use 'i' followed by a number (when morethan one) which can be incremented.
+        $slotnumber = $this->get_question_info($quiz, $question->id, 'slot');
+
         if ($this->page->user_is_editing()) {
             $output .= quiz_get_question_move($question, $sectionreturn);
         }
 
         $output .= html_writer::start_tag('div', array('class' => 'mod-indent-outer'));
+        $output .= html_writer::tag('span', $slotnumber, array('class' => 'slotnumber'));
 
         // This div is used to indent the content.
         $output .= html_writer::div('', $indentclasses);
@@ -1354,14 +1366,18 @@ class mod_quiz_renderer extends plugin_renderer_base {
             $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
             $output .= $cmname;
 
-            if ($this->page->user_is_editing()) {
-                $output .= ' ' . quiz_get_question_rename_action($question, $sectionreturn);
-            }
+
 
             // Module can put text after the link (e.g. forum unread)
 //             $output .= $question->get_after_link();
 
             $output .= quiz_question_preview_button($quiz, $question);
+
+            $output .= quiz_question_marked_out_of_field($quiz, $question);
+
+            if ($this->page->user_is_editing()) {
+                $output .= ' ' . quiz_get_question_regrade_action($question, $sectionreturn);
+            }
 
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
             $output .= html_writer::end_tag('div'); // .activityinstance
@@ -1371,6 +1387,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
         if ($this->page->user_is_editing()) {
             $editactions = quiz_get_question_edit_actions($quiz, $question, null, $sectionreturn);
             $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question, $displayoptions);
+            $questionicons .= ' '. $this->quiz_add_menu_actions($quiz, $question);
 //             $questionicons .= $question->get_after_edit_icons();
 
             $output .= html_writer::span($questionicons, 'actions');
@@ -1387,6 +1404,31 @@ class mod_quiz_renderer extends plugin_renderer_base {
         $output .= html_writer::end_tag('div');
 
         return $output;
+    }
+
+    public function quiz_add_menu_actions($quiz, $question) {
+        global $CFG;
+
+        $actions = quiz_get_edit_menu_actions($quiz, $question);
+        if (empty($actions)) {
+            return '';
+        }
+        $menu = new action_menu();
+        $menu->set_alignment(action_menu::BR, action_menu::BR);
+        $menu->set_menu_trigger(html_writer::tag('span', 'add', array('class' => 'add-menu')));// TODO: To be replace by an icon
+
+        foreach ($actions as $action) {
+            if ($action instanceof action_menu_link) {
+                $action->add_class('add-menu');
+            }
+            $menu->add($action);
+        }
+        $menu->attributes['class'] .= ' section-cm-edit-actions commands';
+
+        // Prioritise the menu ahead of all other actions.
+        $menu->prioritise = true;
+
+        return $this->render($menu);
     }
 
     /**
@@ -1501,9 +1543,19 @@ class mod_quiz_renderer extends plugin_renderer_base {
      */
     public function quiz_section_question_list_item($quiz, $course, &$completioninfo, $question, $sectionreturn, $displayoptions = array()) {
         $output = '';
+        $slotid = $this->get_question_info($quiz, $question->id, 'slotid');
+        $slotnumber = $this->get_question_info($quiz, $question->id, 'slot');
+        $pagenumber = $this->get_question_info($quiz, $question->id, 'page');
+        $page = $pagenumber ? get_string('page') . ' ' . $pagenumber : null;
+        $Pagenumbercss = ''; // TODO: to add appropriate CSS here
+        $prevpage = $this->get_previous_page($quiz, $slotnumber -1);
+        if ($prevpage != $pagenumber) {
+            $output .= html_writer::tag('div', $page,  array('class' => $Pagenumbercss));
+        }
+
         if ($questiontypehtml = $this->quiz_section_question($quiz, $course, $completioninfo, $question, $sectionreturn, $displayoptions)) {
-            $questionclasses = 'activity ' . $question->qtype . ' qtype_' . $question->qtype;
-            $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $question->id));
+            $questionclasses = 'activity ' . $question->qtype . 'qtype_' . $question->qtype;
+            $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $slotid));
         }
         return $output;
     }
@@ -1542,7 +1594,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
 
         // Get the list of question types visible to user (excluding the question type being moved if there is one)
         $questionshtml = array();
-        $sections = explode(',', $quiz->questions);
+        //$sections = explode(',', $quiz->questions);
         $slots = \mod_quiz\structure::get_quiz_slots($quiz);
         $sectiontoslotids = $quiz->sectiontoslotids;
         if (!empty($sectiontoslotids[$section->id])) {
@@ -1573,16 +1625,15 @@ class mod_quiz_renderer extends plugin_renderer_base {
         if (!empty($questionshtml) || $ismoving) {
             foreach ($questionshtml as $questionnumber => $questiontypehtml) {
                 if ($ismoving) {
-                    $movingurl = new moodle_url('/course/mod.php', array('moveto' => $questionnumber, 'sesskey' => sesskey()));
+                    $movingurl = new moodle_url('/quiz/edit.php', array('moveto' => $questionnumber, 'sesskey' => sesskey()));
                     $sectionoutput .= html_writer::tag('li', html_writer::link($movingurl, $this->output->render($movingpix)),
                             array('class' => 'movehere', 'title' => $strmovefull));
                 }
-
                 $sectionoutput .= $questiontypehtml;
             }
 
             if ($ismoving) {
-                $movingurl = new moodle_url('/course/mod.php', array('movetosection' => $section->id, 'sesskey' => sesskey()));
+                $movingurl = new moodle_url('/quiz/edit.php', array('movetosection' => $section->id, 'sesskey' => sesskey()));
                 $sectionoutput .= html_writer::tag('li', html_writer::link($movingurl, $this->output->render($movingpix)),
                         array('class' => 'movehere', 'title' => $strmovefull));
             }
@@ -1886,8 +1937,83 @@ class mod_quiz_renderer extends plugin_renderer_base {
         $module->help = '';
         return $this->course_modchooser_module($module, array('moduletypetitle'));
     }
-}
 
+    /**
+     *
+     * @param object $quiz
+     * @param int $questionid
+     * @return array, a list (sectionid, page-number, slot-number, maxmark)
+     */
+    protected function get_section($quiz, $sectionid) {
+        if (!$sectionid) {
+            // Possible, printout a notification or an error, but that should not happen.
+            return null;
+        }
+        $sections = \mod_quiz\structure::get_quiz_sections($quiz);
+        if (!$sections) {
+            return null;
+        }
+        Foreach ($sections as $key => $section) {
+            if ((int)$section->id === (int)$sectionid) {
+                return \mod_quiz\structure::get_quiz_section_heading($section);
+            }
+        }
+        return null;
+    }
+
+    /**
+     *
+     * @param object $quiz
+     * @param int $questionid
+     * @param string, 'all' for returning list (sectionid, page-number, slot-number, maxmark),
+     * 'section' for returning section heding, 'page' for returning page number,
+     * 'slot' for returning slot-number and 'mark' for returning maxmark.
+     * @return array, a list (sectionid, page-number, slot-number, maxmark), or the value for the given string
+     */
+    protected function get_question_info($quiz, $questionid, $info = 'all') {
+        if (!$quiz->slots) {
+            // Possible, printout a notification or an error, but that should not happen.
+            return null;
+        }
+        // TODO: If slots are organised with keys as questionids, I could get rid of the loop.
+        foreach ($quiz->slots as $slotid => $slot) {
+            if ((int)$slot->questionid === (int)$questionid) {
+                if ($info === 'all') {
+                    return array($slot->sectionid, $slot->page, $slot->id, $slot->maxmark);
+                }
+                if ($info === 'section') {
+                    return $this->get_section($quiz, $slot->sectionid);
+                }
+                if ($info === 'page') {
+                    return $slot->page;
+                }
+                if ($info === 'slot') {
+                    return $slot->slot;
+                }
+                if ($info === 'mark') {
+                    return $slot->maxmark;
+                }
+                if ($info === 'slotid') {
+                    return $slot->id;
+                }
+            }
+        }
+        return null;
+    }
+
+    protected function get_previous_page($quiz, $prevslotnumber) {
+        if ($prevslotnumber < 1) {
+            return 0;
+        }
+        foreach ($quiz->slots as $slotid => $slot) {
+            if ($slot->slot == $prevslotnumber) {
+                return $slot->page;
+            }
+        }
+        return 0;
+    }
+
+}
 class mod_quiz_links_to_other_attempts implements renderable {
     /**
      * @var array string attempt number => url, or null for the current attempt.

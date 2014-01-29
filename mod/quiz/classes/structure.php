@@ -70,7 +70,9 @@ class structure {
     }
 
     public static function populate_structure($quiz) {
-        self::update_quiz_structure_from_questions($quiz);
+        self::populate_quiz_slots($quiz);
+        self::populate_quiz_questionids($quiz);
+//         self::update_quiz_structure_from_questions($quiz);
         self::populate_quiz_sections($quiz);
         self::populate_slot_to_sectionids($quiz);
         self::populate_slots_with_sectionids($quiz);
@@ -121,6 +123,65 @@ class structure {
     }
 
     /**
+     * Populate quiz slots for the given quiz from the DB
+     * to be changed
+     * @param object $quiz
+     * @return array
+     */
+    public static function populate_quiz_slots($quiz, $sort='slot'){
+        global $DB;
+        $records = $DB->get_records('quiz_slots', array('quizid' => $quiz->id), $sort);
+        $quiz->slots = $records;
+        return $records;
+    }
+
+    /**
+     * Save quiz slots for the given quiz to the DB
+     * to be changed
+     * @param object $quiz
+     * @return array
+     */
+    public static function save_quiz_slot_order($quiz) {
+        global $DB;
+
+        $records = self::get_quiz_slots($quiz);
+
+        // Start a transaction because we are performing multiple related updates
+        $transaction = $DB->start_delegated_transaction();
+
+        $count = count($records);
+        // iterate through the slots.
+        foreach($records as $record){
+            // To avoid unique constraint on quizid and slot set matching slot to a number
+            // greater than existing slots for the quiz
+            $sql = 'UPDATE {quiz_slots} SET slot = '.($record->slot+$count).' WHERE quizid='.$quiz->id.' AND slot='.$record->slot;
+            $DB->execute($sql);
+
+            $DB->update_record('quiz_slots', $record, true);
+
+        }
+
+        // End transaction
+        $transaction->allow_commit();
+    }
+
+    /**
+     * Populate quiz questionids from slots array
+     * to be changed
+     * @param object $quiz
+     * @return void
+     */
+    public static function populate_quiz_questionids($quiz){
+        $slots = self::get_quiz_slots($quiz);
+        $questionids = array();
+        foreach ($slots as $slot) {
+            $questionids[] = $slot->questionid;
+        }
+
+        $quiz->questionids = $questionids;
+    }
+
+    /**
      * Populate quiz slots using the $quiz->questions string
      * to be changed
      * @param object $quiz
@@ -131,6 +192,7 @@ class structure {
         // Rows are in the format array(id, quizid, slot, page, questionid, maxmark)
         // Reflecting a $quiz->question string of '1,0,2,3,4,5,6,0,7,0,8,0,0'
         $questions = explode(',', $quiz->questions);
+
 
         $records = array();
         $currentpagenumber = 0;
@@ -159,6 +221,51 @@ class structure {
         }
 
         return $records;
+    }
+
+    /**
+     * Move a slot from its current location to a new location.
+     * Reorder the slot table accordingly.
+     * @param object $quiz
+     * @param int $id id of slot to be moved
+     * @param int $idbefore id of slot to come after slot being moved
+     * @return array
+     */
+    public static function move_slot($quiz, $id, $idbefore){
+
+        // Get the current slots for the current quiz ordered by slot
+        self::populate_quiz_slots($quiz, 'slot');
+        $records = self::get_quiz_slots($quiz);
+
+        $keyvalues = self::get_original_pagination(self::get_quiz_slots($quiz));
+
+        // iterate through the slots.
+        $slot = 1;
+        $slottomove = $records[$id];
+        foreach($records as $record){
+
+            if($record->id == $id){
+                continue;
+            }
+
+            if($record->id == $idbefore){
+                $slottomove->slot = $slot;
+                $slottomove->page = $keyvalues[$slottomove->slot];
+                $slot++;
+            }
+            $record->slot = $slot;
+
+            $record->page = $keyvalues[$record->slot];
+            $slot++;
+        }
+
+        if($idbefore == 0){
+            $slottomove->slot = $slot;
+            $slottomove->page = $keyvalues[$slottomove->slot];
+        }
+
+        // Update the db
+        self::save_quiz_slot_order($quiz);
     }
 
     public static function convert_slots_to_new_slot_objects($attemptobj, $oldslots) {
@@ -229,6 +336,22 @@ class structure {
         }
 
         $quiz->sectiontoslotids = $sectiontoslotids;
+    }
+
+    /**
+     * Return an array which refers to the original pagination
+     * where the slot number is the key and the page number is the value
+     * @param object $slots
+     */
+    public static function get_original_pagination($slots) {
+        if (!$slots) {
+            return;
+        }
+        $keyvalues = array();
+        foreach ($slots as $slotid => $slot) {
+            $keyvalues[$slot->slot] = $slot->page;
+        }
+        return $keyvalues;
     }
 
 }

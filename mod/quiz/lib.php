@@ -1793,13 +1793,13 @@ function quiz_get_navigation_options() {
 }
 
 /**
- * Returns the rename action.
+ * Returns the regrade action.
  *
  * @param $question The question to produce editing buttons for
  * @param int $sr The section to link back to (used for creating the links)
- * @return The markup for the rename action, or an empty string if not available.
+ * @return The markup for the regrade action, or an empty string if not available.
  */
-function quiz_get_question_rename_action($question, $sr = null) {
+function quiz_get_question_regrade_action($question, $sr = null) {
     global $PAGE, $COURSE, $OUTPUT;
 
     static $str;
@@ -1808,7 +1808,7 @@ function quiz_get_question_rename_action($question, $sr = null) {
     $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
 
     if (!isset($str)) {
-        $str = get_strings(array('edittitle'));
+        $str = get_strings(array('editmaxmark'), 'question');
     }
 
     if (!isset($baseurl)) {
@@ -1826,9 +1826,9 @@ function quiz_get_question_rename_action($question, $sr = null) {
                 new moodle_url($baseurl, array('update' => $question->id)),
                 $OUTPUT->pix_icon('t/editstring', '', 'moodle', array('class' => 'iconsmall visibleifjs', 'title' => '')),
                 array(
-                    'class' => 'editing_title',
-                    'data-action' => 'edittitle',
-                    'title' => $str->edittitle,
+                    'class' => 'editing_maxmark',
+                    'data-action' => 'editmaxmark',
+                    'title' => $str->editmaxmark,
                 )
             )
         );
@@ -1967,5 +1967,90 @@ function quiz_get_question_edit_actions($quiz, $question, $indent = -1, $sr = nu
         );
     }
 
+    return $actions;
+}
+
+/**
+ * Retuns the list of adding actions
+ * @param object $quiz, the quiz object
+ * @param objet $question, the question object
+ *
+ */
+function quiz_get_edit_menu_actions($quiz, $question) {
+    global $DB, $PAGE;
+
+    // No permission to edit anything.
+    if (!has_capability('mod/quiz:manage', $PAGE->cm->context)) {
+            return array();
+    }
+
+    if (!$quiz->fullquestions) {
+        $context = context_module::instance($quiz->cmid);
+        $questioncategoryid = $DB->get_field('question_categories', 'id', array('contextid' => $context->id));
+    } else {
+        $questioncategoryid = $question->category;
+    }
+
+    static $str;
+    if (!isset($str)) {
+        $str = get_strings(array('addasectionheading',
+                                 'addaquestion',
+                                'addarandomquestion',
+                                'addarandomselectedquestion',
+                                'questionbankcontents'), 'quiz');
+   }
+
+    $baseurl = '/mod/quiz/edit.php';
+
+    // Get section, page, slotnumber and maxmark.
+    //list($sectionid, $page, $slotnumber, $maxmark) = get_question_info($quiz, $question->id);
+    $actions = array();
+
+    // Add a section heading.
+    $params = array('cmid' => $quiz->cmid);
+    $actions['addasectionheading'] = new action_menu_link_secondary(
+        new moodle_url($baseurl, $params),
+        new pix_icon('t/add', $str->addasectionheading, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+        $str->addasectionheading, array('class' => 'editing_addasectionheading', 'data-action' => 'addasectionheading')
+    );
+
+    // Add a new question to the quiz.
+    $returnurl = '/mod/quiz/edit.php';
+    $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'courseid' => $quiz->course,
+                    'category' => $questioncategoryid, 'appendqnumstring' => 'addquestion');
+    $actions['addaquestion'] = new action_menu_link_secondary(
+        new moodle_url('/question/question.php', $params),
+        new pix_icon('t/add', $str->addaquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+        $str->addaquestion, array('class' => 'editing_addaquestion', 'data-action' => 'addaquestion')
+    );
+
+    // Add a random question.
+    $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
+    $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
+    $actions['addarandomquestion'] = new action_menu_link_secondary(
+        new moodle_url('/mod/quiz/addrandom.php', $params),
+        new pix_icon('t/add', $str->addarandomquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+        $str->addarandomquestion, array('class' => 'editing_addarandomquestion', 'data-action' => 'addarandomquestion')
+    );
+
+    // Add a random selected question.
+    // TODO: We have to refine the functionality when adding random selected questions.
+    $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
+    $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
+    $actions['addarandomselectedquestion'] = new action_menu_link_secondary(
+        new moodle_url('/mod/quiz/addrandom.php', $params),
+        new pix_icon('t/add', $str->addarandomselectedquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+        $str->addarandomselectedquestion, array('class' => 'editing_addarandomselectedquestion', 'data-action' => 'addarandomselectedquestion')
+    );
+
+    // Call question bank.
+    // TODO: we have to write the code for qbank to be displayed as popup.
+    $returnurl = '';///mod/quiz/edit.php';
+    $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
+    $actions['questionbankcontents'] = new action_menu_link_secondary(
+        new moodle_url('/question/questionbank.php', $params),
+        new pix_icon('t/edit', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+        $str->questionbankcontents, array('class' => 'editing_questionbankcontents', 'data-action' => 'questionbankcontents')
+    );
     return $actions;
 }

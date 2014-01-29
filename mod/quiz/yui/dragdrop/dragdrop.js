@@ -400,8 +400,8 @@ YUI.add('moodle-mod_quiz-dragdrop', function(Y) {
             params.id = Number(Y.Moodle.core_course.util.cm.getId(dragnode));
             params.sectionId = Y.Moodle.core_course.util.section.getId(dropnode.ancestor(M.mod_quiz.edit.get_section_wrapper(Y), true));
 
-            if (dragnode.next()) {
-                params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.next()));
+            if (dragnode.next('li')) {
+                params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.next('li')));
             }
 
             // Do AJAX request

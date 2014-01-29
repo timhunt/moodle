@@ -1330,7 +1330,28 @@ bank window's title is prominent enough*/
 #page-mod-quiz-edit .add-menu {
     float: left;
     text-align: right;
+    max-height: 7px;
 }
+#page-mod-quiz-edit .add-menu-left {
+    position:relative;
+    right:10em;
+}
+#page-mod-quiz-edit .tablerow {
+    display:table;
+}
+#page-mod-quiz-edit .secondcolumn {
+    text-align: left;
+    display: table-cell;
+    width: 93%%
+}
+#page-mod-quiz-edit .slotnumber{
+    background-color: #D3D3D3;
+    text-align: center;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    padding: 2px 5px 2px 5px;
+}
+
 /** Edit Quiz **/
 .path-mod-quiz ul.slots li.section {border: 0;}
 .path-mod-quiz ul.slots li.section .content {background-color:#FAFAFA;padding:5px 10px;}
@@ -1345,5 +1366,7 @@ bank window's title is prominent enough*/
 .path-mod-quiz ul.slots li.section .right {float:right;}
 .path-mod-quiz ul.slots li.section .left,
 .path-mod-quiz ul.slots li.section .right {width:40px;text-align:center;padding: 6px 0;}
-.path-mod-quiz ul.slots li.section .right img.icon { padding: 0 0 4px 0;}
-.path-mod-quiz ul.slots li.section .left .section-handle img.icon { padding:0; vertical-align: baseline; }
+.path-mod-quiz ul.slots li.section .right img.icon {padding: 0 0 4px 0;}
+.path-mod-quiz ul.slots li.section .left .section-handle img.icon {padding:0; vertical-align: baseline;}
+
+#page-mod-quiz-edit ul.slots li.activity div.activityinstance .questiontext {font-weight: bold; margin-left: 5px;}
