@@ -29,7 +29,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+<<<<<<< HEAD
 $version  = 2014032000.00;              // YYYYMMDD      = weekly release date of this DEV branch.
+=======
+$version  = 2014031400.01;              // YYYYMMDD      = weekly release date of this DEV branch.
+>>>>>>> MDL-44316 core: updated the 'tag_instance' table to store the component, contextid and timecreated
                                         //         RR    = release increments - 00 in DEV branches.
                                         //           .XX = incremental changes.
 
