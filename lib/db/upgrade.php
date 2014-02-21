@@ -3068,6 +3068,7 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2014021900.03);
     }
 
+<<<<<<< HEAD
     if ($oldversion < 2014022600.00) {
         $table = new xmldb_table('task_scheduled');
 
@@ -3175,12 +3176,74 @@ function xmldb_main_upgrade($oldversion) {
         $field = new xmldb_field('whichtries', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'hashcode');
 
         // Conditionally launch add field whichtries.
+=======
+    if ($oldversion < 2014022000.01) {
+        // Add new fields to the 'tag_instance' table.
+        $table = new xmldb_table('tag_instance');
+        $field = new xmldb_field('component', XMLDB_TYPE_CHAR, '100', null, false, null, null, 'tagid');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
+        $field = new xmldb_field('contextid', XMLDB_TYPE_INTEGER, '10', null, false, null, '0', 'itemid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'ordering');
+>>>>>>> MDL-44316 core: updated the 'tag_instance' table to store the component, contextid and timecreated
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+<<<<<<< HEAD
         // Main savepoint reached.
         upgrade_main_savepoint(true, 2014031400.04);
+=======
+        $sql = "UPDATE {tag_instance}
+                SET timecreated = timemodified";
+        $DB->execute($sql);
+
+        // Now we want to populate these tables with the values we have.
+        if ($taginstances = $DB->get_records('tag_instance')) {
+            // Loop through the tag instances
+            foreach ($taginstances as $taginstance) {
+                // Get the context.
+                switch ($taginstance->itemtype) {
+                    case 'course':
+                        $component = 'core';
+                        $context = context_course::instance($taginstance->itemid);
+                        break;
+                    case 'user':
+                        $component = 'core';
+                        $context = context_user::instance($taginstance->itemid);
+                        break;
+                    case 'post': // Blog posts.
+                        $component = 'core';
+                        $context = context_user::instance($USER->id);
+                        break;
+                    case 'wiki_pages':
+                        $wikipage = $DB->get_record('wiki_pages', array('id' => $taginstance->itemid));
+                        $subwiki = $DB->get_record('wiki_subwikis', array('id' => $wikipage->subwikiid));
+                        $cm = get_coursemodule_from_instance('wiki', $subwiki->wikiid);
+                        $component = 'mod_wiki';
+                        $context = context_module::instance($cm->id);
+                        break;
+                    default:
+                        $component = null;
+                        $context = null;
+                }
+
+                $taginstance->component = $component;
+                $taginstance->context = $context;
+
+                $DB->update_record('tag_instance', $taginstance);
+            }
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2014022000.01);
+>>>>>>> MDL-44316 core: updated the 'tag_instance' table to store the component, contextid and timecreated
     }
 
     return true;
