@@ -187,6 +187,7 @@ $string['configtimelimit'] = 'Default time limit for quizzes in minutes. 0 mean 
 $string['configtimelimitsec'] = 'Default time limit for quizzes in seconds. 0 mean no time limit.';
 $string['configurerandomquestion'] = 'Configure question';
 $string['confirmclose'] = 'Once you submit, you will no longer be able to change your answers for this attempt.';
+$string['confirmremovequestion'] = 'Are you sure you want to remove this {$a} question?';
 $string['confirmserverdelete'] = 'Are you sure you want to remove the server <b>{$a}</b> from the list?';
 $string['confirmstartattemptlimit'] = 'Number of attempts allowed:  {$a}. You are about to start a new attempt.  Do you wish to proceed?';
 $string['confirmstartattempttimelimit'] = 'This quiz has a time limit and is limited to {$a} attempt(s). You are about to start a new attempt.  Do you wish to proceed?';
@@ -263,6 +264,7 @@ $string['editingquiz_help'] = 'When creating a quiz, the main concepts are:
 * Random questions -  A student gets different questions each time they attempt the quiz and different students can get different questions';
 $string['editingquiz_link'] = 'mod/quiz/edit';
 $string['editingquizx'] = 'Editing quiz: {$a}';
+$string['editmaxmark'] = 'Edit marked out of';
 $string['editoverride'] = 'Edit override';
 $string['editqcats'] = 'Edit questions categories';
 $string['editquestions'] = 'Edit questions';

@@ -1,0 +1,12 @@
+{
+    "moodle-mod_quiz-toolboxes": {
+        "requires": [
+            "node",
+            "base",
+            "event-key",
+            "node",
+            "io",
+            "moodle-mod_quiz-quizbase"
+        ]
+    }
+}

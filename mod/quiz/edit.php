@@ -117,7 +117,7 @@ $scrollpos = optional_param('scrollpos', '', PARAM_INT);
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
         question_edit_setup('editq', '/mod/quiz/edit.php', true);
 // $quiz->questions = quiz_clean_layout($quiz->questions);
-\mod_quiz\structure::populate_structure($quiz);
+$structure = \mod_quiz\structure::create_for($quiz);
 
 $defaultcategoryobj = question_make_default_categories($contexts->all());
 $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
@@ -170,17 +170,6 @@ $afteractionurl = new moodle_url($thispageurl);
 if ($scrollpos) {
     $afteractionurl->param('scrollpos', $scrollpos);
 }
-if (($up = optional_param('up', false, PARAM_INT)) && confirm_sesskey()) {
-    quiz_move_question_up($quiz, $up);
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-if (($down = optional_param('down', false, PARAM_INT)) && confirm_sesskey()) {
-    quiz_move_question_down($quiz, $down);
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
 
 if (optional_param('repaginate', false, PARAM_BOOL) && confirm_sesskey()) {
     // Re-paginate the quiz.
@@ -224,58 +213,6 @@ if ((optional_param('addrandom', false, PARAM_BOOL)) && confirm_sesskey()) {
     $randomcount = required_param('randomcount', PARAM_INT);
     quiz_add_random_questions($quiz, $addonpage, $categoryid, $randomcount, $recurse);
 
-    quiz_delete_previews($quiz);
-    quiz_update_sumgrades($quiz);
-    redirect($afteractionurl);
-}
-
-if (optional_param('addnewpagesafterselected', null, PARAM_CLEAN) &&
-        !empty($selectedslots) && confirm_sesskey()) {
-    foreach ($selectedslots as $slot) {
-        quiz_add_page_break_after_slot($quiz, $slot);
-    }
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-$addpage = optional_param('addpage', false, PARAM_INT);
-if ($addpage !== false && confirm_sesskey()) {
-    quiz_add_page_break_after_slot($quiz, $addpage);
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-$deleteemptypage = optional_param('deleteemptypage', false, PARAM_INT);
-if (($deleteemptypage !== false) && confirm_sesskey()) {
-    quiz_delete_empty_page($quiz, $deleteemptypage);
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-$remove = optional_param('remove', false, PARAM_INT);
-if ($remove && confirm_sesskey() && quiz_has_question_use($quiz, $remove)) {
-    // Remove a question from the quiz.
-    // We require the user to have the 'use' capability on the question,
-    // so that then can add it back if they remove the wrong one by mistake,
-    // but, if the question is missing, it can always be removed.
-    quiz_remove_slot($quiz, $remove);
-    quiz_delete_previews($quiz);
-    quiz_update_sumgrades($quiz);
-//     if ($DB->record_exists('question', array('id' => $remove))) {
-//         quiz_require_question_use($remove);
-//     }
-    quiz_remove_question_from_quiz($quiz, $remove);
-    redirect($afteractionurl);
-}
-
-if (optional_param('quizdeleteselected', false, PARAM_BOOL) &&
-        !empty($selectedslots) && confirm_sesskey()) {
-    // Work backwards, since removing a question renumbers following slots.
-    foreach (array_reverse($selectedslots) as $slot) {
-        if (quiz_has_question_use($quiz, $slot)) {
-            quiz_remove_slot($quiz, $slot);
-        }
-    }
     quiz_delete_previews($quiz);
     quiz_update_sumgrades($quiz);
     redirect($afteractionurl);
@@ -495,16 +432,15 @@ if ($completion->is_enabled() && $ajaxenabled) {
 // Course wrapper start.
 echo html_writer::start_tag('div', array('class'=>'course-content'));
 
-$output->edit_page($course, $quiz, $cm, $contexts);
+$output->edit_page($course, $quiz, $structure, $cm, $contexts);
 
 // Content wrapper end.
-    echo html_writer::end_tag('div');
+echo html_writer::end_tag('div');
 
 // get information about course modules and existing module types
 // format.php in course formats may rely on presence of these variables
 $modinfo = get_fast_modinfo($course);
 
-$modnamesused = $modinfo->get_used_module_names();
 $qtypes = question_bank::get_all_qtypes();
 $qtypenamesused = array();
 foreach ($qtypes as $qtypename => $qtypedata) {
