@@ -271,7 +271,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param int $cm Course Module ID
      * @param int $context The page context ID
      */
-    public function edit_page($course, $quiz, $structure, $cm, $context) {
+    public function edit_page($course, $quiz, $structure, $cm, $context, $pageurl) {
         global $DB;
 
         $modinfo = get_fast_modinfo($course);
@@ -313,7 +313,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Get questions.
         $questions = $DB->get_records_sql(
-                "SELECT q.*, qc.contextid, slot.maxmark, slot.slot
+                "SELECT q.*, qc.contextid, slot.maxmark, slot.slot, slot.page
                    FROM {question} q
                    JOIN {question_categories} qc ON qc.id = q.category
                    JOIN {quiz_slots} slot ON slot.questionid = q.id
@@ -348,7 +348,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Display the add icon menu.
         if (!$quiz->fullquestions) {
-            echo html_writer::tag('span', $this->add_menu_actions($quiz, ''));
+            echo html_writer::tag('span', $this->add_menu_actions($quiz, '', $pageurl));
         }
 
         // Now the list of sections.
@@ -367,7 +367,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                 // 0-section is displayed a little differently than the others.
                 if ($section->heading or $this->page->user_is_editing()) {
                     echo $this->section_header($section, $course, false, 0);
-                    echo $this->quiz_section_question_list($quiz, $structure, $course, $section, 0);
+                    echo $this->quiz_section_question_list($quiz, $structure, $course, $section, 0, $pageurl);
                     echo $this->section_footer();
                 }
                 continue;
@@ -375,7 +375,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
             echo $this->section_header($section, $course, false, 0);
             if ($section->uservisible) {
-                echo $this->quiz_section_question_list($quiz, $structure, $course, $section, 0);
+                echo $this->quiz_section_question_list($quiz, $structure, $course, $section, 0, $pageurl);
             }
             echo $this->section_footer();
         }
@@ -481,10 +481,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param completion_info $completioninfo
      * @param cm_info $question
      * @param int|null $sectionreturn
-     * @param array $displayoptions
      * @return String
      */
-    public function quiz_section_question_list_item($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $displayoptions = array()) {
+    public function quiz_section_question_list_item($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $pageurl) {
         $output = '';
         $slotid = $this->get_question_info($structure, $question->id, 'slotid');
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
@@ -496,7 +495,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $output .= html_writer::tag('div', $page,  array('class' => $pagenumberclass));
         }
 
-        if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $displayoptions)) {
+        if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $pageurl)) {
             $questionclasses = 'activity ' . $question->qtype . 'qtype_' . $question->qtype;
             $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $slotid));
         }
@@ -512,10 +511,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param stdClass $course course object
      * @param int|stdClass|section_info $section relative section number or section object
      * @param int $sectionreturn section number to return to
-     * @param int $displayoptions
      * @return void
      */
-    public function quiz_section_question_list($quiz, $structure, $course, $section, $sectionreturn = null, $displayoptions = array()) {
+    public function quiz_section_question_list($quiz, $structure, $course, $section, $sectionreturn, $pageurl) {
         global $USER;
 
         $output = '';
@@ -553,7 +551,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                 }
 
                 if ($questiontypehtml = $this->quiz_section_question_list_item($quiz, $structure, $course,
-                        $completioninfo, $question, $sectionreturn, $displayoptions)) {
+                        $completioninfo, $question, $sectionreturn, $pageurl)) {
                     $questionshtml[$questionnumber] = $questiontypehtml;
                 }
             }
@@ -593,10 +591,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * this function returns an empty string
      *
      * @param question $question
-     * @param array $displayoptions
      * @return string
      */
-    public function quiz_section_question_name($quiz, $question, $displayoptions = array()) {
+    public function quiz_section_question_name($quiz, $question) {
         global $CFG;
         $output = '';
 //         if (!$question->uservisible &&
@@ -720,10 +717,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param completion_info $completioninfo
      * @param cm_info $question
      * @param int|null $sectionreturn
-     * @param array $displayoptions
      * @return string
      */
-    public function quiz_section_question($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $displayoptions = array()) {
+    public function quiz_section_question($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $pageurl) {
         $output = '';
         // We return empty string (because quiz question will not be displayed at all)
         // if:
@@ -774,7 +770,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $output .= html_writer::start_tag('div');
 
         // Display the link to the question (or do nothing if question has no url)
-        $cmname = $this->quiz_section_question_name($quiz, $question, $displayoptions);
+        $cmname = $this->quiz_section_question_name($quiz, $question);
 
         if (!empty($cmname)) {
             // Start the div for the activity title, excluding the edit icons.
@@ -801,15 +797,12 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $questionicons = '';
         if ($this->page->user_is_editing()) {
             $editactions = $this->question_edit_actions($quiz, $question, null, $sectionreturn);
-            $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question, $displayoptions);
-            $questionicons .= ' '. $this->add_menu_actions($quiz, $question);
+            $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question);
+            $questionicons .= ' '. $this->add_menu_actions($quiz, $question, $pageurl);
 //             $questionicons .= $question->get_after_edit_icons();
 
             $output .= html_writer::span($questionicons, 'actions');
         }
-
-        // show availability info (if module is not available)
-//         $output .= $this->course_section_question_availability($question, $displayoptions);
 
         $output .= html_writer::end_tag('div'); // $indentclasses
 
@@ -965,47 +958,32 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param objet $question, the question object
      *
      */
-    public function edit_menu_actions($quiz, $question) {
-        global $DB, $PAGE;
-
-        // No permission to edit anything.
-        if (!has_capability('mod/quiz:manage', $PAGE->cm->context)) {
-                return array();
-        }
-
-        if (!$quiz->fullquestions) {
-            $context = context_module::instance($quiz->cmid);
-            $questioncategoryid = $DB->get_field('question_categories', 'id', array('contextid' => $context->id));
-        } else {
-            $questioncategoryid = $question->category;
+    public function edit_menu_actions($quiz, $question, $pageurl) {
+        list($questioncategoryid) = explode(',', $pageurl->param('cat'));
+        if (empty($questioncategoryid)) {
+            global $defaultcategoryobj; // TODO MDL-43089 undo this hack.
+            $questioncategoryid = $defaultcategoryobj->id;
         }
 
         static $str;
         if (!isset($str)) {
-            $str = get_strings(array('addasectionheading',
-                                     'addaquestion',
-                                    'addarandomquestion',
-                                    'addarandomselectedquestion',
-                                    'questionbankcontents'), 'quiz');
-       }
-
-        $baseurl = '/mod/quiz/edit.php';
+            $str = get_strings(array('addaquestion', 'addarandomquestion',
+                    'addarandomselectedquestion', 'questionbankcontents'), 'quiz');
+        }
 
         // Get section, page, slotnumber and maxmark.
         $actions = array();
 
-        // Add a section heading.
-        $params = array('cmid' => $quiz->cmid);
-        $actions['addasectionheading'] = new action_menu_link_secondary(
-            new moodle_url($baseurl, $params),
-            new pix_icon('t/add', $str->addasectionheading, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->addasectionheading, array('class' => 'editing_addasectionheading', 'data-action' => 'addasectionheading')
-        );
-
         // Add a new question to the quiz.
-        $returnurl = '/mod/quiz/edit.php';
-        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'courseid' => $quiz->course,
-                        'category' => $questioncategoryid, 'appendqnumstring' => 'addquestion');
+        if (!empty($question->page)) {
+            $page = $question->page;
+        } else {
+            $page = 1;
+        }
+        $returnurl = new moodle_url($pageurl, array('addonpage' => $page));
+        $params = array('returnurl' => $returnurl->out_as_local_url(false),
+                'cmid' => $quiz->cmid, 'category' => $questioncategoryid,
+                'appendqnumstring' => 'addquestion');
         $actions['addaquestion'] = new action_menu_link_secondary(
             new moodle_url('/question/question.php', $params),
             new pix_icon('t/add', $str->addaquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
@@ -1043,16 +1021,17 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         return $actions;
     }
 
-    public function add_menu_actions($quiz, $question) {
+    public function add_menu_actions($quiz, $question, $thispageurl) {
         global $CFG;
 
-        $actions = $this->edit_menu_actions($quiz, $question);
+        $actions = $this->edit_menu_actions($quiz, $question, $thispageurl);
         if (empty($actions)) {
             return '';
         }
         $menu = new action_menu();
         $menu->set_alignment(action_menu::BR, action_menu::BR);
-        $menu->set_menu_trigger(html_writer::tag('span', 'add', array('class' => 'add-menu')));// TODO: To be replace by an icon
+        $menu->set_menu_trigger(html_writer::tag('span', get_string('add', 'quiz'),
+                array('class' => 'add-menu')));
 
         foreach ($actions as $action) {
             if ($action instanceof action_menu_link) {
@@ -1075,43 +1054,30 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      *
      * @param action_link[] $actions Array of action_link objects
      * @param $question The question we are displaying actions for.
-     * @param array $displayoptions additional display options:
-     *     ownerselector => A JS/CSS selector that can be used to find an cm node.
-     *         If specified the owning node will be given the class 'action-menu-shown' when the action
-     *         menu is being displayed.
-     *     constraintselector => A JS/CSS selector that can be used to find the parent node for which to constrain
-     *         the action menu to when it is being displayed.
-     *     donotenhance => If set to true the action menu that gets displayed won't be enhanced by JS.
      * @return string
      */
-    public function quiz_section_question_edit_actions($actions, $question = null, $displayoptions = array()) {
+    public function quiz_section_question_edit_actions($actions, $question = null) {
         global $CFG;
 
         if (empty($actions)) {
             return '';
         }
 
-        if (isset($displayoptions['ownerselector'])) {
-            $ownerselector = $displayoptions['ownerselector'];
-        } else if ($question) {
+        if ($question) {
             $ownerselector = '#module-'.$question->id;
         } else {
             debugging('You should upgrade your call to '.__FUNCTION__.' and provide $question', DEBUG_DEVELOPER);
             $ownerselector = 'li.activity';
         }
 
-        if (isset($displayoptions['constraintselector'])) {
-            $constraint = $displayoptions['constraintselector'];
-        } else {
-            $constraint = '.course-content';
-        }
+        $constraint = '.course-content';
 
         $menu = new action_menu();
         $menu->set_owner_selector($ownerselector);
         $menu->set_constraint($constraint);
         $menu->set_alignment(action_menu::TR, action_menu::BR);
         $menu->set_menu_trigger(get_string('edit'));
-        if (isset($CFG->modeditingmenu) && !$CFG->modeditingmenu || !empty($displayoptions['donotenhance'])) {
+        if (isset($CFG->modeditingmenu) && !$CFG->modeditingmenu) {
             $menu->do_not_enhance();
 
             // Swap the left/right icons.
@@ -1162,135 +1128,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                         'cmid' => $quiz->cmid,
                         'id' => $question->id);
         return new moodle_url('/question/question.php', $questionparams);
-    }
-
-    /**
-     * Renders HTML for the menus to add activities and resources to the current course
-     *
-     * Note, if theme overwrites this function and it does not use modchooser,
-     * see also {@link core_course_renderer::add_modchoosertoggle()}
-     *
-     * @param stdClass $course
-     * @param int $section relative section number (field quiz_sections.section)
-     * @param int $sectionreturn The section to link back to
-     * @param array $displayoptions additional display options, for example blocks add
-     *     option 'inblock' => true, suggesting to display controls vertically
-     * @return string
-     */
-    public function quiz_section_add_question_control($quiz, $course, $section, $sectionreturn = null, $displayoptions = array()) {
-        global $CFG, $PAGE;
-
-        $vertical = !empty($displayoptions['inblock']);
-
-        $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
-        // check to see if user can add menus and there are modules to add
-        if (!has_capability('mod/quiz:manage', $PAGE->cm->context)
-                || !$this->page->user_is_editing()
-                || !($questionnames = get_module_types_names()) || empty($questionnames)) {
-            return '';
-        }
-
-        // Retrieve all modules with associated metadata
-        $questions = get_module_metadata($course, $questionnames, $sectionreturn);
-        $urlparams = array('section' => $section);
-
-        // We'll sort resources and activities into two lists
-        $activities = array(MOD_CLASS_ACTIVITY => array(), MOD_CLASS_RESOURCE => array());
-
-        foreach ($questions as $question) {
-            if (isset($question->types)) {
-                // This module has a subtype
-                // NOTE: this is legacy stuff, module subtypes are very strongly discouraged!!
-                $subtypes = array();
-                foreach ($question->types as $subtype) {
-                    $link = $subtype->link->out(true, $urlparams);
-                    $subtypes[$link] = $subtype->title;
-                }
-
-                // Sort module subtypes into the list
-                $activityclass = MOD_CLASS_ACTIVITY;
-                if ($question->archetype == MOD_CLASS_RESOURCE) {
-                    $activityclass = MOD_CLASS_RESOURCE;
-                }
-                if (!empty($question->title)) {
-                    // This grouping has a name
-                    $activities[$activityclass][] = array($question->title => $subtypes);
-                } else {
-                    // This grouping does not have a name
-                    $activities[$activityclass] = array_merge($activities[$activityclass], $subtypes);
-                }
-            } else {
-                // This module has no subtypes
-                $activityclass = MOD_CLASS_ACTIVITY;
-                if ($question->archetype == MOD_ARCHETYPE_RESOURCE) {
-                    $activityclass = MOD_CLASS_RESOURCE;
-                } else if ($question->archetype === MOD_ARCHETYPE_SYSTEM) {
-                    // System modules cannot be added by user, do not add to dropdown
-                    continue;
-                }
-                $link = $question->link->out(true, $urlparams);
-                $activities[$activityclass][$link] = $question->title;
-            }
-        }
-
-        $straddactivity = get_string('addactivity');
-        $straddresource = get_string('addresource');
-        $sectionname = get_section_name($course, $section);
-        $strresourcelabel = get_string('addresourcetosection', null, $sectionname);
-        $stractivitylabel = get_string('addactivitytosection', null, $sectionname);
-
-        $output = html_writer::start_tag('div', array('class' => 'section_add_menus', 'id' => 'add_menus-section-' . $section->id));
-
-        if (!$vertical) {
-            $output .= html_writer::start_tag('div', array('class' => 'horizontal'));
-        }
-
-        if (!empty($activities[MOD_CLASS_RESOURCE])) {
-            $select = new url_select($activities[MOD_CLASS_RESOURCE], '', array(''=>$straddresource), "ressection$section");
-            $select->set_help_icon('resources');
-            $select->set_label($strresourcelabel, array('class' => 'accesshide'));
-            $output .= $this->output->render($select);
-        }
-
-        if (!empty($activities[MOD_CLASS_ACTIVITY])) {
-            $select = new url_select($activities[MOD_CLASS_ACTIVITY], '', array(''=>$straddactivity), "section$section");
-            $select->set_help_icon('activities');
-            $select->set_label($stractivitylabel, array('class' => 'accesshide'));
-            $output .= $this->output->render($select);
-        }
-
-        if (!$vertical) {
-            $output .= html_writer::end_tag('div');
-        }
-
-        $output .= html_writer::end_tag('div');
-
-        if (course_ajax_enabled($course) && $course->id == $this->page->course->id) {
-            // modchooser can be added only for the current course set on the page!
-            $straddeither = get_string('addresourceoractivity');
-            // The module chooser link
-            $modchooser = html_writer::start_tag('div', array('class' => 'mdl-right'));
-            $modchooser.= html_writer::start_tag('div', array('class' => 'section-modchooser'));
-            $icon = $this->output->pix_icon('t/add', '');
-            $span = html_writer::tag('span', $straddeither, array('class' => 'section-modchooser-text'));
-            $modchooser .= html_writer::tag('span', $icon . $span, array('class' => 'section-modchooser-link'));
-            $modchooser.= html_writer::end_tag('div');
-            $modchooser.= html_writer::end_tag('div');
-
-            // Wrap the normal output in a noscript div
-            $usemodchooser = get_user_preferences('usemodchooser', $CFG->modchooserdefault);
-            if ($usemodchooser) {
-                $output = html_writer::tag('div', $output, array('class' => 'hiddenifjs addresourcedropdown'));
-                $modchooser = html_writer::tag('div', $modchooser, array('class' => 'visibleifjs addresourcemodchooser'));
-            } else {
-                // If the module chooser is disabled, we need to ensure that the dropdowns are shown even if javascript is disabled
-                $output = html_writer::tag('div', $output, array('class' => 'show addresourcedropdown'));
-                $modchooser = html_writer::tag('div', $modchooser, array('class' => 'hide addresourcemodchooser'));
-            }
-            $output = $this->course_modchooser($questions, $course) . $modchooser . $output;
-        }
-
-        return $output;
     }
 
     /**

@@ -60,4 +60,20 @@ class behat_mod_quiz extends behat_question_base {
             new Given("I press \"$addaquestion\""),
                 ), $this->finish_adding_question($questiontype, $questiondata));
     }
+
+    /**
+     * Set the max mark for a question on the Edit quiz page.
+     *
+     * @When /^I set the max mark for question "(?P<question_name_string>(?:[^"]|\\")*)" to "(?P<new_mark_string>(?:[^"]|\\")*)"$/
+     * @param string $questionname the name of the question to set the max mark for.
+     * @param string $newmark the mark to set
+     */
+    public function i_set_the_max_mark_for_quiz_question($questionname, $newmark) {
+        return array(
+            new Given('I follow "' . $this->escape(get_string('editmaxmark', 'quiz')) . '"'),
+            new Given('I wait "2" seconds'),
+            new Given('I should see "' . $this->escape(get_string('edittitleinstructions')) . '"'),
+            new Given('I set the field "maxmark" to "' . $this->escape($newmark) . chr(10) . '"'),
+        );
+    }
 }
