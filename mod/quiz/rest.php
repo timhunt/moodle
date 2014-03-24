@@ -46,6 +46,7 @@ $sequence   = optional_param('sequence', '', PARAM_SEQUENCE);
 $visible    = optional_param('visible', 0, PARAM_INT);
 $pageaction = optional_param('action', '', PARAM_ALPHA); // Used to simulate a DELETE command.
 $maxmark    = optional_param('maxmark', '', PARAM_FLOAT);
+$page       = optional_param('page', '', PARAM_INT);
 $PAGE->set_url('/mod/quiz/rest.php',
         array('courseid' => $courseid, 'quizid' => $quizid, 'class' => $class));
 
@@ -79,7 +80,7 @@ switch($requestmethod) {
 
                     case 'move':
                         require_capability('mod/quiz:manage', $modcontext);
-                        $structure->move_slot($quiz, $id, $beforeid);
+                        $structure->move_slot($quiz, $id, $beforeid, $page);
                         quiz_delete_previews($quiz);
                         echo json_encode(array('visible' => true));
                         break;

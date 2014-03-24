@@ -17,6 +17,7 @@ var CSS = {
     LIGHTBOX: 'lightbox',
     MOVEDOWN: 'movedown',
     MOVEUP: 'moveup',
+    PAGE : 'pagenumber',
     PAGECONTENT: 'page-content',
     RIGHT: 'right',
     SECTION: 'section',
@@ -24,4 +25,8 @@ var CSS = {
     SECTIONHANDLE: 'section-handle',
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
+};
+
+var CONSTANTS =  {
+    PAGEIDPREFIX : 'page-'
 };

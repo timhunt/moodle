@@ -46,7 +46,6 @@ require_once($CFG->dirroot . '/mod/quiz/editlib.php');
 require_once($CFG->dirroot . '/mod/quiz/addrandomform.php');
 require_once($CFG->dirroot . '/question/category_class.php');
 
-
 /**
  * Callback function called from question_list() function
  * (which is called from showbank())
@@ -388,6 +387,7 @@ $numberoflisteners = $DB->get_field_sql("
 for ($pageiter = 1; $pageiter <= $numberoflisteners; $pageiter++) {
     $quizeditconfig->dialoglisteners[] = 'addrandomdialoglaunch_' . $pageiter;
 }
+
 $PAGE->requires->data_for_js('quiz_edit_config', $quizeditconfig);
 $PAGE->requires->js('/question/qengine.js');
 $module = array(
@@ -397,7 +397,7 @@ $module = array(
     'strings'   => array(),
     'async'     => false,
 );
-$PAGE->requires->js_init_call('quiz_edit_init', null, false, $module);
+//$PAGE->requires->js_init_call('quiz_edit_init', null, false, $module);
 
 global $USER;
 $USER->editing = 1;
@@ -440,6 +440,29 @@ echo html_writer::end_tag('div');
 // get information about course modules and existing module types
 // format.php in course formats may rely on presence of these variables
 $modinfo = get_fast_modinfo($course);
+
+if ($quiz->shufflequestions) {
+    $repaginatingdisabledhtml = 'disabled="disabled"';
+    $repaginatingdisabled = true;
+    $quiz->questions = quiz_repaginate($quiz->questions, $quiz->questionsperpage);
+} else {
+    $repaginatingdisabledhtml = '';
+    $repaginatingdisabled = false;
+}
+$repaginateparams = array(array('courseid' => $course->id, 'quizid' => $quiz->id));
+// $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'moodle-core-notification-dialogue', $repaginateparams);
+
+echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
+        $repaginatingdisabledhtml.'>'.
+        get_string('repaginatecommand', 'quiz').'...</button>';
+echo '</div>';
+
+if ($USER->editing && !$repaginatingdisabledhtml) {
+
+    require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
+    $repaginate = new quiz_repaginate();
+    echo $repaginate->get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml);
+}
 
 $qtypes = question_bank::get_all_qtypes();
 $qtypenamesused = array();

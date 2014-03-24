@@ -1251,7 +1251,30 @@ function quiz_question_preview_button($quiz, $question, $label = false) {
     $action = new popup_action('click', $url, 'questionpreview',
             question_preview_popup_params());
 
-    return $OUTPUT->action_link($url, $image, $action, array('title' => $strpreviewquestion));
+    return $OUTPUT->action_link($url, $image, $action, array('title' => $strpreviewquestion, 'class' => 'preview'));
+}
+
+/**
+ * @param object $quiz the quiz settings
+ * @param object $question the question
+ * @return the HTML for a delete icon and link.
+ */
+function quiz_question_delete_button($quiz, $question) {
+    global $OUTPUT, $PAGE;
+
+    if (!$hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context)) {
+        return '';
+    }
+
+    $url = new moodle_url($PAGE->url, array('sesskey' => sesskey(), 'remove' => $question->slot));
+
+    $strdelete = get_string('delete');
+
+    // Build the icon.
+    $image = $OUTPUT->pix_icon('t/delete', $strdelete);
+
+    return $OUTPUT->action_link($url, $image, null, array('title' => $strdelete,
+                'class' => 'cm-edit-action editing_delete', 'data-action' => 'delete'));
 }
 
 /**

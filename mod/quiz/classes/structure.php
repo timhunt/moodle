@@ -173,11 +173,12 @@ class structure {
      * @param int $idbefore id of slot to come after slot being moved
      * @return array
      */
-    public function move_slot($quiz, $id, $idbefore) {
+    public function move_slot($quiz, $id, $idbefore, $page) {
         global $DB;
 
         $movingslot = $this->slots[$id];
         $targetslot = $this->slots[$idbefore];
+        $hasslotmoved = false;
 
         if (empty($movingslot)) {
             throw new moodle_exception('Bad slot ID ' . $id);
@@ -191,23 +192,28 @@ class structure {
 
         $slotreorder = array($movingslot->slot => $targetslot->slot);
         if ($movingslot->slot < $targetslot->slot) {
+            $hasslotmoved = true;
             for ($i = $movingslot->slot; $i < $targetslot->slot; $i += 1) {
                 $slotreorder[$i + 1] = $i;
             }
         } else if ($movingslot->slot > $targetslot->slot) {
+            $hasslotmoved = true;
             for ($i = $targetslot->slot; $i < $movingslot->slot; $i += 1) {
                 $slotreorder[$i] = $i + 1;
             }
-        } else {
-            // Nothing to do.
-            return;
         }
 
         $trans = $DB->start_delegated_transaction();
-        update_field_with_unique_index('quiz_slots',
-                'slot', $slotreorder, array('quizid' => $quiz->id));
-        $DB->set_field('quiz_slots', 'page', $targetslot->page,
-                array('id' => $movingslot->id));
+        // Slot has moved record new order
+        if($hasslotmoved) {
+            update_field_with_unique_index('quiz_slots',
+                    'slot', $slotreorder, array('quizid' => $quiz->id));
+        }
+        // Page has changed. Record it
+        if($movingslot->page !== $page){
+            $DB->set_field('quiz_slots', 'page', $page,
+                    array('id' => $movingslot->id));
+        }
         $trans->allow_commit();
     }
 
@@ -263,7 +269,7 @@ class structure {
         $trans = $DB->start_delegated_transaction();
         $slot->maxmark = $maxmark;
         $DB->update_record('quiz_slots', $slot);
-        \question_engine::set_max_mark_in_attempts(new qubaids_for_quiz($slot->quizid),
+        \question_engine::set_max_mark_in_attempts(new \qubaids_for_quiz($slot->quizid),
                 $slot->slot, $maxmark);
         $trans->allow_commit();
 

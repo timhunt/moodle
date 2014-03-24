@@ -19,6 +19,7 @@ var CSS = {
     LIGHTBOX: 'lightbox',
     MOVEDOWN: 'movedown',
     MOVEUP: 'moveup',
+    PAGE : 'pagenumber',
     PAGECONTENT: 'page-content',
     RIGHT: 'right',
     SECTION: 'section',
@@ -27,7 +28,10 @@ var CSS = {
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
 };
-/**
+
+var CONSTANTS =  {
+    PAGEIDPREFIX : 'page-'
+};/**
  * Section drag and drop.
  *
  * @class M.mod_quiz.dragdrop.section
@@ -434,6 +438,10 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         if (dragnode.previous('li')) {
             params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.previous('li')));
         }
+        
+        if (dragnode.previous('li.page')) {
+            params.page = Number(this.getPageId(dragnode.previous('li.page')));
+        }
 
 //        if (dragnode.next()) {
 //            params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.next()));
@@ -468,6 +476,26 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
             },
             context:this
         });
+    },
+    
+    /**
+     * Determines the page ID for the provided page.
+     *
+     * @method getId
+     * @param page {Node} The page to find an ID for.
+     * @return {Number|false} The ID of the page in question or false if no ID was found.
+     */
+    getPageId: function(page) {
+        // We perform a simple substitution operation to get the ID.
+        var id = page.get('id').replace(
+                CONSTANTS.PAGEIDPREFIX, '');
+
+        // Attempt to validate the ID.
+        id = parseInt(id, 10);
+        if (typeof id === 'number' && isFinite(id)) {
+            return id;
+        }
+        return false;
     }
 }, {
     NAME: 'mod_quiz-dragdrop-resource',

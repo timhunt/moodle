@@ -19,7 +19,7 @@ M.mod_quiz.edit = M.mod_quiz.edit || {};
 M.mod_quiz.edit.get_config = function() {
     return {
         container_node : 'ul',
-        container_class : 'weeks',
+        container_class : 'slots',
         section_node : 'li',
         section_class : 'section'
     };

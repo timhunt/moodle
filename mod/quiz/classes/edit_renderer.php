@@ -489,16 +489,19 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
         $pagenumber = $this->get_question_info($structure, $question->id, 'page');
         $page = $pagenumber ? get_string('page') . ' ' . $pagenumber : null;
+
         $pagenumberclass = ''; // TODO MDL-43089 to add appropriate class name here
+        $dragdropclass = 'activity yui3-dd-drop';
         $prevpage = $this->get_previous_page($structure, $slotnumber -1);
         if ($prevpage != $pagenumber) {
-            $output .= html_writer::tag('div', $page,  array('class' => $pagenumberclass));
+            $output .= html_writer::tag('li', $page,  array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
         }
 
         if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $pageurl)) {
             $questionclasses = 'activity ' . $question->qtype . 'qtype_' . $question->qtype;
             $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $slotid));
         }
+
         return $output;
     }
 
@@ -692,10 +695,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @return the HTML for a marked out of question grade field.
      */
     public function marked_out_of_field($quiz, $question) {
-        $output = '';
-        $maxmark = html_writer::span(0 + $question->maxmark, 'instancemaxmark');
-        $output .= html_writer::span($maxmark);
-        return $output;
+        return html_writer::span(0 + $question->maxmark, 'instancemaxmark');
     }
 
     /**
@@ -777,11 +777,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
             $output .= $cmname;
 
-
-
-            // Module can put text after the link (e.g. forum unread)
-//             $output .= $question->get_after_link();
-
             $output .= quiz_question_preview_button($quiz, $question);
 
             $output .= $this->marked_out_of_field($quiz, $question);
@@ -790,16 +785,15 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                 $output .= ' ' . $this->regrade_action($question, $sectionreturn);
             }
 
+            $output .= quiz_question_delete_button($quiz, $question);
+
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
             $output .= html_writer::end_tag('div'); // .activityinstance
         }
 
         $questionicons = '';
         if ($this->page->user_is_editing()) {
-            $editactions = $this->question_edit_actions($quiz, $question, null, $sectionreturn);
-            $questionicons .= ' '. $this->quiz_section_question_edit_actions($editactions, $question);
             $questionicons .= ' '. $this->add_menu_actions($quiz, $question, $pageurl);
-//             $questionicons .= $question->get_after_edit_icons();
 
             $output .= html_writer::span($questionicons, 'actions');
         }
@@ -893,66 +887,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Returns the list of all editing actions that current user can perform on the module
-     *
-     * @param object $question The module to produce editing buttons for
-     * @param int $indent The current indenting (default -1 means no move left-right actions)
-     * @param int $sr The section to link back to (used for creating the links)
-     * @return array array of action_link or pix_icon objects
-     */
-    public function question_edit_actions($quiz, $question, $indent = -1, $sr = null) {
-        global $COURSE, $SITE, $PAGE;
-
-        static $str;
-
-        // No permission to edit anything.
-        $hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context);
-
-        if (!isset($str)) {
-            $str = get_strings(array('delete', 'move', 'moveright', 'moveleft',
-                'editsettings', 'duplicate', 'hide', 'show'), 'moodle');
-            $str->assign         = get_string('assignroles', 'role');
-            $str->groupsnone     = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsnone"));
-            $str->groupsseparate = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsseparate"));
-            $str->groupsvisible  = get_string('clicktochangeinbrackets', 'moodle', get_string("groupsvisible"));
-        }
-
-    //     $baseurl = new moodle_url('/course/mod.php', array('sesskey' => sesskey()));
-        $baseurl = $this->get_edit_question_url($quiz, $question);
-
-        // TODO MDL-43089 fix this hack.
-        global $thispageurl;
-        $pageurl = new moodle_url($thispageurl, array('sesskey' => sesskey()));
-
-        if ($sr !== null) {
-            $baseurl->param('sr', $sr);
-        }
-        $actions = array();
-
-        // Update.
-        if ($hasmanagequiz) {
-            $actions['update'] = new action_menu_link_secondary(
-                new moodle_url($baseurl, array('update' => $question->id)),
-                new pix_icon('t/edit', $str->editsettings, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-                $str->editsettings,
-                array('class' => 'editing_update', 'data-action' => 'update')
-            );
-        }
-
-        // Delete.
-        if ($hasmanagequiz) {
-            $actions['delete'] = new action_menu_link_secondary(
-                new moodle_url($pageurl, array('remove' => $question->slot)),
-                new pix_icon('t/delete', $str->delete, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-                $str->delete,
-                array('class' => 'editing_delete', 'data-action' => 'delete')
-            );
-        }
-
-        return $actions;
-    }
-
-    /**
      * Retuns the list of adding actions
      * @param object $quiz, the quiz object
      * @param objet $question, the question object
@@ -1036,80 +970,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         foreach ($actions as $action) {
             if ($action instanceof action_menu_link) {
                 $action->add_class('add-menu');
-            }
-            $menu->add($action);
-        }
-        $menu->attributes['class'] .= ' section-cm-edit-actions commands';
-
-        // Prioritise the menu ahead of all other actions.
-        $menu->prioritise = true;
-
-        return $this->render($menu);
-    }
-
-    /**
-     * Renders HTML for displaying the sequence of quiz question editing buttons
-     *
-     * @see quiz_get_question_edit_actions()
-     *
-     * @param action_link[] $actions Array of action_link objects
-     * @param $question The question we are displaying actions for.
-     * @return string
-     */
-    public function quiz_section_question_edit_actions($actions, $question = null) {
-        global $CFG;
-
-        if (empty($actions)) {
-            return '';
-        }
-
-        if ($question) {
-            $ownerselector = '#module-'.$question->id;
-        } else {
-            debugging('You should upgrade your call to '.__FUNCTION__.' and provide $question', DEBUG_DEVELOPER);
-            $ownerselector = 'li.activity';
-        }
-
-        $constraint = '.course-content';
-
-        $menu = new action_menu();
-        $menu->set_owner_selector($ownerselector);
-        $menu->set_constraint($constraint);
-        $menu->set_alignment(action_menu::TR, action_menu::BR);
-        $menu->set_menu_trigger(get_string('edit'));
-        if (isset($CFG->modeditingmenu) && !$CFG->modeditingmenu) {
-            $menu->do_not_enhance();
-
-            // Swap the left/right icons.
-            // Normally we have have right, then left but this does not
-            // make sense when modactionmenu is disabled.
-            $moveright = null;
-            $_actions = array();
-            foreach ($actions as $key => $value) {
-                if ($key === 'moveright') {
-
-                    // Save moveright for later.
-                    $moveright = $value;
-                } else if ($moveright) {
-
-                    // This assumes that the order was moveright, moveleft.
-                    // If we have a moveright, then we should place it immediately after the current value.
-                    $_actions[$key] = $value;
-                    $_actions['moveright'] = $moveright;
-
-                    // Clear the value to prevent it being used multiple times.
-                    $moveright = null;
-                } else {
-
-                    $_actions[$key] = $value;
-                }
-            }
-            $actions = $_actions;
-            unset($_actions);
-        }
-        foreach ($actions as $action) {
-            if ($action instanceof action_menu_link) {
-                $action->add_class('cm-edit-action');
             }
             $menu->add($action);
         }

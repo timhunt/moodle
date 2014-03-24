@@ -207,4 +207,38 @@ class quiz_repaginate {
         }
         return $newslots;
     }
+
+    /**
+     *
+     * @param object $quiz
+     * @param object $thispageurl
+     * @param string $repaginatingdisabledhtml
+     */
+    public function get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml) {
+        $perpage = array();
+        $perpage[0] = get_string('allinone', 'quiz');
+        for ($i = 1; $i <= 50; ++$i) {
+            $perpage[$i] = $i;
+        }
+        $gostring = get_string('go');
+        $output =  '<div id="repaginatedialog"><div class="hd">';
+        $output .= get_string('repaginatecommand', 'quiz');
+        $output .= '</div><div class="bd">';
+        $output .= '<form action="edit.php" method="post">';
+        $output .= '<fieldset class="invisiblefieldset">';
+        $output .= html_writer::input_hidden_params($thispageurl);
+        $output .= '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
+        // YUI does not submit the value of the submit button so we need to add the value.
+        $output .= '<input type="hidden" name="repaginate" value="'.$gostring.'" />';
+        $attributes = array();
+        $attributes['disabled'] = $repaginatingdisabledhtml ? 'disabled' : null;
+        $select = html_writer::select(
+                $perpage, 'questionsperpage', $quiz->questionsperpage, null, $attributes);
+        $output .= get_string('repaginate', 'quiz', $select);
+        $output .= '<div class="quizquestionlistcontrols">';
+        $output .= ' <input type="submit" name="repaginate" value="'. $gostring . '" ' .
+                $repaginatingdisabledhtml.' />';
+        $output .= '</div></fieldset></form></div></div>';
+        return $output;
+    }
 }
