@@ -348,7 +348,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Display the add icon menu.
         if (!$quiz->fullquestions) {
-            echo html_writer::tag('span', $this->add_menu_actions($quiz, '', $pageurl));
+            echo html_writer::tag('span', $this->add_menu_actions($quiz, '', $pageurl), array('class' => 'add-menu-outer'));
         }
 
         // Now the list of sections.
@@ -484,24 +484,36 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @return String
      */
     public function quiz_section_question_list_item($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $pageurl) {
-        $output = '';
+        global $OUTPUT;
+    	$output = '';
         $slotid = $this->get_question_info($structure, $question->id, 'slotid');
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
         $pagenumber = $this->get_question_info($structure, $question->id, 'page');
         $page = $pagenumber ? get_string('page') . ' ' . $pagenumber : null;
+        // Put page in a span for easier styling.
+        $page = html_writer::tag('span', $page, array('class' => 'text'));
 
-        $pagenumberclass = ''; // TODO MDL-43089 to add appropriate class name here
+        $pagenumberclass = 'pagenumber'; // TODO MDL-43089 to add appropriate class name here
         $dragdropclass = 'activity yui3-dd-drop';
         $prevpage = $this->get_previous_page($structure, $slotnumber -1);
+        // TODO: Create two icons or use link and unlink icon from TinyMCE to replcae show and hide
         if ($prevpage != $pagenumber) {
-            $output .= html_writer::tag('li', $page,  array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
+            // Add the add-menu at the page level.
+            $addmenu = html_writer::tag('span', $this->add_menu_actions($quiz, $question, $pageurl), array('class' => 'add-menu-outer'));
+
+            $output .= html_writer::tag('li', $page.$addmenu,  array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
+//             $output .= $addmenu;
         }
 
         if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $pageurl)) {
-            $questionclasses = 'activity ' . $question->qtype . 'qtype_' . $question->qtype;
-            $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'module-' . $slotid));
+            $questionclasses = 'activity ' . $question->qtype . ' qtype_' . $question->qtype . ' slot';
+            $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'slot-' . $slotid));
         }
 
+        if(true){
+            $joinhtml = quiz_question_page_join_button($quiz, $question);
+            $output .= html_writer::tag('li', $joinhtml, array('class' => $dragdropclass.' page_join'));
+        }
         return $output;
     }
 
@@ -792,11 +804,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         }
 
         $questionicons = '';
-        if ($this->page->user_is_editing()) {
-            $questionicons .= ' '. $this->add_menu_actions($quiz, $question, $pageurl);
+//         if ($this->page->user_is_editing()) {
+//             $questionicons .= ' '. $this->add_menu_actions($quiz, $question, $pageurl);
 
-            $output .= html_writer::span($questionicons, 'actions');
-        }
+            $output .= html_writer::span('', 'actions');
+//         }
 
         $output .= html_writer::end_tag('div'); // $indentclasses
 

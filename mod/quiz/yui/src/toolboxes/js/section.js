@@ -96,7 +96,7 @@ Y.extend(SECTIONTOOLBOX, TOOLBOX, {
                 } else {
                     button = node.one(SELECTOR.HIDE);
                 }
-                var activityid = Y.Moodle.core_course.util.cm.getId(node);
+                var activityid = Y.Moodle.mod_quiz.util.slot.getId(node);
 
                 // NOTE: resourcestotoggle is returned as a string instead
                 // of a Number so we must cast our activityid to a String.

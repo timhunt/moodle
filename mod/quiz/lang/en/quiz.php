@@ -431,6 +431,7 @@ $string['invalidquizid'] = 'Invalid quiz ID';
 $string['invalidsource'] = 'The source is not accepted as valid.';
 $string['invalidsourcetype'] = 'Invalid source type.';
 $string['invalidstateid'] = 'Invalid state id';
+$string['joinpage'] = 'Join page';
 $string['lastanswer'] = 'Your last answer was';
 $string['layout'] = 'Layout';
 $string['layoutasshown'] = 'Page layout as shown.';

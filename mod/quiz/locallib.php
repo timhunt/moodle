@@ -1278,6 +1278,30 @@ function quiz_question_delete_button($quiz, $question) {
 }
 
 /**
+ * @param object $quiz the quiz settings
+ * @param object $question the question
+ * @return the HTML for a delete icon and link.
+ */
+function quiz_question_page_join_button($quiz, $question) {
+    global $OUTPUT, $PAGE;
+
+    if (!$hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context)) {
+        return '';
+    }
+
+    $url = new moodle_url('repaginate.php', array('cmid' =>$quiz->cmid, 'quizid' => $quiz->id,
+                'slot' => $question->slot, 'repag' => 1, 'sesskey' => sesskey()));
+
+    $strjoin = get_string('joinpage', 'quiz');
+
+    // Build the icon.
+    $image = $OUTPUT->pix_icon('e/insert_edit_link', $strjoin); //remove_link
+
+    return $OUTPUT->action_link($url, $image, null, array('title' => $strjoin,
+                'class' => 'cm-edit-action editing_page_join', 'data-action' => 'joinpage'));
+}
+
+/**
  * @param object $attempt the attempt.
  * @param object $context the quiz context.
  * @return int whether flags should be shown/editable to the current user for this attempt.

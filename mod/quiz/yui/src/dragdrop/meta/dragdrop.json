@@ -10,6 +10,7 @@
             "moodle-core-dragdrop",
             "moodle-core-notification",
             "moodle-mod_quiz-quizbase",
+            "moodle-mod_quiz-util",
             "moodle-course-util"
         ]
     }

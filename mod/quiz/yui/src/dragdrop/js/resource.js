@@ -141,20 +141,16 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         params.quizid = this.get('quizid');
         params['class'] = 'resource';
         params.field = 'move';
-        params.id = Number(Y.Moodle.core_course.util.cm.getId(dragnode));
+        params.id = Number(Y.Moodle.mod_quiz.util.slot.getId(dragnode));
         params.sectionId = Y.Moodle.core_course.util.section.getId(dropnode.ancestor(M.mod_quiz.edit.get_section_wrapper(Y), true));
 
         if (dragnode.previous('li')) {
-            params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.previous('li')));
+            params.beforeId = Number(Y.Moodle.mod_quiz.util.slot.getId(dragnode.previous('li')));
         }
         
         if (dragnode.previous('li.page')) {
             params.page = Number(this.getPageId(dragnode.previous('li.page')));
         }
-
-//        if (dragnode.next()) {
-//            params.beforeId = Number(Y.Moodle.core_course.util.cm.getId(dragnode.next()));
-//        }
 
         // Do AJAX request
         var uri = M.cfg.wwwroot + this.get('ajaxurl');

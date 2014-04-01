@@ -275,4 +275,40 @@ class structure {
 
         return true;
     }
+
+    /**
+     * link/unlink a slot to a page.
+     *
+     * Saves changes to the slot page relationship in the quiz_slots table and reorders the paging
+     * for subsequent slots.
+     *
+     * @param stdClass $slot    row from the quiz_slots table.
+     * @param float    $maxmark the new maxmark.
+     * @return bool true if the new grade is different from the old one.
+     */
+    function link_slot_to_page($quiz, $slot, $type) {
+        global $DB;
+        require_once("locallib.php");
+        require_once('repaginate.php');
+        $quizid = $quiz->id;
+        $slotnumber = $slot;
+        $repagtype = $type;
+        $quizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot');
+        // print_object($quizslots);
+        // print_object($slotnumber);
+        // print_object($repagtype);
+        // exit;
+//         if ($repagtype == 1) {
+//             new \quiz_repaginate($quizslots, $slotnumber, 'join');
+//         } else if ($repagtype == 2) {
+//             new \quiz_repaginate($quizslots, $slotnumber, 'separate');
+//         }
+
+        $repaginate = new \quiz_repaginate($quizid, $quizslots);
+        $repaginate->repaginate($slotnumber, $repagtype);
+//         $updatedquizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot', 'slot,page');
+        $updatedquizslots = $repaginate->get_slots();
+
+        return $updatedquizslots;
+    }
 }

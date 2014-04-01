@@ -1,0 +1,15 @@
+{
+  "name": "moodle-mod_quiz-util",
+  "builds": {
+    "moodle-mod_quiz-util-base": {
+      "jsfiles": [
+        "base.js"
+      ]
+    },
+    "moodle-mod_quiz-util-slot": {
+      "jsfiles": [
+        "slot.js"
+      ]
+    }
+  }
+}

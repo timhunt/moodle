@@ -25,11 +25,24 @@
 
 class quiz_repaginate {
 
-    public function __construct($slots = null, $nextslotnumber = 0, $type = null) {
-        if ($slots && $nextslotnumber && $type) {
-            global $DB;
-            $newslots = $this->repaginate($slots, $nextslotnumber, $type);
-            $this->update_quiz_slots_table($newslots);
+    const LINK = 1; // This is used to join pages.
+    const UNLINK = 2; // This is used to separate pages.
+
+    private $quizid;
+    private $slots;
+
+    /**
+     * Set current slots object
+     * @param int $quizid
+     * @param object $slots
+     */
+    public function __construct($quizid = 0, $slots = null) {
+        $this->quizid = $quizid;
+        if (!$this->quizid) {
+            $this->slots = array();
+        }
+        if (!$slots) {
+            $this->slots = $slots;
         }
     }
 
@@ -78,7 +91,7 @@ class quiz_repaginate {
     }
 
     /**
-     * Return currect slot object
+     * Return current slot object
      * @param object$slots
      * @param int $slotnumber
      */
@@ -115,61 +128,84 @@ class quiz_repaginate {
     }
 
     /**
-     * Repaginate the slots. Depending on the function call type
-     * 'join', join two pages together and repaginate
-     * 'separate' separate two pages and repaginate
-     * @param int $nextslot, next slot number
-     * @param string $type, whether 'join' or 'separate'
-     * @param object $slots, all quiz slots (optional)
+     * Return array of slots with slot id as key
+     * @param object$slots
      */
-    public function repaginate($slots, $nextslot, $type) {
-        global $DB;
+    protected function get_slots_by_slotid($slots) {
         if (!$slots) {
             return array();
         }
-
-        $slots = $this->get_pages_slotnumber_slotids($slots);
-        $numberofpages = $this->get_number_of_pages($slots);
-        if ($numberofpages < 2) {
-            return $slots;
-        }
-
-        $numberofslots = count($slots);
-        if ($numberofslots < 2) {
-            return $slots;
-        }
-        $nextslotobj = $this->get_this_slot($slots, $nextslot);
-        $lastslot = $this->get_last_slot($slots);
         $newslots = array();
-        $paging = 1;
-        foreach ($slots as $key => $slot) {
-            // We do use the complex key for processing.
-            // we do not need this any more, The return object will only have the id as key.
-            list($currentpagenumber, $currentslotnumber, $currentslotid) = explode(',', $key);
-            if ($nextslot > $lastslot->slot) {
-                // That should not happen.
-                return;
-            }
-            if ((int)$currentslotnumber === (int)$nextslot - 1) {
-                $newslots[$slot->id] = $this->repaginate_this_slot($slot, $paging);
-                if ($type === 'join') {
-                    $nextslotobj->page = $currentpagenumber;
-                    $newslots[$nextslotobj->id] = $nextslotobj;
-                    $paging++;
-                } else {
-                    $nextslotobj->page = $currentpagenumber + 1;
-                    $newslots[$nextslotobj->id] = $nextslotobj;
-                    $paging = $paging + 2;
-                }
-            } else {
-                $ignorekey = $currentpagenumber . ',' . $nextslot . ',' . $nextslotobj->id;
-                if ($key != $ignorekey) {
-                    $newslots[$slot->id] = $this->repaginate_this_slot($slot, $paging);
-                    $paging++;
-                }
-            }
+        foreach ($slots as $slot) {
+            $newslots[$slot->id] = $slot;
         }
         return $newslots;
+    }
+    /**
+     * Repaginate, update DB and slots object
+     * @param int $nextslotnumber
+     * @param int $type
+     */
+    public function repaginate($nextslotnumber, $type) {
+        global $DB;
+        $this->slots = $DB->get_records('quiz_slots', array('quizid' => $this->quizid), 'slot');
+        $nextslot = null;
+        $newslots = array();
+        foreach ($this->slots as $slot) {
+            if ($slot->slot < $nextslotnumber) {
+                 $newslots[$slot->id] = $slot;
+            } else if ($slot->slot == $nextslotnumber) {
+                $nextslot = $this->repaginate_next_slot($nextslotnumber, $type);
+
+                // Update DB.
+                $this->update_this_slot($nextslot);
+
+                // Update returning object.
+                 $newslots[$slot->id] = $nextslot;
+            }
+        }
+        if ($nextslot) {
+            $newslots = array_merge($newslots, $this->repaginate_the_rest($this->slots, $nextslotnumber, $type));
+            $this->slots = $this->get_slots_by_slotid($newslots);
+        }
+    }
+
+    /**
+     * Repaginate next slot and return the modified slot object
+     * @param int $nextslotnumber
+     * @param int $type
+     */
+    public function repaginate_next_slot($nextslotnumber, $type) {
+        global $DB;
+        global $Out;
+        $currentslotnumber = $nextslotnumber - 1;
+        if (!($currentslotnumber && $nextslotnumber)) {
+            return null;
+        }
+        $currentslot = $DB->get_record('quiz_slots', array('quizid' => $this->quizid, 'slot' => $currentslotnumber));
+        $nextslot = $DB->get_record('quiz_slots', array('quizid' => $this->quizid, 'slot' => $nextslotnumber));
+//         $Out->append('type '. $type);
+        if ($type === self::LINK) {
+//             $Out->append('type === self::LINK');
+            return $this->repaginate_this_slot($nextslot, $currentslot->page);
+        } else if ($type === self::UNLINK) {
+//             $Out->append('type === self::UNLINK');
+            return $this->repaginate_this_slot($nextslot, $nextslot->page + 1);
+        }
+//         $Out->append('type null');
+        return null;
+    }
+
+    /**
+     * Update quiz_slots table for this slot
+     * @param object $slot
+     */
+    public function update_this_slot($slot) {
+        global $DB;
+        // Update quiz_slots table.
+        $transaction = $DB->start_delegated_transaction(); // TODO: Do i really need this?
+        $DB->update_record('quiz_slots', $slot, true);
+        $transaction->allow_commit();
     }
 
     /**
@@ -209,6 +245,41 @@ class quiz_repaginate {
     }
 
     /**
+     * Repaginate the rest
+     * @param object $quizslots
+     * @param int $slotfrom
+     * @param int $type
+     */
+    public function repaginate_the_rest($quizslots, $slotfrom, $type) {
+        global $DB;
+        if (!$quizslots) {
+            return null;
+        }
+        $newslots = array();
+        foreach ($quizslots as $slot) {
+            if ($type == self::LINK) {
+                if ($slot->slot <= $slotfrom) {
+                    continue;
+                }
+                $slot->page = $slot->page - 1;
+            } else if ($type == self::UNLINK) {
+                if ($slot->slot <= $slotfrom - 1) {
+                    continue;
+                }
+                $slot->page = $slot->page + 1;
+            }
+            // Update DB.
+            $DB->update_record('quiz_slots', $slot);
+            $newslots[$slot->id] = $slot;
+        }
+        return $newslots;
+    }
+
+    public function get_slots() {
+        return $this->slots;
+    }
+
+    /**
      *
      * @param object $quiz
      * @param object $thispageurl
@@ -221,7 +292,7 @@ class quiz_repaginate {
             $perpage[$i] = $i;
         }
         $gostring = get_string('go');
-        $output =  '<div id="repaginatedialog"><div class="hd">';
+        $output = '<div id="repaginatedialog"><div class="hd">';
         $output .= get_string('repaginatecommand', 'quiz');
         $output .= '</div><div class="bd">';
         $output .= '<form action="edit.php" method="post">';

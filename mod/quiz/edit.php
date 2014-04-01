@@ -458,10 +458,12 @@ echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
 echo '</div>';
 
 if ($USER->editing && !$repaginatingdisabledhtml) {
-
-    require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
-    $repaginate = new quiz_repaginate();
-    echo $repaginate->get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml);
+    // Display repaginate popup only if the quiz has at least two or more questions.
+    if ($quiz->fullquestions && count($quiz->fullquestions) > 1) {
+        require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
+        $repaginate = new quiz_repaginate();
+        echo $repaginate->get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml);
+    }
 }
 
 $qtypes = question_bank::get_all_qtypes();

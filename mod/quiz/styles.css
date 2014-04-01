@@ -1327,10 +1327,17 @@ bank window's title is prominent enough*/
 }
 .path-mod-quiz li.activity > div {position:relative;}
 
+#page-mod-quiz-edit .add-menu-outer {
+    display: inline;
+    text-align: right;
+    float: right;
+    --margin-bottom: -1.5em;'
+    margin-left: 55em;'
+}
 #page-mod-quiz-edit .add-menu {
     float: left;
     text-align: right;
-    max-height: 7px;
+    max-height: 20px;
 }
 #page-mod-quiz-edit .add-menu-left {
     position:relative;
@@ -1351,6 +1358,21 @@ bank window's title is prominent enough*/
     margin-right: 0.5em;
     padding: 2px 5px 2px 5px;
 }
+#page-mod-quiz-edit .pagenumber{
+    text-align: left;
+    margin-left: -4em;
+    margin-bottom: -1.5em;
+}
+#page-mod-quiz-edit .pagenumber .text {
+    float: left;
+}
+#page-mod-quiz-edit .nopagenumber{
+    text-align: left;
+    margin-left: -2em;
+    margin-top: -0.7em;
+    margin-bottom: -0.7em;
+}
+
 
 /** Edit Quiz **/
 .path-mod-quiz ul.slots li.section {border: 0;}
@@ -1372,7 +1394,7 @@ bank window's title is prominent enough*/
 #page-mod-quiz-edit ul.slots li.activity div.activityinstance .questiontext {font-weight: bold; margin-left: 5px;}
 
 .path-mod-quiz ul.slots li.section li.activity {background: #E6E6E6; margin: 3px 0 3px 0}
-.path-mod-quiz ul.slots li.section li.activity.descriptionqtype_description {background: #CEBAFF;}
+.path-mod-quiz ul.slots li.section li.activity.qtype_description {background: #CEBAFF;}
 .path-mod-quiz ul.slots li.section li.activity.page {background: #FFFFFF;}
 .path-mod-quiz ul.slots li.section li.activity a.preview {margin-left: 5px}
 .path-mod-quiz ul.slots li.section li.activity .instancemaxmark {margin-left: 5px}
@@ -1381,3 +1403,5 @@ bank window's title is prominent enough*/
 
 .path-mod-quiz ul.slots li.section li.activity .activityinstance {padding-right: 40px;}
 .quizsavegradesform label[for=inputmaxgrade] {display: inline;}
+.path-mod-quiz ul.slots .activityinstance form {display: inline;}
+.path-mod-quiz ul.slots .titleeditor {width: 25px;}

@@ -69,7 +69,7 @@ if ($pageaction == 'DELETE') {
 
 switch($requestmethod) {
     case 'POST':
-//      case 'GET': // For debugging.
+     case 'GET': // For debugging.
 
         switch ($class) {
             case 'section':
@@ -77,7 +77,6 @@ switch($requestmethod) {
 
             case 'resource':
                 switch ($field) {
-
                     case 'move':
                         require_capability('mod/quiz:manage', $modcontext);
                         $structure->move_slot($quiz, $id, $beforeid, $page);
@@ -103,6 +102,17 @@ switch($requestmethod) {
                             quiz_update_grades($quiz, 0, true);
                         }
                         echo json_encode(array('instancemaxmark' => $maxmark));
+                        break;
+                    case 'linkslottopage':
+                        require_capability('mod/quiz:manage', $modcontext);
+                        $slots = $structure->link_slot_to_page($quiz, $id, $value);
+                        $slots_json = array();
+//                         $slots_json = $slots;
+                        foreach ($slots as $slot) {
+                            $slots_json[$slot->slot] = array('id'=>$slot->id, 'slot'=>$slot->slot,
+                                                            'page'=>$slot->page);
+                        }
+                        echo json_encode(array('slots' => $slots_json));
                         break;
                 }
                 break;
