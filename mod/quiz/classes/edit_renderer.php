@@ -496,8 +496,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $pagenumberclass = 'pagenumber'; // TODO MDL-43089 to add appropriate class name here
         $dragdropclass = 'activity yui3-dd-drop';
         $prevpage = $this->get_previous_page($structure, $slotnumber -1);
+        $nextpage = $this->get_previous_page($structure, $slotnumber +1);
+        $link_page = 2; // Unlink
         // TODO: Create two icons or use link and unlink icon from TinyMCE to replcae show and hide
         if ($prevpage != $pagenumber) {
+
             // Add the add-menu at the page level.
             $addmenu = html_writer::tag('span', $this->add_menu_actions($quiz, $question, $pageurl), array('class' => 'add-menu-outer'));
 
@@ -505,15 +508,22 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 //             $output .= $addmenu;
         }
 
+        if ($nextpage != $pagenumber) {
+            $link_page = 1; // Link
+        }
+
         if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $pageurl)) {
             $questionclasses = 'activity ' . $question->qtype . ' qtype_' . $question->qtype . ' slot';
             $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'slot-' . $slotid));
         }
 
-        if(true){
-            $joinhtml = quiz_question_page_join_button($quiz, $question);
+        $lastslot = $structure->get_last_slot();
+        if ($lastslot->id != $slotid) {
+            // Add pink page button.
+            $joinhtml = quiz_question_page_join_button($quiz, $question, $link_page);
             $output .= html_writer::tag('li', $joinhtml, array('class' => $dragdropclass.' page_join'));
         }
+
         return $output;
     }
 

@@ -1,7 +1,7 @@
 /**
- * Drag and Drop for course sections and course modules.
+ * Drag and Drop for Quiz sections and slots.
  *
- * @module moodle-course-dragdrop
+ * @module moodle-mod-quiz-dragdrop
  */
 
 var CSS = {
@@ -25,8 +25,4 @@ var CSS = {
     SECTIONHANDLE: 'section-handle',
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
-};
-
-var CONSTANTS =  {
-    PAGEIDPREFIX : 'page-'
 };

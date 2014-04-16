@@ -1,9 +1,9 @@
 YUI.add('moodle-mod_quiz-dragdrop', function (Y, NAME) {
 
 /**
- * Drag and Drop for course sections and course modules.
+ * Drag and Drop for Quiz sections and slots.
  *
- * @module moodle-course-dragdrop
+ * @module moodle-mod-quiz-dragdrop
  */
 
 var CSS = {
@@ -28,10 +28,7 @@ var CSS = {
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
 };
-
-var CONSTANTS =  {
-    PAGEIDPREFIX : 'page-'
-};/**
+/**
  * Section drag and drop.
  *
  * @class M.mod_quiz.dragdrop.section
@@ -440,7 +437,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         }
         
         if (dragnode.previous('li.page')) {
-            params.page = Number(this.getPageId(dragnode.previous('li.page')));
+            params.page = Number(Y.Moodle.mod_quiz.util.page.getId(dragnode.previous('li.page')));
         }
 
         // Do AJAX request
@@ -458,6 +455,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
                     var responsetext = Y.JSON.parse(response.responseText);
                     var params = {element: dragnode, visible: responsetext.visible};
                     M.mod_quiz.quizbase.invoke_function('set_visibility_resource_ui', params);
+                    Y.Moodle.mod_quiz.util.slot.reorder_slots();
                     this.unlock_drag_handle(drag, CSS.EDITINGMOVE);
                     window.setTimeout(function() {
                         spinner.hide();
@@ -472,26 +470,6 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
             },
             context:this
         });
-    },
-    
-    /**
-     * Determines the page ID for the provided page.
-     *
-     * @method getId
-     * @param page {Node} The page to find an ID for.
-     * @return {Number|false} The ID of the page in question or false if no ID was found.
-     */
-    getPageId: function(page) {
-        // We perform a simple substitution operation to get the ID.
-        var id = page.get('id').replace(
-                CONSTANTS.PAGEIDPREFIX, '');
-
-        // Attempt to validate the ID.
-        id = parseInt(id, 10);
-        if (typeof id === 'number' && isFinite(id)) {
-            return id;
-        }
-        return false;
     }
 }, {
     NAME: 'mod_quiz-dragdrop-resource',

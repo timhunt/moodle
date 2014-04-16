@@ -11,5 +11,11 @@
         "slot.js"
       ]
     }
+    ,
+    "moodle-mod_quiz-util-page": {
+      "jsfiles": [
+        "page.js"
+      ]
+    }
   }
 }

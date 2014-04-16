@@ -58,16 +58,12 @@ YUI.add('moodle-mod_quiz-toolboxes', function (Y, NAME) {
         SECTIONUL : 'ul.section',
         SHOW : 'a.'+CSS.SHOW,
         SHOWHIDE : 'a.editing_showhide',
-        SLOTLI : 'li.slot',
-        SLOTNUMBER : 'span.slotnumber'
+        SLOTLI : 'li.slot'
     },
     INDENTLIMITS = {
         MIN: 0,
         MAX: 16
     },
-    CONSTANTS =  {
-            PAGENUMBERPREFIX : 'Page '
-        },
     BODY = Y.one(document.body);
 
 // Setup the basic namespace.
@@ -316,9 +312,12 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
                 // The user is deleting the activity.
                 this.delete_with_confirmation(ev, node, activity, action);
                 break;
-            case 'joinpage':
-                // The user wishes to edit the maxmark of the resource.
-                this.join_page(ev, node, activity, action);
+            case 'linkpage':
+            case 'unlinkpage':
+                // The user is linking or unlinking pages.
+                var value = action == 'linkpage'?1:2;
+                // TODO MDL-43089 finish link page functionality. 
+//                this.link_page(ev, node, activity, value);
                 break;
             default:
                 // Nothing to do here!
@@ -376,6 +375,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
             // Actually remove the element.
             element.remove();
+            Y.Moodle.mod_quiz.util.slot.reorder_slots();
             var data = {
                 'class': 'resource',
                 'action': 'DELETE',
@@ -555,76 +555,43 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
      * the other slots
      *
      * @protected
-     * @method join_page
+     * @method link_page
      * @param {EventFacade} ev The event that was fired.
      * @param {Node} button The button that triggered this action.
      * @param {Node} activity The activity node that this action will be performed on.
      * @chainable
      */
-    join_page: function(ev, button, activity) {
+    link_page: function(ev, button, activity, value) {
         // Prevent the default button action
         ev.preventDefault();
 
-        // Get the element we're working on
-        var element   = activity;
-
-        // If it is confirmed.
-
-        var spinner = this.add_spinner(activity);
-        // Actually remove the element.
-//            element.remove();
-        var slotnumber = 0;
+        var spinner = this.add_spinner(activity),
+            slotnumber = 0;
         
-//        Y.Moodle.mod_quiz.util.slot.getSlotNumber(element);
         var data = {
             'class': 'resource',
             'field': 'linkslottopage',
             'id':    slotnumber,
-            'value': 1
+            'value': value
         };
         
-        slotnumber = activity.previous('li.activity').one('.slotnumber').get('text');
+        slotnumber = Y.Moodle.mod_quiz.util.slot.getNumber(activity.previous('li.activity'));
         if (slotnumber) {
             data.id = Number(slotnumber);
         }
         this.send_request(data, spinner, function(response) {
             if (response.slots) {
                 this.repaginate_slots(response.slots);
-////                activity.one(SELECTOR.INSTANCEMAXMARK).setContent(response.instancemaxmark);
             }
         });
-//            this.send_request(data);
-//            if (M.core.actionmenu && M.core.actionmenu.instance) {
-//                M.core.actionmenu.instance.hideMenu();
-//            }
-
 
         return this;
     },
     repaginate_slots: function(slots) {
-        console.log(slots);
         this.slots = slots;
-        console.log(this.slots);
-//        for(var x=0;i<slots.length;x++){
-        var slot;
-        var section = Y.one(SELECTOR.PAGECONTENT+' '+SELECTOR.SECTIONUL);
-//        var resources = section
-        for(var key in slots){
-            
-            if(!slots.hasOwnProperty(key)){
-                continue;
-            }
-            
-            console.log(key);
-            slot = slots[key];
-            console.log(slot);
-            
-        }
-        
-        var activities = section.all(SELECTOR.ACTIVITYLI);
+        var section = Y.one(SELECTOR.PAGECONTENT+' '+SELECTOR.SECTIONUL),
+            activities = section.all(SELECTOR.ACTIVITYLI);
         activities.each(function(node) {
-            console.log('activities: 1');
-            console.log(this.slots);
             
             // What element is it? page/slot/link
             // what is the current slot?
@@ -642,9 +609,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
             }
             
             // getSlotnumber() Should be a method of util.slot
-            var slotnumber = Number(slot.one(SELECTOR.SLOTNUMBER).get('text'));
-            console.log('type = '+type);
-            console.log('slotnumber = '+slotnumber);
+            var slotnumber = Number(Y.Moodle.mod_quiz.util.slot.getNumber(slot));
             if(!type){
                 return;
             }
@@ -656,49 +621,29 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
             }
             
             var slotdata = this.slots[slotnumber];
-            console.log(slotdata);
             
             if(type == this.NODE_PAGE){
                 // Get page number
-                var pagenumber = this.getPageNumber(node);
+                var pagenumber = Y.Moodle.mod_quiz.util.page.getNumber(node);
                 console.log('pagenumber = '+pagenumber);
+                console.log('slotdata.page = '+slotdata.page);
                 // Is the page number correct?
+                if (slotdata.page == pagenumber) {
+                    console.log('slotdata.page == pagenumber return');
+                    return;
+                }
+                
+                if (pagenumber < slotdata.page) {
+                    // Remove page node.
+                    node.remove();
+                }
+                else {
+                    // Add page node.
+                    console.log('pagenumber > slotdata.page update page number');
+                }
                 
             }
-//            var button;
-//            if (node.one(SELECTOR.SHOW)) {
-//                button = node.one(SELECTOR.SHOW);
-//            } else {
-//                button = node.one(SELECTOR.HIDE);
-//            }
-//            var activityid = Y.Moodle.mod_quiz.util.slot.getId(node);
-//
-//            // NOTE: resourcestotoggle is returned as a string instead
-//            // of a Number so we must cast our activityid to a String.
-//            if (Y.Array.indexOf(response.resourcestotoggle, "" + activityid) !== -1) {
-//                M.mod_quiz.resource_toolbox.handle_resource_dim(button, node, action);
-//            }
         }, this);
-    },
-    
-    /**
-     * Determines the page Number for the provided page.
-     *
-     * @method getId
-     * @param page {Node} The page to find an ID for.
-     * @return {Number|false} The ID of the page in question or false if no ID was found.
-     */
-    getPageNumber: function(page) {
-        // We perform a simple substitution operation to get the ID.
-        var number = page.get('text').replace(
-                CONSTANTS.PAGENUMBERPREFIX, '');
-
-        // Attempt to validate the ID.
-        number = parseInt(number, 10);
-        if (typeof number === 'number' && isFinite(number)) {
-            return number;
-        }
-        return false;
     }
 },
 {
@@ -902,4 +847,14 @@ M.mod_quiz.init_section_toolbox = function(config) {
 };
 
 
-}, '@VERSION@', {"requires": ["node", "base", "event-key", "node", "io", "moodle-mod_quiz-quizbase"]});
+}, '@VERSION@', {
+    "requires": [
+        "node",
+        "base",
+        "event-key",
+        "node",
+        "io",
+        "moodle-mod_quiz-quizbase",
+        "moodle-mod_quiz-util"
+    ]
+});

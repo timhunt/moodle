@@ -56,16 +56,12 @@
         SECTIONUL : 'ul.section',
         SHOW : 'a.'+CSS.SHOW,
         SHOWHIDE : 'a.editing_showhide',
-        SLOTLI : 'li.slot',
-        SLOTNUMBER : 'span.slotnumber'
+        SLOTLI : 'li.slot'
     },
     INDENTLIMITS = {
         MIN: 0,
         MAX: 16
     },
-    CONSTANTS =  {
-            PAGENUMBERPREFIX : 'Page '
-        },
     BODY = Y.one(document.body);
 
 // Setup the basic namespace.

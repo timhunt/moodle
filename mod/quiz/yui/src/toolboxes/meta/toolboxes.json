@@ -6,7 +6,8 @@
             "event-key",
             "node",
             "io",
-            "moodle-mod_quiz-quizbase"
+            "moodle-mod_quiz-quizbase",
+            "moodle-mod_quiz-util"
         ]
     }
 }

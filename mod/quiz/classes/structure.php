@@ -289,26 +289,23 @@ class structure {
     function link_slot_to_page($quiz, $slot, $type) {
         global $DB;
         require_once("locallib.php");
-        require_once('repaginate.php');
+        require_once('classes/repaginate.php');
         $quizid = $quiz->id;
-        $slotnumber = $slot;
+        $slotnumber = $slot+1;
         $repagtype = $type;
         $quizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot');
-        // print_object($quizslots);
-        // print_object($slotnumber);
-        // print_object($repagtype);
-        // exit;
-//         if ($repagtype == 1) {
-//             new \quiz_repaginate($quizslots, $slotnumber, 'join');
-//         } else if ($repagtype == 2) {
-//             new \quiz_repaginate($quizslots, $slotnumber, 'separate');
-//         }
 
         $repaginate = new \quiz_repaginate($quizid, $quizslots);
         $repaginate->repaginate($slotnumber, $repagtype);
-//         $updatedquizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot', 'slot,page');
         $updatedquizslots = $repaginate->get_slots();
 
         return $updatedquizslots;
+    }
+
+    public function get_last_slot() {
+        $slots = $this->get_quiz_slots();
+        $keys = array_keys($slots);
+        $id = array_pop($keys);
+        return $slots[$id];
     }
 }

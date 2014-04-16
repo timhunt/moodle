@@ -1282,7 +1282,7 @@ function quiz_question_delete_button($quiz, $question) {
  * @param object $question the question
  * @return the HTML for a delete icon and link.
  */
-function quiz_question_page_join_button($quiz, $question) {
+function quiz_question_page_join_button($quiz, $question, $link_page) {
     global $OUTPUT, $PAGE;
 
     if (!$hasmanagequiz = has_capability('mod/quiz:manage', $PAGE->cm->context)) {
@@ -1290,15 +1290,20 @@ function quiz_question_page_join_button($quiz, $question) {
     }
 
     $url = new moodle_url('repaginate.php', array('cmid' =>$quiz->cmid, 'quizid' => $quiz->id,
-                'slot' => $question->slot, 'repag' => 1, 'sesskey' => sesskey()));
+                'slot' => $question->slot, 'repag' => $link_page, 'sesskey' => sesskey()));
 
-    $strjoin = get_string('joinpage', 'quiz');
+    if($link_page == 1) {
+        $title = get_string('linkpage', 'quiz');
+        $image = $OUTPUT->pix_icon('e/insert_edit_link', $title); //remove_link
+        $action = 'linkpage';
+    } else {
+        $title = get_string('unlinkpage', 'quiz');
+        $image = $OUTPUT->pix_icon('e/remove_link', $title);
+        $action = 'unlinkpage';
+    }
 
-    // Build the icon.
-    $image = $OUTPUT->pix_icon('e/insert_edit_link', $strjoin); //remove_link
-
-    return $OUTPUT->action_link($url, $image, null, array('title' => $strjoin,
-                'class' => 'cm-edit-action editing_page_join', 'data-action' => 'joinpage'));
+    return $OUTPUT->action_link($url, $image, null, array('title' => $title,
+                'class' => 'cm-edit-action editing_page_join', 'data-action' => $action));
 }
 
 /**

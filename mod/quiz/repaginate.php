@@ -30,7 +30,7 @@ $cmid = required_param('cmid', PARAM_INT);
 $quizid = required_param('quizid', PARAM_INT);
 $slotnumber = required_param('slot', PARAM_INT);
 $repagtype = required_param('repag', PARAM_INT);
-
+$slotnumber++;
 $repage = new quiz_repaginate($quizid);
 $repage->repaginate($slotnumber, $repagtype);
 
