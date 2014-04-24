@@ -200,9 +200,14 @@ function cron_run() {
 
     // Session gc.
     mtrace("Running session gc tasks...");
-    \core\session\manager::gc();
-    mtrace("...finished stale session cleanup");
-
+    cron_trace_time_and_memory();
+    $counts = \core\session\manager::gc();
+    mtrace("... deleted {$counts['deletedorsuspendedusers']} sessions of deleted or suspended users.");
+    mtrace("... deleted {$counts['disabledauth']} sessions of users using a disabled authentication plugin.");
+    mtrace("... deleted {$counts['realtimeouts']} sessions real login sessions.");
+    mtrace("... deleted {$counts['guesttimeouts']} sessions guest login sessions.");
+    mtrace("... deleted {$counts['notloggedin']} sessions of users who never finished logging in.");
+    mtrace("... deleted {$counts['cookiecheck']} cookie-check sessions.");
 
     // Run the auth cron, if any before enrolments
     // because it might add users that will be needed in enrol plugins

@@ -610,6 +610,7 @@ class manager {
 
     /**
      * Periodic timed-out session cleanup.
+     * @return array info on how many sessions were killed for each reason.
      */
     public static function gc() {
         global $CFG, $DB;
@@ -618,12 +619,21 @@ class manager {
         set_time_limit(0);
 
         $maxlifetime = $CFG->sessiontimeout;
+        $counts = array(
+            'deletedorsuspendedusers' => 0,
+            'disabledauth'            => 0,
+            'realtimeouts'            => 0,
+            'guesttimeouts'           => 0,
+            'notloggedin'             => 0,
+            'cookiecheck'             => 0,
+        );
 
         try {
             // Kill all sessions of deleted and suspended users without any hesitation.
             $rs = $DB->get_recordset_select('sessions', "userid IN (SELECT id FROM {user} WHERE deleted <> 0 OR suspended <> 0)", array(), 'id DESC', 'id, sid');
             foreach ($rs as $session) {
                 self::kill_session($session->sid);
+                $counts['deletedorsuspendedusers']++;
             }
             $rs->close();
 
@@ -637,6 +647,7 @@ class manager {
             $rs = $DB->get_recordset_select('sessions', "userid IN (SELECT id FROM {user} WHERE auth $notplugins)", $params, 'id DESC', 'id, sid');
             foreach ($rs as $session) {
                 self::kill_session($session->sid);
+                $counts['disabledauth']++;
             }
             $rs->close();
 
@@ -660,6 +671,7 @@ class manager {
                     }
                 }
                 self::kill_session($user->sid);
+                $counts['realtimeouts']++;
             }
             $rs->close();
 
@@ -668,6 +680,7 @@ class manager {
             $rs = $DB->get_recordset_select('sessions', 'userid = :guestid AND timemodified < :purgebefore', $params, 'id DESC', 'id, sid');
             foreach ($rs as $session) {
                 self::kill_session($session->sid);
+                $counts['guesttimeouts']++;
             }
             $rs->close();
 
@@ -676,6 +689,7 @@ class manager {
             $rs = $DB->get_recordset_select('sessions', 'userid = 0 AND timemodified < :purgebefore', $params, 'id DESC', 'id, sid');
             foreach ($rs as $session) {
                 self::kill_session($session->sid);
+                $counts['notloggedin']++;
             }
             $rs->close();
 
@@ -684,12 +698,15 @@ class manager {
             $rs = $DB->get_recordset_select('sessions', 'userid = 0 AND timemodified = timecreated AND timemodified < :purgebefore', $params, 'id ASC', 'id, sid');
             foreach ($rs as $session) {
                 self::kill_session($session->sid);
+                $counts['cookiecheck']++;
             }
             $rs->close();
 
         } catch (\Exception $ex) {
             debugging('Error gc-ing sessions: '.$ex->getMessage(), DEBUG_NORMAL, $ex->getTrace());
         }
+
+        return $counts;
     }
 
     /**
