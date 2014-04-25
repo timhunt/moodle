@@ -1,4 +1,3 @@
-
 /**
  * The quizbase class to provide shared functionality to Modules within Moodle.
  *

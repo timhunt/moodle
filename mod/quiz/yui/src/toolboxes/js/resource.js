@@ -35,7 +35,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
      * @protected
      */
     editmaxmarkevents: [],
-    
+
     /**
      * 
      */
@@ -104,8 +104,8 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
             case 'linkpage':
             case 'unlinkpage':
                 // The user is linking or unlinking pages.
-                var value = action == 'linkpage'?1:2;
-                // TODO MDL-43089 finish link page functionality. 
+                var value = action == 'linkpage' ? 1 : 2;
+                // TODO MDL-43089 finish link page functionality.
 //                this.link_page(ev, node, activity, value);
                 break;
             default:
@@ -223,9 +223,9 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
             // Create the editor and submit button
             var editform = Y.Node.create('<form action="#" />');
-            var editinstructions = Y.Node.create('<span class="'+CSS.EDITINSTRUCTIONS+'" id="id_editinstructions" />')
+            var editinstructions = Y.Node.create('<span class="' + CSS.EDITINSTRUCTIONS + '" id="id_editinstructions" />')
                 .set('innerHTML', M.util.get_string('edittitleinstructions', 'moodle'));
-            var editor = Y.Node.create('<input name="maxmark" type="text" class="'+CSS.TITLEEDITOR+'" />').setAttrs({
+            var editor = Y.Node.create('<input name="maxmark" type="text" class="' + CSS.TITLEEDITOR + '" />').setAttrs({
                 'value' : maxmarktext,
                 'autocomplete' : 'off',
                 'aria-describedby' : 'id_editinstructions',
@@ -316,7 +316,6 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
      * @method edit_maxmark_clear
      * @param {Node} activity  The activity whose maxmark we were altering.
      */
-    
     edit_maxmark_clear : function(activity) {
       // Detach all listen events to prevent duplicate triggers
       new Y.EventHandle(this.editmaxmarkevents).detach();
@@ -356,14 +355,14 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
         var spinner = this.add_spinner(activity),
             slotnumber = 0;
-        
+
         var data = {
             'class': 'resource',
             'field': 'linkslottopage',
             'id':    slotnumber,
             'value': value
         };
-        
+
         slotnumber = Y.Moodle.mod_quiz.util.slot.getNumber(activity.previous('li.activity'));
         if (slotnumber) {
             data.id = Number(slotnumber);
@@ -378,50 +377,49 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
     },
     repaginate_slots: function(slots) {
         this.slots = slots;
-        var section = Y.one(SELECTOR.PAGECONTENT+' '+SELECTOR.SECTIONUL),
+        var section = Y.one(SELECTOR.PAGECONTENT + ' ' + SELECTOR.SECTIONUL),
             activities = section.all(SELECTOR.ACTIVITYLI);
         activities.each(function(node) {
-            
+
             // What element is it? page/slot/link
             // what is the current slot?
             var type;
             var slot;
             if(node.hasClass(CSS.PAGE)){
-               type = this.NODE_PAGE; 
+               type = this.NODE_PAGE;
                slot = node.next(SELECTOR.SLOTLI);
             } else if (node.hasClass(CSS.SLOT)){
-                type = this.NODE_SLOT;  
+                type = this.NODE_SLOT;
                 slot = node;
             } else if (node.hasClass(CSS.JOIN)){
                 type = this.NODE_JOIN;
                 slot = node.previous(SELECTOR.SLOTLI);
             }
-            
+
             // getSlotnumber() Should be a method of util.slot
             var slotnumber = Number(Y.Moodle.mod_quiz.util.slot.getNumber(slot));
             if(!type){
+                // Nothing we can do.
                 return;
             }
-            
+
             // Is it correct?
             if(!this.slots.hasOwnProperty(slotnumber)){
                 // An error. We should handle this.
                 return;
             }
-            
+
             var slotdata = this.slots[slotnumber];
-            
+
             if(type == this.NODE_PAGE){
                 // Get page number
                 var pagenumber = Y.Moodle.mod_quiz.util.page.getNumber(node);
-                console.log('pagenumber = '+pagenumber);
-                console.log('slotdata.page = '+slotdata.page);
                 // Is the page number correct?
                 if (slotdata.page == pagenumber) {
                     console.log('slotdata.page == pagenumber return');
                     return;
                 }
-                
+
                 if (pagenumber < slotdata.page) {
                     // Remove page node.
                     node.remove();
@@ -430,7 +428,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
                     // Add page node.
                     console.log('pagenumber > slotdata.page update page number');
                 }
-                
+
             }
         }, this);
     }

@@ -69,7 +69,7 @@ if ($pageaction == 'DELETE') {
 
 switch($requestmethod) {
     case 'POST':
-     case 'GET': // For debugging.
+    case 'GET': // For debugging.
 
         switch ($class) {
             case 'section':
@@ -106,13 +106,12 @@ switch($requestmethod) {
                     case 'linkslottopage':
                         require_capability('mod/quiz:manage', $modcontext);
                         $slots = $structure->link_slot_to_page($quiz, $id, $value);
-                        $slots_json = array();
-//                         $slots_json = $slots;
+                        $json = array();
                         foreach ($slots as $slot) {
-                            $slots_json[$slot->slot] = array('id'=>$slot->id, 'slot'=>$slot->slot,
-                                                            'page'=>$slot->page);
+                            $json[$slot->slot] = array('id' => $slot->id, 'slot' => $slot->slot,
+                                                            'page' => $slot->page);
                         }
-                        echo json_encode(array('slots' => $slots_json));
+                        echo json_encode(array('slots' => $json));
                         break;
                 }
                 break;
@@ -126,7 +125,7 @@ switch($requestmethod) {
         switch ($class) {
             case 'resource':
                 require_capability('mod/quiz:manage', $modcontext);
-                if (!$slot = $DB->get_record('quiz_slots', array('quizid'=>$quiz->id, 'id'=>$id))) {
+                if (!$slot = $DB->get_record('quiz_slots', array('quizid' => $quiz->id, 'id' => $id))) {
                     throw new moodle_exception('AJAX commands.php: Bad slot ID '.$id);
                 }
                 $structure->remove_slot($quiz, $slot->slot);

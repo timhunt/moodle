@@ -435,7 +435,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         if (dragnode.previous('li')) {
             params.beforeId = Number(Y.Moodle.mod_quiz.util.slot.getId(dragnode.previous('li')));
         }
-        
+
         if (dragnode.previous('li.page')) {
             params.page = Number(Y.Moodle.mod_quiz.util.page.getId(dragnode.previous('li.page')));
         }

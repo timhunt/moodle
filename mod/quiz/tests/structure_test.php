@@ -64,7 +64,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         // Make a quiz.
         $quizgenerator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
 
-        $quiz = $quizgenerator->create_instance(array('course'=>$course->id, 'questionsperpage' => 0,
+        $quiz = $quizgenerator->create_instance(array('course' => $course->id, 'questionsperpage' => 0,
             'grade' => 100.0, 'sumgrades' => 2));
 
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id);
@@ -216,7 +216,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $uniqueid = 1;
         $pagenumber = 0;
 
-        // Rows are in the format array(id, quizid, slot, page, questionid, maxmark)
+        // Rows are in the format array(id, quizid, slot, page, questionid, maxmark).
         $data[] = array($uniqueid++, $quiz->id, 1, $pagenumber, 1, 100);
         $data[] = array($uniqueid++, $quiz->id, 2, ++$pagenumber, 2, 100);
         $data[] = array($uniqueid++, $quiz->id, 3, $pagenumber, 3, 100);

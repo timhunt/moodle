@@ -184,7 +184,7 @@ class structure {
             throw new moodle_exception('Bad slot ID ' . $id);
         }
 
-        // empty target slot means move slot to first
+        // Empty target slot means move slot to first.
         if (empty($targetslot)) {
             $targetid = $DB->get_field('quiz_slots', 'id', array('slot' => 1, 'quizid' => $quiz->id));
             $targetslot = $this->slots[$targetid];
@@ -204,13 +204,13 @@ class structure {
         }
 
         $trans = $DB->start_delegated_transaction();
-        // Slot has moved record new order
-        if($hasslotmoved) {
+        // Slot has moved record new order.
+        if ($hasslotmoved) {
             update_field_with_unique_index('quiz_slots',
                     'slot', $slotreorder, array('quizid' => $quiz->id));
         }
-        // Page has changed. Record it
-        if($movingslot->page !== $page){
+        // Page has changed. Record it.
+        if ($movingslot->page !== $page) {
             $DB->set_field('quiz_slots', 'page', $page,
                     array('id' => $movingslot->id));
         }
@@ -222,7 +222,7 @@ class structure {
      * @param object $quiz the quiz object.
      * @param int $questionid The id of the question to be deleted.
      */
-    function remove_slot($quiz, $slotnumber) {
+    public function remove_slot($quiz, $slotnumber) {
         global $DB;
 
         $slot = $DB->get_record('quiz_slots', array('quizid' => $quiz->id, 'slot' => $slotnumber));
@@ -258,7 +258,7 @@ class structure {
      * @param float    $maxmark the new maxmark.
      * @return bool true if the new grade is different from the old one.
      */
-    function update_slot_maxmark($slot, $maxmark) {
+    public function update_slot_maxmark($slot, $maxmark) {
         global $DB;
 
         if (abs($maxmark - $slot->maxmark) < 1e-7) {
@@ -286,12 +286,12 @@ class structure {
      * @param float    $maxmark the new maxmark.
      * @return bool true if the new grade is different from the old one.
      */
-    function link_slot_to_page($quiz, $slot, $type) {
+    public function link_slot_to_page($quiz, $slot, $type) {
         global $DB;
         require_once("locallib.php");
         require_once('classes/repaginate.php');
         $quizid = $quiz->id;
-        $slotnumber = $slot+1;
+        $slotnumber = $slot + 1;
         $repagtype = $type;
         $quizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot');
 

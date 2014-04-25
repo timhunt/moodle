@@ -106,7 +106,7 @@ Y.Moodle.mod_quiz.util.slot = {
      * @return {node[]} An array containing slot nodes.
      */
     getSlots: function() {
-        return Y.all(this.SELECTORS.PAGECONTENT+' '+this.SELECTORS.SECTIONUL+' '+this.SELECTORS.SLOT);
+        return Y.all(this.SELECTORS.PAGECONTENT + ' ' + this.SELECTORS.SECTIONUL + ' ' + this.SELECTORS.SLOT);
     },
 
     /**
@@ -138,7 +138,7 @@ Y.Moodle.mod_quiz.util.slot = {
             }
 
             // Set slot number.
-            this.setNumber(slot, previousslotnumber+1);
+            this.setNumber(slot, previousslotnumber + 1);
         }, this);
 
     }

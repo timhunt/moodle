@@ -456,7 +456,7 @@ class quiz_question_bank_view extends core_question\bank\view {
 function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledmodules = null, $config = null) {
     global $CFG, $PAGE, $SITE;
 
-    // Ensure that ajax should be included
+    // Ensure that ajax should be included.
     if (!course_ajax_enabled($course)) {
         return false;
     }
@@ -465,22 +465,22 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
         $config = new stdClass();
     }
 
-    // The URL to use for resource changes
+    // The URL to use for resource changes.
     if (!isset($config->resourceurl)) {
         $config->resourceurl = '/mod/quiz/rest.php';
     }
 
-    // The URL to use for section changes
+    // The URL to use for section changes.
     if (!isset($config->sectionurl)) {
         $config->sectionurl = '/mod/quiz/rest.php';
     }
 
-    // Any additional parameters which need to be included on page submission
+    // Any additional parameters which need to be included on page submission.
     if (!isset($config->pageparams)) {
         $config->pageparams = array();
     }
 
-    // Include toolboxes
+    // Include toolboxes.
     $PAGE->requires->yui_module('moodle-mod_quiz-toolboxes',
             'M.mod_quiz.init_resource_toolbox',
             array(array(
@@ -501,7 +501,7 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
             ))
     );
 
-    // Include course dragdrop
+    // Include course dragdrop.
     if ($course->id != $SITE->id) {
         $PAGE->requires->yui_module('moodle-mod_quiz-dragdrop', 'M.mod_quiz.init_section_dragdrop',
             array(array(
@@ -520,7 +520,7 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
             )), null, true);
     }
 
-    // Require various strings for the command toolbox
+    // Require various strings for the command toolbox.
     $PAGE->requires->strings_for_js(array(
             'moveleft',
             'deletechecktype',
@@ -543,7 +543,7 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
             'confirmremovequestion',
         ), 'quiz');
 
-    // For confirming resource deletion we need the name of the module in question
+    // For confirming resource deletion we need the name of the module in question.
     foreach ($usedqtypes as $module => $modname) {
         $PAGE->requires->string_for_js('pluginname', 'qtype_'.$module);
     }

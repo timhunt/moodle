@@ -69,15 +69,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     protected function section_right_content($section, $course, $onsectionpage) {
         $o = $this->output->spacer();
-
-        if ($section->firstslot > 1) {
-            // TODO MDL-43089 what is this?
-//             $controls = $this->section_edit_controls($course, $section, $onsectionpage);
-//             if (!empty($controls)) {
-//                 $o = implode('<br />', $controls);
-//             }
-        }
-
         return $o;
     }
 
@@ -112,16 +103,16 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $currenttext = '';
         $sectionstyle = '';
 
-        $o.= html_writer::start_tag('li', array('id' => 'section-'.$section->id,
-            'class' => 'section main clearfix'.$sectionstyle, 'role'=>'region',
-            'aria-label'=> $section->heading));
+        $o .= html_writer::start_tag('li', array('id' => 'section-'.$section->id,
+            'class' => 'section main clearfix'.$sectionstyle, 'role' => 'region',
+            'aria-label' => $section->heading));
 
         $leftcontent = $this->section_left_content($section, $course, $onsectionpage);
-        $o.= html_writer::tag('div', $leftcontent, array('class' => 'left side'));
+        $o .= html_writer::tag('div', $leftcontent, array('class' => 'left side'));
 
         $rightcontent = $this->section_right_content($section, $course, $onsectionpage);
-        $o.= html_writer::tag('div', $rightcontent, array('class' => 'right side'));
-        $o.= html_writer::start_tag('div', array('class' => 'content'));
+        $o .= html_writer::tag('div', $rightcontent, array('class' => 'right side'));
+        $o .= html_writer::start_tag('div', array('class' => 'content'));
 
         return $o;
     }
@@ -133,7 +124,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     protected function section_footer() {
         $o = html_writer::end_tag('div');
-        $o.= html_writer::end_tag('li');
+        $o .= html_writer::end_tag('li');
 
         return $o;
     }
@@ -215,24 +206,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $controls = array();
 
         $url = clone($baseurl);
-            // TODO MDL-43089 ?
-//         if (has_capability('moodle/course:sectionvisibility', $coursecontext)) {
-//             if ($section->visible) { // Show the hide/show eye.
-//                 $strhidefromothers = get_string('hidefromothers', 'format_'.$course->format);
-//                 $url->param('hide', $section->section);
-//                 $controls[] = html_writer::link($url,
-//                     html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/hide'),
-//                     'class' => 'icon hide', 'alt' => $strhidefromothers)),
-//                     array('title' => $strhidefromothers, 'class' => 'editing_showhide'));
-//             } else {
-//                 $strshowfromothers = get_string('showfromothers', 'format_'.$course->format);
-//                 $url->param('show',  $section->section);
-//                 $controls[] = html_writer::link($url,
-//                     html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/show'),
-//                     'class' => 'icon hide', 'alt' => $strshowfromothers)),
-//                     array('title' => $strshowfromothers, 'class' => 'editing_showhide'));
-//             }
-//         }
 
         if (!$onsectionpage && has_capability('moodle/course:movesections', $coursecontext)) {
             $url = clone($baseurl);
@@ -251,7 +224,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             if ($section->section < $course->numsections) { // Add a arrow to move section down.
                 $url->param('section', $section->section);
                 $url->param('move', 1);
-                $strmovedown =  get_string('movedown');
+                $strmovedown = get_string('movedown');
 
                 $controls[] = html_writer::link($url,
                     html_writer::empty_tag('img', array('src' => $this->output->pix_url('i/down'),
@@ -354,7 +327,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         // Now the list of sections.
         echo $this->start_section_list();
 
-//         foreach ($sections as $section => $qnum) {
         $section = null;
         foreach ($sections as $section) {
             // For prototyping add required fields. Refactor to correct objects later.
@@ -454,7 +426,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @return int The tabindex from which the calling page can continue, that is,
      *      the last value used +1.
      */
-    function maximum_grade_input($quiz, $pageurl) {
+    public function maximum_grade_input($quiz, $pageurl) {
         $o = '';
         $o .= '<form method="post" action="edit.php" class="quizsavegradesform"><div>';
         $o .= '<fieldset class="invisiblefieldset" style="display: block;">';
@@ -483,9 +455,10 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param int|null $sectionreturn
      * @return String
      */
-    public function quiz_section_question_list_item($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $pageurl) {
+    public function quiz_section_question_list_item($quiz, $structure, $course, &$completioninfo, $question,
+            $sectionreturn, $pageurl) {
         global $OUTPUT;
-    	$output = '';
+        $output = '';
         $slotid = $this->get_question_info($structure, $question->id, 'slotid');
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
         $pagenumber = $this->get_question_info($structure, $question->id, 'page');
@@ -493,26 +466,25 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         // Put page in a span for easier styling.
         $page = html_writer::tag('span', $page, array('class' => 'text'));
 
-        $pagenumberclass = 'pagenumber'; // TODO MDL-43089 to add appropriate class name here
+        $pagenumberclass = 'pagenumber'; // TODO MDL-43089 to add appropriate class name here.
         $dragdropclass = 'activity yui3-dd-drop';
-        $prevpage = $this->get_previous_page($structure, $slotnumber -1);
-        $nextpage = $this->get_previous_page($structure, $slotnumber +1);
-        $link_page = 2; // Unlink
-        // TODO: Create two icons or use link and unlink icon from TinyMCE to replcae show and hide
+        $prevpage = $this->get_previous_page($structure, $slotnumber - 1);
+        $nextpage = $this->get_previous_page($structure, $slotnumber + 1);
+        $linkpage = 2; // Unlink.
         if ($prevpage != $pagenumber) {
-
             // Add the add-menu at the page level.
-            $addmenu = html_writer::tag('span', $this->add_menu_actions($quiz, $question, $pageurl), array('class' => 'add-menu-outer'));
-
-            $output .= html_writer::tag('li', $page.$addmenu,  array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
-//             $output .= $addmenu;
+            $addmenu = html_writer::tag('span', $this->add_menu_actions($quiz, $question, $pageurl),
+                    array('class' => 'add-menu-outer'));
+            $output .= html_writer::tag('li', $page.$addmenu,
+                    array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
         }
 
         if ($nextpage != $pagenumber) {
-            $link_page = 1; // Link
+            $linkpage = 1; // Link.
         }
 
-        if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo, $question, $sectionreturn, $pageurl)) {
+        if ($questiontypehtml = $this->quiz_section_question($quiz, $structure, $course, $completioninfo,
+                $question, $sectionreturn, $pageurl)) {
             $questionclasses = 'activity ' . $question->qtype . ' qtype_' . $question->qtype . ' slot';
             $output .= html_writer::tag('li', $questiontypehtml, array('class' => $questionclasses, 'id' => 'slot-' . $slotid));
         }
@@ -520,7 +492,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $lastslot = $structure->get_last_slot();
         if ($lastslot->id != $slotid) {
             // Add pink page button.
-            $joinhtml = quiz_question_page_join_button($quiz, $question, $link_page);
+            $joinhtml = quiz_question_page_join_button($quiz, $question, $linkpage);
             $output .= html_writer::tag('li', $joinhtml, array('class' => $dragdropclass.' page_join'));
         }
 
@@ -540,38 +512,28 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     public function quiz_section_question_list($quiz, $structure, $course, $section, $sectionreturn, $pageurl) {
         global $USER;
-
         $output = '';
-//         $modinfo = get_fast_modinfo($course);
-//         $questions = array();
-//         if (is_object($section)) {
-//             $section = $questions->get_section_info($section->section);
-//         } else {
-//             $section = $questions->get_section_info($section);
-//         }
-//         $completioninfo = new completion_info($course);
 
-        // check if we are currently in the process of moving a module with JavaScript disabled
+        // Check if we are currently in the process of moving a module with JavaScript disabled.
         $ismoving = $this->page->user_is_editing() && ismoving($course->id);
         if ($ismoving) {
             $movingpix = new pix_icon('movehere', get_string('movehere'), 'moodle', array('class' => 'movetarget'));
             $strmovefull = strip_tags(get_string("movefull", "", "'$USER->activitycopyname'"));
         }
 
-        // Get the list of question types visible to user (excluding the question type being moved if there is one)
+        // Get the list of question types visible to user (excluding the question type being moved if there is one).
         $questionshtml = array();
 
         $slots = $structure->get_quiz_slots();
         $sectiontoslotids = $structure->get_sections_and_slots();
         if (!empty($sectiontoslotids[$section->id])) {
-//             foreach ($sections[$section->section] as $questionnumber => $questionid) {
             foreach ($sectiontoslotids[$section->id] as $slotid) {
                 $slot = $slots[$slotid];
                 $questionnumber = $slot->questionid;
                 $question = $quiz->fullquestions[$questionnumber];
 
                 if ($ismoving and $question->id == $USER->activitycopy) {
-                    // do not display moving question type
+                    // Do not display moving question type.
                     continue;
                 }
 
@@ -621,17 +583,8 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     public function quiz_section_question_name($quiz, $question) {
         global $CFG;
         $output = '';
-//         if (!$question->uservisible &&
-//                 (empty($question->showavailability) || empty($question->availableinfo))) {
-//             // nothing to be displayed to the user
-//             return $output;
-//         }
-        $url = '';
         $url = $this->get_edit_question_url($quiz, $question);
 
-//         $this->url = $modviews[$this->modname]
-//                 ? new moodle_url('/mod/' . $this->modname . '/view.php', array('id'=>$this->id))
-//                 : null;
         if (!$url) {
             return $output;
         }
@@ -651,63 +604,14 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $altname = get_accesshide(' '.$altname);
         }
 
-        // For items which are hidden but available to current user
-        // ($question->uservisible), we show those as dimmed only if the user has
-        // viewhiddenactivities, so that teachers see 'items which might not
-        // be available to some students' dimmed but students do not see 'item
-        // which is actually available to current student' dimmed.
-        $linkclasses = '';
-        $accesstext = '';
-        $textclasses = '';
-//         if ($question->uservisible) {
-//             $conditionalhidden = $this->is_question_conditionally_hidden($question);
-//             $accessiblebutdim = (!$question->visible || $conditionalhidden) &&
-//                 has_capability('moodle/course:viewhiddenactivities',
-//                         context_course::instance($question->course));
-//             if ($accessiblebutdim) {
-//                 $linkclasses .= ' dimmed';
-//                 $textclasses .= ' dimmed_text';
-//                 if ($conditionalhidden) {
-//                     $linkclasses .= ' conditionalhidden';
-//                     $textclasses .= ' conditionalhidden';
-//                 }
-//                 // Show accessibility note only if user can access the module himself.
-//                 $accesstext = get_accesshide(get_string('hiddenfromstudents').':'. $question->modfullname);
-//             }
-//         } else {
-//             $linkclasses .= ' dimmed';
-//             $textclasses .= ' dimmed_text';
-//         }
-
-        // Get on-click attribute value if specified and decode the onclick - it
-        // has already been encoded for display (puke).
-        $onclick = ''; //htmlspecialchars_decode($question->get_on_click(), ENT_QUOTES);
-
-        $groupinglabel = '';
-//         if (!empty($question->groupingid) && has_capability('moodle/course:managegroups', context_course::instance($question->course))) {
-//             $groupings = groups_get_all_groupings($question->course);
-//             $groupinglabel = html_writer::tag('span', '('.format_string($groupings[$question->groupingid]->name).')',
-//                     array('class' => 'groupinglabel '.$textclasses));
-//         }
-
         $qtype = question_bank::get_qtype($question->qtype, false);
         $namestr = $qtype->local_name();
 
         $icon = $this->pix_icon('icon', $namestr, $qtype->plugin_name(), array('title' => $namestr,
                 'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation'));
         // Display link itself.
-        $activitylink = $icon . $accesstext .
-                html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
-//         if ($question->uservisible) {
-            $output .= html_writer::link($url, $activitylink, array('class' => $linkclasses, 'onclick' => $onclick)) .
-                    $groupinglabel;
-//         }
-//         else {
-//             // We may be displaying this just in order to show information
-//             // about visibility, without the actual link ($question->uservisible)
-//             $output .= html_writer::tag('div', $activitylink, array('class' => $textclasses)) .
-//                     $groupinglabel;
-//         }
+        $activitylink = $icon . html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
+        $output .= html_writer::link($url, $activitylink);
         return $output;
     }
 
@@ -743,21 +647,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     public function quiz_section_question($quiz, $structure, $course, &$completioninfo, $question, $sectionreturn, $pageurl) {
         $output = '';
-        // We return empty string (because quiz question will not be displayed at all)
-        // if:
-        // 1) The activity is not visible to users
-        // and
-        // 2a) The 'showavailability' option is not set (if that is set,
-        //     we need to display the activity so we can show
-        //     availability info)
-        // or
-        // 2b) The 'availableinfo' is empty, i.e. the activity was
-        //     hidden in a way that leaves no info, such as using the
-        //     eye icon.
-//         if (!$question->uservisible &&
-//             (empty($question->showavailability) || empty($question->availableinfo))) {
-//             return $output;
-//         }
 
         $indentclasses = 'mod-indent';
         if (!empty($question->indent)) {
@@ -770,10 +659,10 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $output .= html_writer::start_tag('div');
 
         // Print slot number.
-        // TODO: We have to write a function to deal with description questions.
+        // TODO: MDL-43089 We have to write a function to deal with description questions.
         // Currently there is a functionality that translates the slotnumber of a
         // description question to 'i' for information. That could be confusing when
-        // you have lots of description questions, in particular if you have consecative
+        // you have lots of description questions, in particular if you have consecutive
         // description question types. We can either have the slot number prefixes the 'i'
         // or use 'i' followed by a number (when morethan one) which can be incremented.
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
@@ -788,10 +677,10 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         // This div is used to indent the content.
         $output .= html_writer::div('', $indentclasses);
 
-        // Start a wrapper for the actual content to keep the indentation consistent
+        // Start a wrapper for the actual content to keep the indentation consistent.
         $output .= html_writer::start_tag('div');
 
-        // Display the link to the question (or do nothing if question has no url)
+        // Display the link to the question (or do nothing if question has no url).
         $cmname = $this->quiz_section_question_name($quiz, $question);
 
         if (!empty($cmname)) {
@@ -810,17 +699,13 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $output .= quiz_question_delete_button($quiz, $question);
 
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
-            $output .= html_writer::end_tag('div'); // .activityinstance
+            $output .= html_writer::end_tag('div'); // .activityinstance.
         }
 
         $questionicons = '';
-//         if ($this->page->user_is_editing()) {
-//             $questionicons .= ' '. $this->add_menu_actions($quiz, $question, $pageurl);
+        $output .= html_writer::span('', 'actions'); // Required to add js spinner icon.
 
-            $output .= html_writer::span('', 'actions');
-//         }
-
-        $output .= html_writer::end_tag('div'); // $indentclasses
+        $output .= html_writer::end_tag('div'); // ...$indentclasses.
 
         // End of indentation div.
         $output .= html_writer::end_tag('div');
@@ -962,12 +847,13 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $actions['addarandomselectedquestion'] = new action_menu_link_secondary(
             new moodle_url('/mod/quiz/addrandom.php', $params),
             new pix_icon('t/add', $str->addarandomselectedquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->addarandomselectedquestion, array('class' => 'editing_addarandomselectedquestion', 'data-action' => 'addarandomselectedquestion')
+            $str->addarandomselectedquestion, array('class' => 'editing_addarandomselectedquestion',
+                    'data-action' => 'addarandomselectedquestion')
         );
 
         // Call question bank.
-        // TODO: we have to write the code for qbank to be displayed as popup.
-        $returnurl = '';///mod/quiz/edit.php';
+        // TODO: MDL-43089 we have to write the code for qbank to be displayed as popup.
+        $returnurl = '';// /mod/quiz/edit.php.
         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
         $actions['questionbankcontents'] = new action_menu_link_secondary(
             new moodle_url('/question/questionbank.php', $params),
@@ -1027,18 +913,17 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         }
         $isdisplayed = true;
 
-        // Add the module chooser
-        $this->page->requires->yui_module('moodle-course-modchooser',
-        'M.course.init_chooser',
-        array(array('courseid' => $course->id, 'closeButtonTitle' => get_string('close', 'editor')))
-        );
+        // Add the module chooser.
+        $this->page->requires->yui_module('moodle-course-modchooser', 'M.course.init_chooser',
+                array(array('courseid' => $course->id, 'closeButtonTitle' => get_string('close', 'editor')))
+            );
         $this->page->requires->strings_for_js(array(
                 'addresourceoractivity',
                 'modchooserenable',
                 'modchooserdisable',
         ), 'moodle');
 
-        // Add the header
+        // Add the header.
         $header = html_writer::tag('div', get_string('addresourceoractivity', 'moodle'),
                 array('class' => 'hd choosertitle'));
 
@@ -1053,29 +938,30 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                 'value' => sesskey()));
         $formcontent .= html_writer::end_tag('div');
 
-        // Put everything into one tag 'options'
+        // Put everything into one tag 'options'.
         $formcontent .= html_writer::start_tag('div', array('class' => 'options'));
         $formcontent .= html_writer::tag('div', get_string('selectmoduletoviewhelp', 'moodle'),
                 array('class' => 'instruction'));
-        // Put all options into one tag 'alloptions' to allow us to handle scrolling
+        // Put all options into one tag 'alloptions' to allow us to handle scrolling.
         $formcontent .= html_writer::start_tag('div', array('class' => 'alloptions'));
 
-         // Activities
-        $activities = array_filter($modules, create_function('$mod', 'return ($mod->archetype !== MOD_ARCHETYPE_RESOURCE && $mod->archetype !== MOD_ARCHETYPE_SYSTEM);'));
+         // Activities.
+        $activities = array_filter($modules, create_function('$mod',
+                'return ($mod->archetype !== MOD_ARCHETYPE_RESOURCE && $mod->archetype !== MOD_ARCHETYPE_SYSTEM);'));
         if (count($activities)) {
             $formcontent .= $this->course_modchooser_title('activities');
             $formcontent .= $this->course_modchooser_module_types($activities);
         }
 
-        // Resources
+        // Resources.
         $resources = array_filter($modules, create_function('$mod', 'return ($mod->archetype === MOD_ARCHETYPE_RESOURCE);'));
         if (count($resources)) {
             $formcontent .= $this->course_modchooser_title('resources');
             $formcontent .= $this->course_modchooser_module_types($resources);
         }
 
-        $formcontent .= html_writer::end_tag('div'); // modoptions
-        $formcontent .= html_writer::end_tag('div'); // types
+        $formcontent .= html_writer::end_tag('div'); // ...modoptions.
+        $formcontent .= html_writer::end_tag('div'); // types.
 
         $formcontent .= html_writer::start_tag('div', array('class' => 'submitbuttons'));
         $formcontent .= html_writer::tag('input', '',
@@ -1085,10 +971,10 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $formcontent .= html_writer::end_tag('div');
         $formcontent .= html_writer::end_tag('form');
 
-        // Wrap the whole form in a div
+        // Wrap the whole form in a div.
         $formcontent = html_writer::tag('div', $formcontent, array('id' => 'chooseform'));
 
-        // Put all of the content together
+        // Put all of the content together.
         $content = $formcontent;
 
         $content = html_writer::tag('div', $content, array('class' => 'choosercontainer'));
@@ -1139,18 +1025,18 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         $output .= html_writer::start_tag('span', array('class' => 'modicon'));
         if (isset($module->icon)) {
-            // Add an icon if we have one
+            // Add an icon if we have one.
             $output .= $module->icon;
         }
         $output .= html_writer::end_tag('span');
 
         $output .= html_writer::tag('span', $module->title, array('class' => 'typename'));
         if (!isset($module->help)) {
-            // Add help if found
+            // Add help if found.
             $module->help = get_string('nohelpforactivityorresource', 'moodle');
         }
 
-        // Format the help text using markdown with the following options
+        // Format the help text using markdown with the following options.
         $options = new stdClass();
         $options->trusted = false;
         $options->noclean = false;

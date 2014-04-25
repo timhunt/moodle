@@ -177,22 +177,17 @@ class quiz_repaginate {
      */
     public function repaginate_next_slot($nextslotnumber, $type) {
         global $DB;
-        global $Out;
         $currentslotnumber = $nextslotnumber - 1;
         if (!($currentslotnumber && $nextslotnumber)) {
             return null;
         }
         $currentslot = $DB->get_record('quiz_slots', array('quizid' => $this->quizid, 'slot' => $currentslotnumber));
         $nextslot = $DB->get_record('quiz_slots', array('quizid' => $this->quizid, 'slot' => $nextslotnumber));
-//         $Out->append('type '. $type);
         if ($type === self::LINK) {
-//             $Out->append('type === self::LINK');
             return $this->repaginate_this_slot($nextslot, $currentslot->page);
         } else if ($type === self::UNLINK) {
-//             $Out->append('type === self::UNLINK');
             return $this->repaginate_this_slot($nextslot, $nextslot->page + 1);
         }
-//         $Out->append('type null');
         return null;
     }
 

@@ -54,7 +54,7 @@
         PAGECONTENT : 'div#page-content',
         PAGELI : 'li.page',
         SECTIONUL : 'ul.section',
-        SHOW : 'a.'+CSS.SHOW,
+        SHOW : 'a.' + CSS.SHOW,
         SHOWHIDE : 'a.editing_showhide',
         SLOTLI : 'li.slot'
     },
@@ -206,4 +206,3 @@ Y.extend(TOOLBOX, Y.Base, {
     }
 }
 );
-

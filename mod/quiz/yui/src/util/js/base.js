@@ -13,5 +13,3 @@ Y.namespace('Moodle.mod_quiz.util');
  * @class Moodle.mod_quiz.util
  * @static
  */
-
-

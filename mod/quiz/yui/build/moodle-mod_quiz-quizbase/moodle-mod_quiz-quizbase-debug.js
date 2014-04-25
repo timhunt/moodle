@@ -1,6 +1,5 @@
 YUI.add('moodle-mod_quiz-quizbase', function (Y, NAME) {
 
-
 /**
  * The quizbase class to provide shared functionality to Modules within Moodle.
  *

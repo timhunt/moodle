@@ -17,6 +17,4 @@ Y.namespace('Moodle.mod_quiz.util');
  */
 
 
-
-
 }, '@VERSION@');

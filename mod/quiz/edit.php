@@ -115,7 +115,6 @@ $scrollpos = optional_param('scrollpos', '', PARAM_INT);
 
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
         question_edit_setup('editq', '/mod/quiz/edit.php', true);
-// $quiz->questions = quiz_clean_layout($quiz->questions);
 $structure = \mod_quiz\structure::create_for($quiz);
 
 $defaultcategoryobj = question_make_default_categories($contexts->all());
@@ -136,7 +135,7 @@ if (!$course) {
 
 // TODO: Following code related to questionbank needs to be removed from this file
 // since it has been moved to /question/questionbank.php and js related functionality
-// will be done in /question/yui/src/questionbank/js/questionbank.js
+// will be done in /question/yui/src/questionbank/js/questionbank.js.
 $questionbank = new quiz_question_bank_view($contexts, $thispageurl, $course, $cm, $quiz);
 $questionbank->set_quiz_has_attempts($quizhasattempts);
 
@@ -154,7 +153,7 @@ $params = array(
 $event = \mod_quiz\event\edit_page_viewed::create($params);
 $event->trigger();
 
-// Process commands ============================================================
+// Process commands ============================================================.
 
 // Get the list of question ids had their check-boxes ticked.
 $selectedslots = array();
@@ -356,7 +355,7 @@ if (optional_param('savechanges', false, PARAM_BOOL) && confirm_sesskey()) {
 
 $questionbank->process_actions($thispageurl, $cm);
 
-// End of process commands =====================================================
+// End of process commands =====================================================.
 
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_pagetype('mod-quiz-edit');
@@ -397,11 +396,10 @@ $module = array(
     'strings'   => array(),
     'async'     => false,
 );
-//$PAGE->requires->js_init_call('quiz_edit_init', null, false, $module);
 
 global $USER;
 $USER->editing = 1;
-// Prevent caching of this page to stop confusion when changing page after making AJAX changes
+// Prevent caching of this page to stop confusion when changing page after making AJAX changes.
     $PAGE->set_cacheable(false);
 
 $ajaxenabled = true; // TODO MDL-40987.
@@ -422,23 +420,24 @@ if ($completion->is_enabled() && $ajaxenabled) {
     // go to another page, (c) clicks Back button - the page will
     // automatically reload. Otherwise it would start with the wrong tick
     // values.
-    echo html_writer::start_tag('form', array('action'=>'.', 'method'=>'get'));
+    echo html_writer::start_tag('form', array('action' => '.', 'method' => 'get'));
     echo html_writer::start_tag('div');
-    echo html_writer::empty_tag('input', array('type'=>'hidden', 'id'=>'completion_dynamic_change', 'name'=>'completion_dynamic_change', 'value'=>'0'));
+    echo html_writer::empty_tag('input', array('type' => 'hidden', 'id' => 'completion_dynamic_change',
+            'name' => 'completion_dynamic_change', 'value' => '0'));
     echo html_writer::end_tag('div');
     echo html_writer::end_tag('form');
 }
 
 // Course wrapper start.
-echo html_writer::start_tag('div', array('class'=>'course-content'));
+echo html_writer::start_tag('div', array('class' => 'course-content'));
 
 $output->edit_page($course, $quiz, $structure, $cm, $contexts, $thispageurl);
 
 // Content wrapper end.
 echo html_writer::end_tag('div');
 
-// get information about course modules and existing module types
-// format.php in course formats may rely on presence of these variables
+// Get information about course modules and existing module types.
+// format.php in course formats may rely on presence of these variables.
 $modinfo = get_fast_modinfo($course);
 
 if ($quiz->shufflequestions) {
@@ -450,7 +449,7 @@ if ($quiz->shufflequestions) {
     $repaginatingdisabled = false;
 }
 $repaginateparams = array(array('courseid' => $course->id, 'quizid' => $quiz->id));
-// $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'moodle-core-notification-dialogue', $repaginateparams);
+// ...$PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'moodle-core-notification-dialogue', $repaginateparams).
 
 echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
         $repaginatingdisabledhtml.'>'.
@@ -471,10 +470,10 @@ $qtypenamesused = array();
 foreach ($qtypes as $qtypename => $qtypedata) {
     $qtypenamesused[$qtypename] = $qtypename;
 }
-// Include course AJAX
+// Include course AJAX.
 quiz_edit_include_ajax($course, $quiz, $qtypenamesused);
 
-// Include course format js module
+// Include course format js module.
 $PAGE->requires->js('/mod/quiz/yui/edit.js');
 
 echo $OUTPUT->footer();
