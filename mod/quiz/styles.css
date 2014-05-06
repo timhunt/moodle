@@ -1335,6 +1335,9 @@ bank window's title is prominent enough*/
     max-height: 20px;
     width:15em;
 }
+#page-mod-quiz-edit .add-menu-disabled {
+    color:gray;
+}
 #page-mod-quiz-edit .add-menu-left {
     position:relative;
     right:10em;

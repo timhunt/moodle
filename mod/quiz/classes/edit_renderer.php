@@ -696,7 +696,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                 $output .= ' ' . $this->regrade_action($question, $sectionreturn);
             }
 
-            $output .= quiz_question_delete_button($quiz, $question);
+            // You cannot delete questions when quiz has been attempted,
+            // display delete ion only when there is no attepts.
+            if (!quiz_has_attempts($quiz->id)) {
+                $output .= quiz_question_delete_button($quiz, $question);
+            }
 
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
             $output .= html_writer::end_tag('div'); // .activityinstance.
@@ -874,6 +878,13 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $menu->set_alignment(action_menu::BR, action_menu::BR);
         $menu->set_menu_trigger(html_writer::tag('span', get_string('add', 'quiz'),
                 array('class' => 'add-menu')));
+
+        // You cannot add questions when quiz has been attempted.
+        if (quiz_has_attempts($quiz->id)) {
+            $menu->set_menu_trigger(html_writer::tag('span', get_string('add', 'quiz'),
+                array('class' => 'add-menu-disabled')));
+            return $this->render($menu);
+        }
 
         foreach ($actions as $action) {
             if ($action instanceof action_menu_link) {
