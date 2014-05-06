@@ -856,7 +856,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $returnurl = '';// /mod/quiz/edit.php.
         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
         $actions['questionbankcontents'] = new action_menu_link_secondary(
-            new moodle_url('/question/questionbank.php', $params),
+            new moodle_url('/mod/quiz/questionbank.php', $params),
             new pix_icon('t/edit', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => '')),
             $str->questionbankcontents, array('class' => 'editing_questionbankcontents', 'data-action' => 'questionbankcontents')
         );

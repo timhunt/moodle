@@ -25,10 +25,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// defined('MOODLE_INTERNAL') || die();
 
-//defined('MOODLE_INTERNAL') || die();
-
-require_once('../config.php');
+require_once('../../config.php');
 require_once($CFG->dirroot . '/question/editlib.php');
 require_once($CFG->dirroot . '/mod/quiz/editlib.php');
 require_once($CFG->dirroot . '/mod/quiz/lib.php');
@@ -38,8 +37,6 @@ $scrollpos = optional_param('scrollpos', 0, PARAM_INT);
 
 list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
     question_edit_setup('editq', '/mod/quiz/edit.php', true);
-
-$quizhasattempts = quiz_has_attempts($quiz->id);
 
 // Get the course object and related bits.
 $course = $DB->get_record('course', array('id' => $quiz->course));
@@ -52,23 +49,23 @@ $PAGE->set_url($thispageurl);
 $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
 $questionbank = get_string('chooseqtypetoadd', 'question');
 $PAGE->set_heading($course->fullname);
-$PAGE->navbar->add(get_string('editinga', 'moodle', get_string('modulename', $cm->modname)),$returnurl);
+$PAGE->navbar->add(get_string('editinga', 'moodle', get_string('modulename', $cm->modname)), $returnurl);
 $PAGE->navbar->add($questionbank);
 $PAGE->set_title($questionbank);
 echo $OUTPUT->header();
 
 // Create quiz question bank view.
 $questionbank = new quiz_question_bank_view($contexts, $thispageurl, $course, $cm, $quiz);
-$questionbank->set_quiz_has_attempts($quizhasattempts);
+$questionbank->set_quiz_has_attempts(quiz_has_attempts($quiz->id));
 
+// TODO: add_to_log() is deprecated, replace this with event.
 // Log this visit.
-add_to_log($cm->course, 'quiz', 'editquestions',
-            "view.php?id=$cm->id", "$quiz->id", $cm->id);
+// add_to_log($cm->course, 'quiz', 'editquestions', "view.php?id=$cm->id", "$quiz->id", $cm->id);
 
 // You need mod/quiz:manage in addition to question capabilities to access this page.
 require_capability('mod/quiz:manage', $contexts->lowest());
 
-// Process commands ============================================================
+// Process commands ============================================================.
 
 // Get the list of question ids had their check-boxes ticked.
 $selectedquestionids = array();
@@ -107,45 +104,6 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
     }
     quiz_delete_previews($quiz);
     quiz_update_sumgrades($quiz);
-    redirect($afteractionurl);
-}
-
-if ((optional_param('addrandom', false, PARAM_BOOL)) && confirm_sesskey()) {
-    // Add random questions to the quiz.
-    $recurse = optional_param('recurse', 0, PARAM_BOOL);
-    $addonpage = optional_param('addonpage', 0, PARAM_INT);
-    $categoryid = required_param('categoryid', PARAM_INT);
-    $randomcount = required_param('randomcount', PARAM_INT);
-    quiz_add_random_questions($quiz, $addonpage, $categoryid, $randomcount, $recurse);
-
-    quiz_delete_previews($quiz);
-    quiz_update_sumgrades($quiz);
-    redirect($afteractionurl);
-}
-
-if (optional_param('addnewpagesafterselected', null, PARAM_CLEAN) &&
-        !empty($selectedquestionids) && confirm_sesskey()) {
-    foreach ($selectedquestionids as $questionid) {
-        $quiz->questions = quiz_add_page_break_after($quiz->questions, $questionid);
-    }
-    $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-$addpage = optional_param('addpage', false, PARAM_INT);
-if ($addpage !== false && confirm_sesskey()) {
-    $quiz->questions = quiz_add_page_break_at($quiz->questions, $addpage);
-    $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
-    quiz_delete_previews($quiz);
-    redirect($afteractionurl);
-}
-
-$deleteemptypage = optional_param('deleteemptypage', false, PARAM_INT);
-if (($deleteemptypage !== false) && confirm_sesskey()) {
-    $quiz->questions = quiz_delete_empty_page($quiz->questions, $deleteemptypage);
-    $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
-    quiz_delete_previews($quiz);
     redirect($afteractionurl);
 }
 
@@ -288,7 +246,7 @@ echo get_string('questionbankcontents', 'quiz');
 echo '</h2></div></div><div class="content">';
 
 if (function_exists('module_specific_buttons')) {
-    echo module_specific_buttons($this->cm->id,$cmoptions);
+    echo module_specific_buttons($this->cm->id, $cmoptions);
 }
 
 echo '<span id="questionbank"></span>';

@@ -951,7 +951,6 @@ table#categoryquestions td,
 
 .questionbankwindow.block {
     float: right;
-    width: 30%;
     right: 0.3em;
     padding-bottom: 0.5em;
     display: block;
@@ -1328,16 +1327,13 @@ bank window's title is prominent enough*/
 .path-mod-quiz li.activity > div {position:relative;}
 
 #page-mod-quiz-edit .add-menu-outer {
-    display: inline;
-    text-align: right;
     float: right;
     --margin-bottom: -1.5em;'
-    margin-left: 55em;'
+    margin-left: 55em;
 }
 #page-mod-quiz-edit .add-menu {
-    float: left;
-    text-align: right;
     max-height: 20px;
+    width:15em;
 }
 #page-mod-quiz-edit .add-menu-left {
     position:relative;
