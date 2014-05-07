@@ -49,7 +49,6 @@ $PAGE->set_url($thispageurl);
 $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
 $questionbank = get_string('chooseqtypetoadd', 'question');
 $PAGE->set_heading($course->fullname);
-$PAGE->navbar->add(get_string('editinga', 'moodle', get_string('modulename', $cm->modname)), $returnurl);
 $PAGE->navbar->add($questionbank);
 $PAGE->set_title($questionbank);
 echo $OUTPUT->header();

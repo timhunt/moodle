@@ -451,8 +451,12 @@ if ($quiz->shufflequestions) {
 $repaginateparams = array(array('courseid' => $course->id, 'quizid' => $quiz->id));
 // ...$PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'moodle-core-notification-dialogue', $repaginateparams).
 
+$disabled = '';
+if (quiz_has_attempts($quiz->id)) {
+    $disabled = 'disabled="disabled"';
+}
 echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
-        $repaginatingdisabledhtml.'>'.
+        $disabled . $repaginatingdisabledhtml.'>'.
         get_string('repaginatecommand', 'quiz').'...</button>';
 echo '</div>';
 
@@ -461,7 +465,9 @@ if ($USER->editing && !$repaginatingdisabledhtml) {
     if ($quiz->fullquestions && count($quiz->fullquestions) > 1) {
         require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
         $repaginate = new quiz_repaginate();
-        echo $repaginate->get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml);
+        if (!$disabled) {
+            echo $repaginate->get_popup_menu($quiz, $thispageurl, $repaginatingdisabledhtml);
+        }
     }
 }
 

@@ -876,13 +876,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         }
         $menu = new action_menu();
         $menu->set_alignment(action_menu::BR, action_menu::BR);
-        $menu->set_menu_trigger(html_writer::tag('span', get_string('add', 'quiz'),
-                array('class' => 'add-menu')));
+        $trigger = html_writer::tag('span', get_string('add', 'quiz'), array('class' => 'add-menu'));
+        $menu->set_menu_trigger($trigger);
 
-        // You cannot add questions when quiz has been attempted.
+        // Disable the link if quiz has attempta.
         if (quiz_has_attempts($quiz->id)) {
-            $menu->set_menu_trigger(html_writer::tag('span', get_string('add', 'quiz'),
-                array('class' => 'add-menu-disabled')));
             return $this->render($menu);
         }
 

@@ -1301,9 +1301,13 @@ function quiz_question_page_join_button($quiz, $question, $link_page) {
         $image = $OUTPUT->pix_icon('e/remove_link', $title);
         $action = 'unlinkpage';
     }
-
+    // Disable the link if quiz has attempta.
+    $disabled = null;
+    if (quiz_has_attempts($quiz->id)) {
+        $disabled = "disabled";
+    }
     return $OUTPUT->action_link($url, $image, null, array('title' => $title,
-                'class' => 'cm-edit-action editing_page_join', 'data-action' => $action));
+                'class' => 'cm-edit-action editing_page_join', 'disabled' => $disabled, 'data-action' => $action));
 }
 
 /**
