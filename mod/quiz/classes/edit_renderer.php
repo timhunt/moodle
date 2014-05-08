@@ -882,6 +882,16 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $str->addaquestion, array('class' => 'editing_addaquestion', 'data-action' => 'addaquestion')
         );
 
+        // Call question bank.
+        // TODO: MDL-43089 we have to write the code for qbank to be displayed as popup.
+        $returnurl = '';// /mod/quiz/edit.php.
+        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
+        $actions['questionbankcontents'] = new action_menu_link_secondary(
+            new moodle_url('/mod/quiz/questionbank.php', $params),
+            new pix_icon('t/add', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+            $str->questionbankcontents, array('class' => 'editing_questionbankcontents', 'data-action' => 'questionbankcontents')
+        );
+
         // Add a random question.
         $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
@@ -891,26 +901,16 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $str->addarandomquestion, array('class' => 'editing_addarandomquestion', 'data-action' => 'addarandomquestion')
         );
 
-        // Add a random selected question.
-        // TODO: We have to refine the functionality when adding random selected questions.
-        $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
-        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
-        $actions['addarandomselectedquestion'] = new action_menu_link_secondary(
-            new moodle_url('/mod/quiz/addrandom.php', $params),
-            new pix_icon('t/add', $str->addarandomselectedquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->addarandomselectedquestion, array('class' => 'editing_addarandomselectedquestion',
-                    'data-action' => 'addarandomselectedquestion')
-        );
-
-        // Call question bank.
-        // TODO: MDL-43089 we have to write the code for qbank to be displayed as popup.
-        $returnurl = '';// /mod/quiz/edit.php.
-        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
-        $actions['questionbankcontents'] = new action_menu_link_secondary(
-            new moodle_url('/mod/quiz/questionbank.php', $params),
-            new pix_icon('t/edit', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->questionbankcontents, array('class' => 'editing_questionbankcontents', 'data-action' => 'questionbankcontents')
-        );
+//         // Add a random selected question.
+//         // TODO: We have to refine the functionality when adding random selected questions.
+//         $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
+//         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
+//         $actions['addarandomselectedquestion'] = new action_menu_link_secondary(
+//             new moodle_url('/mod/quiz/addrandom.php', $params),
+//             new pix_icon('t/add', $str->addarandomselectedquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
+//             $str->addarandomselectedquestion, array('class' => 'editing_addarandomselectedquestion',
+//                     'data-action' => 'addarandomselectedquestion')
+//         );
         return $actions;
     }
 
