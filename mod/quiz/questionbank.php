@@ -45,12 +45,10 @@ if (!$course) {
 }
 
 // Set navigation bar and display header.
-$PAGE->set_url($thispageurl);
-$returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
-$questionbank = get_string('chooseqtypetoadd', 'question');
+$PAGE->set_url(new moodle_url('/mod/quiz/questionbank.php', array('cmid' => $quiz->cmid)));
+$questionbank = get_string('questionbank', 'question');
 $PAGE->set_heading($course->fullname);
 $PAGE->navbar->add($questionbank);
-$PAGE->set_title($questionbank);
 echo $OUTPUT->header();
 
 // Create quiz question bank view.
@@ -182,49 +180,6 @@ if (optional_param('savechanges', false, PARAM_BOOL) && confirm_sesskey()) {
         $quiz->questions = implode(',', $questions);
         $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
         $deletepreviews = true;
-    }
-
-    // Get a list of questions to move, later to be added in the appropriate
-    // place in the string.
-    if ($moveselectedonpage) {
-        $questions = explode(',', $quiz->questions);
-        $newquestions = array();
-        // Remove the questions from their original positions first.
-        foreach ($questions as $questionid) {
-            if (!in_array($questionid, $selectedquestionids)) {
-                $newquestions[] = $questionid;
-            }
-        }
-        $questions = $newquestions;
-
-        // Move to the end of the selected page.
-        $pagebreakpositions = array_keys($questions, 0);
-        $numpages = count($pagebreakpositions);
-
-        // Ensure the target page number is in range.
-        for ($i = $moveselectedonpage; $i > $numpages; $i--) {
-            $questions[] = 0;
-            $pagebreakpositions[] = count($questions) - 1;
-        }
-        $moveselectedpos = $pagebreakpositions[$moveselectedonpage - 1];
-
-        // Do the move.
-        array_splice($questions, $moveselectedpos, 0, $selectedquestionids);
-        $quiz->questions = implode(',', $questions);
-
-        // Update the database.
-        $DB->set_field('quiz', 'questions', $quiz->questions, array('id' => $quiz->id));
-        $deletepreviews = true;
-    }
-
-    // If rescaling is required save the new maximum.
-    $maxgrade = unformat_float(optional_param('maxgrade', -1, PARAM_RAW));
-    if ($maxgrade >= 0) {
-        quiz_set_grade($maxgrade, $quiz);
-    }
-
-    if ($deletepreviews) {
-        quiz_delete_previews($quiz);
     }
     if ($recomputesummarks) {
         quiz_update_sumgrades($quiz);

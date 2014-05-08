@@ -301,7 +301,7 @@ class quiz_question_bank_view extends core_question\bank\view {
 
         if (empty($CFG->quizquestionbankcolumns)) {
             $quizquestionbankcolumns = array('add_to_quiz_action_column', 'checkbox_column', 'question_type_column',
-                    'question_name_column', 'edit_action_column', 'preview_action_column');
+                    'question_name_column', 'preview_action_column');
         } else {
              $quizquestionbankcolumns = explode(',', $CFG->quizquestionbankcolumns);
         }
