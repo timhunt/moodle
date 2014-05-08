@@ -664,7 +664,7 @@ table#categoryquestions {
 }
 #page-mod-quiz-edit div.reorder .reordercontrols .addnewpagesafterselected,
 #page-mod-quiz-edit .repaginatecommand {
-    float: right;
+    float: left;
     clear: right;
     padding-right: 1em;
 }
