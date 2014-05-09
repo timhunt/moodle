@@ -735,26 +735,25 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $output .= html_writer::start_tag('div', array('class' => 'activityinstance'));
             $output .= $cmname;
 
-            $output .= quiz_question_preview_button($quiz, $question);
-
-            $output .= $this->marked_out_of_field($quiz, $question);
-
-            if ($this->page->user_is_editing()) {
-                $output .= ' ' . $this->regrade_action($question, $sectionreturn);
-            }
+            $questionicons = '';
+            $questionicons .= quiz_question_preview_button($quiz, $question);
 
             // You cannot delete questions when quiz has been attempted,
             // display delete ion only when there is no attepts.
             if (!quiz_has_attempts($quiz->id)) {
-                $output .= quiz_question_delete_button($quiz, $question);
+                $questionicons .= quiz_question_delete_button($quiz, $question);
             }
+
+            $questionicons .= $this->marked_out_of_field($quiz, $question);
+            if ($this->page->user_is_editing()) {
+                $questionicons .= ' ' . $this->regrade_action($question, $sectionreturn);
+            }
+
+            $output .= html_writer::span($questionicons, 'actions'); // Required to add js spinner icon.
 
             // Closing the tag which contains everything but edit icons. Content part of the module should not be part of this.
             $output .= html_writer::end_tag('div'); // .activityinstance.
         }
-
-        $questionicons = '';
-        $output .= html_writer::span('', 'actions'); // Required to add js spinner icon.
 
         $output .= html_writer::end_tag('div'); // ...$indentclasses.
 
