@@ -465,7 +465,7 @@ function print_choose_qtype_to_add_form($hiddenparams, array $allowedqtypes = nu
     }
 
     $renderer = $PAGE->get_renderer('question', 'bank');
-    echo $renderer->qbank_chooser($realqtypes, $fakeqtypes, $PAGE->course, $hiddenparams);
+    return $renderer->qbank_chooser($realqtypes, $fakeqtypes, $PAGE->course, $hiddenparams);
 }
 
 /**
@@ -489,7 +489,7 @@ function create_new_question_button($categoryid, $params, $caption, $tooltip = '
 
     if (!$choiceformprinted) {
         echo '<div id="qtypechoicecontainer">';
-        print_choose_qtype_to_add_form(array());
+        echo print_choose_qtype_to_add_form(array());
         echo "</div>\n";
         $choiceformprinted = true;
     }

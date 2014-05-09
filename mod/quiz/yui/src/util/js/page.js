@@ -19,7 +19,7 @@ Y.Moodle.mod_quiz.util.page = {
         PAGENUMBERPREFIX : 'Page '
     },
     SELECTORS: {
-        PAGE: '.activity',
+        PAGE: 'li.page',
         INSTANCENAME: '.instancename'
     },
 

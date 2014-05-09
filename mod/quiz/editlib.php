@@ -501,6 +501,9 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
             ))
     );
 
+    // Include the question chooser.
+    $PAGE->requires->yui_module('moodle-mod_quiz-questionchooser', 'M.mod_quiz.init_questionchooser');
+
     // Include course dragdrop.
     if ($course->id != $SITE->id) {
         $PAGE->requires->yui_module('moodle-mod_quiz-dragdrop', 'M.mod_quiz.init_section_dragdrop',

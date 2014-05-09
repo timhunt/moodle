@@ -60,10 +60,6 @@ YUI.add('moodle-mod_quiz-toolboxes', function (Y, NAME) {
         SHOWHIDE : 'a.editing_showhide',
         SLOTLI : 'li.slot'
     },
-    INDENTLIMITS = {
-        MIN: 0,
-        MAX: 16
-    },
     BODY = Y.one(document.body);
 
 // Setup the basic namespace.
@@ -224,7 +220,7 @@ Y.extend(TOOLBOX, Y.Base, {
  * This is a class extending TOOLBOX containing code specific to resources
  *
  * This class is responsible for managing AJAX interactions with activities and resources
- * when viewing a course in editing mode.
+ * when viewing a quiz in editing mode.
  *
  * @class resources
  * @constructor
@@ -247,7 +243,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
     editmaxmarkevents: [],
 
     /**
-     * 
+     *
      */
     NODE_PAGE: 1,
     NODE_SLOT: 2,
@@ -314,7 +310,6 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
             case 'linkpage':
             case 'unlinkpage':
                 // The user is linking or unlinking pages.
-                var value = action == 'linkpage' ? 1 : 2;
                 // TODO MDL-43089 finish link page functionality.
 //                this.link_page(ev, node, activity, value);
                 break;
@@ -621,11 +616,11 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
             var slotdata = this.slots[slotnumber];
 
-            if(type == this.NODE_PAGE){
+            if(type === this.NODE_PAGE){
                 // Get page number
                 var pagenumber = Y.Moodle.mod_quiz.util.page.getNumber(node);
                 // Is the page number correct?
-                if (slotdata.page == pagenumber) {
+                if (slotdata.page === pagenumber) {
                     console.log('slotdata.page == pagenumber return');
                     return;
                 }
@@ -641,9 +636,8 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
             }
         }, this);
-    }
-},
-{
+    },
+
     NAME : 'mod_quiz-resource-toolbox',
     ATTRS : {
         courseid : {

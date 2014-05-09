@@ -58,10 +58,6 @@
         SHOWHIDE : 'a.editing_showhide',
         SLOTLI : 'li.slot'
     },
-    INDENTLIMITS = {
-        MIN: 0,
-        MAX: 16
-    },
     BODY = Y.one(document.body);
 
 // Setup the basic namespace.

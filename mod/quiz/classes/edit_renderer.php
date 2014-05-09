@@ -401,6 +401,16 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
             echo $this->end_section_list();
 
+            echo $this->question_chooser();
+    }
+
+    /**
+     * Render the question chooser dialogue.
+     */
+    public function question_chooser() {
+        $container = html_writer::tag('div',print_choose_qtype_to_add_form(array(), null, false),
+                array('id' => 'qtypechoicecontainer'));
+        return html_writer::tag('div',$container, array('class' => 'createnewquestion'));
     }
 
     /**
@@ -522,7 +532,25 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             // Add the add-menu at the page level.
             $addmenu = html_writer::tag('span', $this->add_menu_actions($quiz, $question, $pageurl),
                     array('class' => 'add-menu-outer'));
-            $output .= html_writer::tag('li', $page.$addmenu,
+
+            // Add the form for the add new question chooser dialogue.
+            $addquestionurl = new moodle_url('/question/addquestion.php');
+            $questioncategoryid = $this->get_question_category_id($pageurl);
+
+            // Form fields.
+            $addquestionformhtml = html_writer::tag('input', null,
+                    array('type' => 'hidden', 'name' => 'returnurl', 'value' => '/question/edit.php?cmid='.$quiz->cmid));
+            $addquestionformhtml .= html_writer::tag('input', null,
+                    array('type' => 'hidden', 'name' => 'cmid', 'value' => $quiz->cmid));
+            $addquestionformhtml .= html_writer::tag('input', null,
+                    array('type' => 'hidden', 'name' => 'category', 'value' => $questioncategoryid));
+            $addquestionformhtml .= html_writer::tag('div', $addquestionformhtml);
+
+            // Form.
+            $addquestionformhtml .= html_writer::tag('form', $addquestionformhtml,
+                    array('class' => 'addnewquestion', 'method' => 'get', 'action' => $addquestionurl));
+
+            $output .= html_writer::tag('li', $page.$addmenu.$addquestionformhtml,
                     array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
         }
 
@@ -843,6 +871,15 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         return '';
     }
 
+    public function get_question_category_id($pageurl) {
+        list($questioncategoryid) = explode(',', $pageurl->param('cat'));
+        if (empty($questioncategoryid)) {
+            global $defaultcategoryobj; // TODO MDL-43089 undo this hack.
+            $questioncategoryid = $defaultcategoryobj->id;
+        }
+        return $questioncategoryid;
+    }
+
     /**
      * Retuns the list of adding actions
      * @param object $quiz, the quiz object
@@ -850,12 +887,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      *
      */
     public function edit_menu_actions($quiz, $question, $pageurl) {
-        list($questioncategoryid) = explode(',', $pageurl->param('cat'));
-        if (empty($questioncategoryid)) {
-            global $defaultcategoryobj; // TODO MDL-43089 undo this hack.
-            $questioncategoryid = $defaultcategoryobj->id;
-        }
+        global $PAGE;
 
+        $questioncategoryid = $this->get_question_category_id($pageurl);
         static $str;
         if (!isset($str)) {
             $str = get_strings(array('addaquestion', 'addarandomquestion',
@@ -875,10 +909,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $params = array('returnurl' => $returnurl->out_as_local_url(false),
                 'cmid' => $quiz->cmid, 'category' => $questioncategoryid,
                 'appendqnumstring' => 'addquestion');
+
         $actions['addaquestion'] = new action_menu_link_secondary(
-            new moodle_url('/question/question.php', $params),
+            new moodle_url('/question/addquestion.php', $params),
             new pix_icon('t/add', $str->addaquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->addaquestion, array('class' => 'editing_addaquestion', 'data-action' => 'addaquestion')
+            $str->addaquestion, array('class' => 'cm-edit-action addquestion', 'data-action' => 'addquestion')
         );
 
         // Call question bank.
