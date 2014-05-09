@@ -1370,27 +1370,53 @@ bank window's title is prominent enough*/
 }
 
 
-/** Edit Quiz **/
-.path-mod-quiz ul.slots li.section {border: 0;}
-.path-mod-quiz ul.slots li.section .content {background-color:#FAFAFA;padding:5px 10px;}
-.path-mod-quiz ul.slots li.section .content h3 {margin:0;color:#777;font-weight: normal;}
-.path-mod-quiz ul.slots li.section .left {padding:4px 0;}
-.path-mod-quiz ul.slots li.section .right {padding:4px 0;}
-
-.path-mod-quiz ul.slots {margin:0;}
-.path-mod-quiz ul.slots li.section {list-style: none;margin:0 0 5px 0;padding:0;}
-.path-mod-quiz ul.slots li.section .content {margin:0 40px;}
-.path-mod-quiz ul.slots li.section .left {float:left;}
-.path-mod-quiz ul.slots li.section .right {float:right;}
+/** 
+ * Edit Quiz 
+ */
+.path-mod-quiz ul.slots li.section {
+    border: 0;
+}
+.path-mod-quiz ul.slots li.section .content {
+    background-color:#FAFAFA;padding:5px 10px;
+}
+.path-mod-quiz ul.slots li.section .content h3 {
+    margin:0;color:#777;font-weight: normal;
+}
+.path-mod-quiz ul.slots li.section .left {
+    padding:4px 0;
+}
+.path-mod-quiz ul.slots li.section .right {
+    padding:4px 0;
+}
+.path-mod-quiz ul.slots {
+    margin:0;
+}
+.path-mod-quiz ul.slots li.section {
+    list-style: none;margin:0 0 5px 0;padding:0;
+}
+.path-mod-quiz ul.slots li.section .content {
+    margin:0 40px;
+}
+.path-mod-quiz ul.slots li.section .left {
+    float:left;
+}
+.path-mod-quiz ul.slots li.section .right {
+    float:right;
+}
 .path-mod-quiz ul.slots li.section .left,
-.path-mod-quiz ul.slots li.section .right {width:40px;text-align:center;padding: 6px 0;}
-.path-mod-quiz ul.slots li.section .right img.icon {padding: 0 0 4px 0;}
-.path-mod-quiz ul.slots li.section .left .section-handle img.icon {padding:0; vertical-align: baseline;}
+.path-mod-quiz ul.slots li.section .right {
+    width:40px;text-align:center;padding: 6px 0;
+}
+.path-mod-quiz ul.slots li.section .right img.icon {
+    padding: 0 0 4px 0;
+}
+.path-mod-quiz ul.slots li.section .left .section-handle img.icon {
+    padding:0; vertical-align: baseline;
+}
 
 #page-mod-quiz-edit ul.slots li.activity div.activityinstance .questiontext {font-weight: bold; margin-left: 5px;}
 
 .path-mod-quiz ul.slots li.section li.activity {background: #E6E6E6; margin: 3px 0 3px 0}
-.path-mod-quiz ul.slots li.section li.activity.qtype_description {background: #CEBAFF;}
 .path-mod-quiz ul.slots li.section li.activity.page,
 .path-mod-quiz ul.slots li.section li.activity.page_join {background: #FFFFFF;}
 .path-mod-quiz ul.slots li.section li.activity a.preview {margin-left: 5px}
