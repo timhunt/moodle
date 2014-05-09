@@ -655,7 +655,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $namestr = $qtype->local_name();
 
         $icon = $this->pix_icon('icon', $namestr, $qtype->plugin_name(), array('title' => $namestr,
-                'class' => 'iconlarge activityicon', 'alt' => ' ', 'role' => 'presentation'));
+                'class' => 'icon activityicon', 'alt' => ' ', 'role' => 'presentation'));
         // Display link itself.
         $activitylink = $icon . html_writer::tag('span', $instancename . $altname, array('class' => 'instancename'));
         $output .= html_writer::link($url, $activitylink);
