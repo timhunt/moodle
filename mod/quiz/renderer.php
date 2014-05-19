@@ -450,12 +450,9 @@ class mod_quiz_renderer extends plugin_renderer_base {
     public function attempt_form($attemptobj, $page, $slots, $id, $nextpage) {
         $output = '';
 
-        // Start the form.
-        $output .= html_writer::start_tag('form',
-                array('action' => $attemptobj->processattempt_url(), 'method' => 'post',
-                'enctype' => 'multipart/form-data', 'accept-charset' => 'utf-8',
-                'id' => 'responseform'));
-        $output .= html_writer::start_tag('div');
+       // Start the form.
+        $qoutput = $this->page->get_renderer('core_question');
+        $output .= $qoutput->question_form_start($attemptobj->processattempt_url());
 
         // Print all the questions.
         foreach ($slots as $slot) {
@@ -489,8 +486,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
                 'value' => implode(',', $slots)));
 
         // Finish the form.
-        $output .= html_writer::end_tag('div');
-        $output .= html_writer::end_tag('form');
+        $output .= $qoutput->question_form_end();
 
         $output .= $this->connection_warning();
 

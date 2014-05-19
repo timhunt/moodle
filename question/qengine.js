@@ -162,6 +162,7 @@ M.core_question_engine.init_form = function(Y, form) {
     Y.one(form).all('.questionflagsavebutton').remove();
 
     M.core_scroll_manager.scroll_to_saved_pos(Y);
+    window.mod_quiz_page_loading = false;
 }
 
 /**

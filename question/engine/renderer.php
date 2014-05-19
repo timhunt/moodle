@@ -40,6 +40,28 @@ class core_question_renderer extends plugin_renderer_base {
         return $this->page;
     }
 
+    public function question_form_start($actionurl) {
+        $output = '';
+        $output .= html_writer::start_tag('form',
+                array('action' => $actionurl, 'method' => 'post', 'id' => 'responseform',
+                        'enctype' => 'multipart/form-data', 'accept-charset' => 'utf-8'));
+        // This JavaScript code is intentionally inline. It prevents submission of the form
+        // before the real JavaScript in qengine.js has initialised everything.
+        $output .= html_writer::script("
+                window.mod_quiz_page_loading = true;
+                document.getElementById('responseform').addEventListener('submit', function(e) {
+                        if (mod_quiz_page_loading) {
+                            e.preventDefault();
+                        }
+                    }");
+        $output .= html_writer::start_div();
+        return $output;
+    }
+
+    public function question_form_end($actionurl) {
+        return html_writer::end_div() . html_writer::end_tag('form');
+    }
+
     /**
      * Render an icon, optionally with the word 'Preview' beside it, to preview
      * a given question.

@@ -238,12 +238,13 @@ $title = get_string('previewquestion', 'question', format_string($question->name
 $headtags = question_engine::initialise_js() . $quba->render_question_head_html($slot);
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
+
+$qoutput = $PAGE->get_renderer('core_question');
+
 echo $OUTPUT->header();
 
 // Start the question form.
-echo html_writer::start_tag('form', array('method' => 'post', 'action' => $actionurl,
-        'enctype' => 'multipart/form-data', 'id' => 'responseform'));
-echo html_writer::start_tag('div');
+$qoutput->question_form_start($actionurl);
 echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
 echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'slots', 'value' => $slot));
 echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'scrollpos', 'value' => '', 'id' => 'scrollpos'));
@@ -262,8 +263,7 @@ echo html_writer::empty_tag('input', $filldisabled    + array('type' => 'submit'
         'name' => 'fill',    'value' => get_string('fillincorrect', 'question')));
 echo html_writer::empty_tag('input', $finishdisabled  + array('type' => 'submit',
         'name' => 'finish',  'value' => get_string('submitandfinish', 'question')));
-echo html_writer::end_tag('div');
-echo html_writer::end_tag('form');
+echo $qoutput->question_form_end();
 
 // Output the technical info.
 print_collapsible_region_start('', 'techinfo', get_string('technicalinfo', 'question') .
