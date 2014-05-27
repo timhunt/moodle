@@ -340,7 +340,6 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         // Include course format js module.
         $PAGE->requires->js('/mod/quiz/yui/edit.js');
 
-
         // Address missing question types.
         foreach ($slots as $slot) {
             $questionid = $slot->questionid;
@@ -408,9 +407,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * Render the question chooser dialogue.
      */
     public function question_chooser() {
-        $container = html_writer::tag('div',print_choose_qtype_to_add_form(array(), null, false),
+        $container = html_writer::tag('div', print_choose_qtype_to_add_form(array(), null, false),
                 array('id' => 'qtypechoicecontainer'));
-        return html_writer::tag('div',$container, array('class' => 'createnewquestion'));
+        return html_writer::tag('div', $container, array('class' => 'createnewquestion'));
     }
 
     /**
