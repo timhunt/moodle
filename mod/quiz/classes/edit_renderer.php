@@ -484,18 +484,22 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     public function maximum_grade_input($quiz, $pageurl) {
         $o = '';
-        $o .= '<form method="post" action="edit.php" class="quizsavegradesform"><div>';
-        $o .= '<fieldset class="invisiblefieldset" style="display: block;">';
-        $o .= "<input type=\"hidden\" name=\"sesskey\" value=\"" . sesskey() . "\" />";
+        $o .= html_writer::start_tag('div', array('class' => 'maxgrade'));
+        $o .= html_writer::start_tag('form', array('method' => 'post', 'action' => 'edit.php',
+                'class' => 'quizsavegradesform'));
+        $o .= html_writer::start_tag('fieldset', array('class' => 'invisiblefieldset'));
+        $o .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
         $o .= html_writer::input_hidden_params($pageurl);
-        $a = '<input type="text" id="inputmaxgrade" name="maxgrade" size="' .
-                ($quiz->decimalpoints + 2) .
-                '" value="' . quiz_format_grade($quiz, $quiz->grade) . '" />';
-        $o .= '<label for="inputmaxgrade">' . get_string('maximumgradex', '', $a) . "</label>";
-        $o .= '<input type="hidden" name="savechanges" value="save" />';
-        $o .= '<input type="submit" value="' . get_string('save', 'quiz') . '" />';
-        $o .= '</fieldset>';
-        $o .= "</div></form>\n";
+        $a = html_writer::empty_tag('input', array('type' => 'text', 'id' => 'inputmaxgrade',
+                'name' => 'maxgrade', 'size' => ($quiz->decimalpoints + 2),
+                'value' => quiz_format_grade($quiz, $quiz->grade)));
+        $o .= html_writer::tag('label', get_string('maximumgradex', '', $a),
+                array('for' => 'inputmaxgrade'));
+        $o .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'savechanges', 'value' => 'save'));
+        $o .= html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('save', 'quiz')));
+        $o .= html_writer::end_tag('fieldset');
+        $o .= html_writer::end_tag('form');
+        $o .= html_writer::end_tag('div');
         return $o;
     }
 
