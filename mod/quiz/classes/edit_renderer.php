@@ -469,7 +469,8 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $bits[] = html_writer::tag('span', $currentstatus,
                 array('class' => 'quizopeningstatus', 'title' => implode(', ', $dates)));
 
-        return html_writer::tag('div', implode(' | ', $bits), array('class' => 'statusbar'));
+        $bar = html_writer::tag('div', implode(' | ', $bits), array('class' => 'content'));
+        return html_writer::tag('div', $bar, array('class' => 'statusbar'));
     }
 
     /**

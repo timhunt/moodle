@@ -1442,7 +1442,7 @@ bank window's title is prominent enough*/
     margin-left: 5px
 }
 .path-mod-quiz ul.slots li.section li.activity .edit_icon,
-.path-mod-quiz ul.slots li.section li.activity .editing_delete  {
+.path-mod-quiz ul.slots li.section li.activity .editing_delete {
     margin-left: 5px
 }
 
@@ -1458,14 +1458,16 @@ bank window's title is prominent enough*/
 .path-mod-quiz ul.slots .titleeditor {
     width: 25px;
 }
-.path-mod-quiz.editing form.quizsavegradesform fieldset.invisiblefieldset {
+.path-mod-quiz.editing form.quizsavegradesform fieldset.invisiblefieldset,
+.path-mod-quiz.editing div.statusbar div.content {
     display: block;
     float: right;
     margin: 0em 1em;
     padding: .2em;
 }
 
-.path-mod-quiz.editing div.maxgrade {
+.path-mod-quiz.editing div.maxgrade,
+.path-mod-quiz.editing div.statusbar {
     margin: 0em 40px;
     position: relative;
     padding: 5px 10px;
