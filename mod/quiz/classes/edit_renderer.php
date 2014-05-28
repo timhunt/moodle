@@ -301,7 +301,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         if ($quiz->shufflequestions) {
             $repaginatingdisabledhtml = 'disabled="disabled"';
             $repaginatingdisabled = true;
-            $quiz->questions = quiz_repaginate($quiz->questions, $quiz->questionsperpage);
+            $quiz->questions = quiz_repaginate_questions($quiz->questions, $quiz->questionsperpage);
         } else {
             $repaginatingdisabledhtml = '';
             $repaginatingdisabled = false;
