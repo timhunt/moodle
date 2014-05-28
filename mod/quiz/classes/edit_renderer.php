@@ -543,7 +543,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
             // Form fields.
             $addquestionformhtml = html_writer::tag('input', null,
-                    array('type' => 'hidden', 'name' => 'returnurl', 'value' => '/question/edit.php?cmid='.$quiz->cmid));
+                    array('type' => 'hidden', 'name' => 'returnurl', 'value' => '/mod/quiz/edit.php?cmid='.$quiz->cmid));
             $addquestionformhtml .= html_writer::tag('input', null,
                     array('type' => 'hidden', 'name' => 'cmid', 'value' => $quiz->cmid));
             $addquestionformhtml .= html_writer::tag('input', null,
