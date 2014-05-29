@@ -751,7 +751,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         }
 
         $output .= html_writer::start_tag('div', array('class' => 'mod-indent-outer'));
-        $output .= html_writer::tag('span', $slotnumber, array('class' => 'slotnumber'));
+        $output .= html_writer::tag('span', $this->display_question_number($question, $slotnumber), array('class' => 'slotnumber'));
 
         // This div is used to indent the content.
         $output .= html_writer::div('', $indentclasses);
@@ -1212,6 +1212,22 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             }
         }
         return null;
+    }
+
+    /**
+     * Display question number takes the slot number and returns a sequence
+     * where the description questions are shown as 'i' for  information
+     * @param unknown $question
+     * @param unknown $slotnumber
+     * @return string|number
+     */
+    protected function display_question_number($question, $slotnumber) {
+        static $info = 0;
+        if ($question->qtype === 'description') {
+            $info++;
+        	return 'i';
+        }
+    	return $slotnumber - $info;
     }
 
     protected function get_previous_page($structure, $prevslotnumber) {
