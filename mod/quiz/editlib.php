@@ -480,6 +480,10 @@ function quiz_edit_include_ajax($course, $quiz, $usedqtypes = array(), $enabledm
         $config->pageparams = array();
     }
 
+    if (!isset($config->questiondecimalpoints)) {
+        $config->questiondecimalpoints = $quiz->questiondecimalpoints;
+    }
+
     // Include toolboxes.
     $PAGE->requires->yui_module('moodle-mod_quiz-toolboxes',
             'M.mod_quiz.init_resource_toolbox',

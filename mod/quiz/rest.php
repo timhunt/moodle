@@ -87,7 +87,7 @@ switch($requestmethod) {
                     case 'getmaxmark':
                         require_capability('mod/quiz:manage', $modcontext);
                         $slot = $DB->get_record('quiz_slots', array('id' => $id), '*', MUST_EXIST);
-                        echo json_encode(array('instancemaxmark' => 0 + $slot->maxmark));
+                        echo json_encode(array('instancemaxmark' => \mod_quiz_edit_renderer::get_question_grade($quiz, $slot->maxmark)));
                         break;
 
                     case 'updatemaxmark':
@@ -101,7 +101,7 @@ switch($requestmethod) {
                             quiz_update_all_final_grades($quiz);
                             quiz_update_grades($quiz, 0, true);
                         }
-                        echo json_encode(array('instancemaxmark' => $maxmark));
+                        echo json_encode(array('instancemaxmark' => \mod_quiz_edit_renderer::get_question_grade($quiz, $maxmark)));
                         break;
                     case 'linkslottopage':
                         require_capability('mod/quiz:manage', $modcontext);

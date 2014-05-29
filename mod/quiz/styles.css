@@ -1455,9 +1455,6 @@ bank window's title is prominent enough*/
 .path-mod-quiz ul.slots .activityinstance form {
     display: inline;
 }
-.path-mod-quiz ul.slots .titleeditor {
-    width: 25px;
-}
 .path-mod-quiz.editing form.quizsavegradesform fieldset.invisiblefieldset,
 .path-mod-quiz.editing div.statusbar div.content {
     display: block;

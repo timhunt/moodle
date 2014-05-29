@@ -434,7 +434,8 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
                 'value' : maxmarktext,
                 'autocomplete' : 'off',
                 'aria-describedby' : 'id_editinstructions',
-                'maxLength' : '4'
+                'maxLength' : '12',
+                'size' : parseInt(this.get('config').questiondecimalpoints)+2
             });
 
             // Clear the existing content and put the editor in

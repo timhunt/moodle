@@ -700,7 +700,16 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @return the HTML for a marked out of question grade field.
      */
     public function marked_out_of_field($quiz, $question) {
-        return html_writer::span(0 + $question->maxmark, 'instancemaxmark');
+        return html_writer::span(self::get_question_grade($quiz, $question->maxmark), 'instancemaxmark');
+    }
+
+    /**
+     * @param object $quiz The quiz object of the quiz in question
+     * @param int $grade question grade/maxmark
+     * @return value for a marked out of question grade field formatted for display.
+     */
+    public static function get_question_grade($quiz, $grade) {
+        return quiz_format_question_grade($quiz, $grade);
     }
 
     /**
