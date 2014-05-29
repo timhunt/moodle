@@ -1215,11 +1215,11 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Display question number takes the slot number and returns a sequence
-     * where the description questions are shown as 'i' for  information
-     * @param unknown $question
-     * @param unknown $slotnumber
-     * @return string|number
+     * display_question_number takes the slot number and returns a sequence
+     * where the description questions are shown as 'i' for  information and
+     * other question types are shown as number respectively.
+     * @param object $question
+     * @param int $slotnumber
      */
     protected function display_question_number($question, $slotnumber) {
         static $info = 0;
