@@ -1447,7 +1447,7 @@ bank window's title is prominent enough*/
 }
 
 .path-mod-quiz ul.slots li.section li.activity .activityinstance {
-    padding-right: 40px;
+    padding-right: 5.5em;
 }
 .quizsavegradesform label[for=inputmaxgrade] {
     display: inline;
@@ -1474,4 +1474,24 @@ bank window's title is prominent enough*/
 
 .path-mod-quiz.editing span.editinstructions {
     margin-left: 250px;
+}
+
+.path-mod-quiz.editing ul.slots .activityinstance span.instancename {
+    overflow: hidden;  
+    /* white-space: nowrap; */
+    width: 85%;
+    /* display: inline; */
+    /* word-break: break-all; */
+    /* max-width: 100px; */
+    /* line-height: 5px; */
+    word-wrap: break-word;
+    display: block;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.path-mod-quiz.editing ul.slots .activityinstance img.activityicon {
+    float: left;
+}
 }
