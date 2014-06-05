@@ -275,6 +275,60 @@ class quiz_repaginate {
     }
 
     /**
+     * Return the repaginate button
+     * @param object $quiz
+     * @param object $options, array of options
+     */
+    public function get_repaginate_button($quiz, $options) {
+        if ($quiz->shufflequestions) {
+            $repaginatingdisabledhtml = 'disabled="disabled"';
+            $quiz->questions = quiz_repaginate_questions($quiz->questions, $quiz->questionsperpage);
+        } else if (quiz_has_attempts($quiz->id) || !$quiz->fullquestions || count($quiz->fullquestions) < 2) {
+            $repaginatingdisabledhtml = 'disabled="disabled"';
+        } else {
+            $repaginatingdisabledhtml = '';
+        }
+
+        $rpbutton = '<input id="repaginatecommand"' . $repaginatingdisabledhtml .
+        ' type="submit" name="repaginate" value="'. get_string('repaginatecommand', 'quiz') . '"/>';
+        $rpcontainer = html_writer::tag('div', $rpbutton,
+                array_merge(array('id' => 'repaginatecontainer', 'class' => 'rpcontainerclass'), $options));
+        return array($repaginatingdisabledhtml, $rpcontainer);
+    }
+
+    /**
+     * Return the repaginate form
+     * @param object $cm
+     * @param object $quiz
+     * @param object $pageurl
+     * @param int $max, maximum number of questions per page
+     */
+    public function get_repaginate_form($cm, $quiz, $pageurl, $max = 50) {
+        $perpage = array();
+        $perpage[0] = get_string('allinone', 'quiz');
+        for ($i = 1; $i <= $max; ++$i) {
+            $perpage[$i] = $i;
+        }
+
+        $select = html_writer::select($perpage, 'questionsperpage', $quiz->questionsperpage);
+
+        $gostring = get_string('go');
+
+        $formcontent = '<div class="bd">' .
+                '<form action="edit.php" method="post">' .
+                '<fieldset class="invisiblefieldset">' .
+                html_writer::input_hidden_params($pageurl) .
+                '<input type="hidden" name="sesskey" value="'.sesskey().'" />' .
+                '<input type="hidden" name="repaginate" value="'.$gostring.'" />' .
+                get_string('repaginate', 'quiz', $select) .
+                '<div class="quizquestionlistcontrols">' .
+                ' <input type="submit" name="repaginate" value="'. $gostring . '"  />' .
+                '</div></fieldset></form></div>';
+
+        return html_writer::tag('div', $formcontent, array('id' => 'repaginatedialog'));
+    }
+
+    /**
      *
      * @param object $quiz
      * @param object $thispageurl

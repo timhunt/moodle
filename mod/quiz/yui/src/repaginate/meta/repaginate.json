@@ -1,0 +1,16 @@
+{
+    "moodle-mod_quiz-repaginate": {
+        "requires": [
+            "base",
+            "event",
+            "node",
+            "io",
+            "graphics",
+            "json",
+            "event-move",
+            "moodle-core-notification-dialogue",
+            "moodle-core-notification-exception",
+            "moodle-core-notification-ajaxexception"
+        ]
+    }
+}

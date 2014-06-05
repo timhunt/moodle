@@ -294,39 +294,24 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         $quiz->fullquestions = $questions;
 
-        // Get information about course modules and existing module types.
+            // Get information about course modules and existing module types.
         // format.php in course formats may rely on presence of these variables.
         $modinfo = get_fast_modinfo($course);
 
-        if ($quiz->shufflequestions) {
-            $repaginatingdisabledhtml = 'disabled="disabled"';
-            $repaginatingdisabled = true;
-            $quiz->questions = quiz_repaginate_questions($quiz->questions, $quiz->questionsperpage);
-        } else {
-            $repaginatingdisabledhtml = '';
-            $repaginatingdisabled = false;
-        }
-        $repaginateparams = array(array('courseid' => $course->id, 'quizid' => $quiz->id));
-        // ...$PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'moodle-core-notification-dialogue', $repaginateparams).
+        require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
+        $repaginate = new quiz_repaginate();
 
-        $disabled = '';
-        if (quiz_has_attempts($quiz->id) || !$quiz->fullquestions) {
-            $disabled = 'disabled="disabled"';
-        }
-        echo '<div class="repaginatecommand"><button id="repaginatecommand" ' .
-                $disabled . $repaginatingdisabledhtml.'>'.
-                get_string('repaginatecommand', 'quiz').'...</button>';
-        echo '</div>';
+        $header = html_writer::tag('span', get_string('repaginatecommand', 'quiz'), array('class' => 'repaginatecommand'));
+        $form = $repaginate->get_repaginate_form($cm, $quiz, $pageurl);
+        $options = array('cmid' => $cm->id, 'header' => $header, 'form' => $form);
+
+        list($repaginatingdisabledhtml, $repaginatebutton) = $repaginate->get_repaginate_button($quiz, $options);
+        echo $repaginatebutton;
 
         if ($USER->editing && !$repaginatingdisabledhtml) {
+
             // Display repaginate popup only if the quiz has at least two or more questions.
-            if ($quiz->fullquestions && count($quiz->fullquestions) > 1) {
-                require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
-                $repaginate = new quiz_repaginate();
-                if (!$disabled) {
-                    echo $repaginate->get_popup_menu($quiz, $pageurl, $repaginatingdisabledhtml);
-                }
-            }
+            $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init', $options);
         }
 
         $qtypes = question_bank::get_all_qtypes();
@@ -338,7 +323,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         quiz_edit_include_ajax($course, $quiz, $qtypenamesused);
 
         // Include course format js module.
-        $PAGE->requires->js('/mod/quiz/yui/edit.js');
+        //$PAGE->requires->js('/mod/quiz/yui/edit.js');
 
         // Address missing question types.
         foreach ($slots as $slot) {

@@ -1,0 +1,105 @@
+YUI.add('moodle-mod_quiz-repaginate', function (Y, NAME) {
+
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+
+/**
+ * Repaginate functionality for a popup in quiz editing page.
+ *
+ * @package   mod_quiz
+ * @copyright 2014 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+var CSS = {
+    REPAGINATECONTAINER: '#repaginatecontainer',
+    REPAGINATECOMMAND: '#repaginatecommand'
+};
+
+var PARAMS = {
+    CMID: 'cmid',
+    HEADER: 'header',
+    FORM: 'form'
+};
+
+var POPUP = function() {
+    POPUP.superclass.constructor.apply(this, arguments);
+};
+
+Y.extend(POPUP, Y.Base, {
+    rpcontainer: Y.one(CSS.REPAGINATECONTAINER),
+    rpbutton: Y.one(CSS.REPAGINATECOMMAND),
+
+    header: null,
+    body: null,
+
+    initializer : function() {
+        rpcontainerclass = Y.one('.rpcontainerclass');
+        var node = rpcontainerclass._node;
+
+        // Set popup header and body.
+        this.header = node.getAttribute(PARAMS.HEADER);
+        this.body = node.getAttribute(PARAMS.FORM);
+        this.rpbutton.on('click', this.display_dialog, this);
+    },
+
+    display_dialog : function (e) {
+        e.preventDefault();
+
+        // Configure the popup.
+        var config = {
+            headerContent : this.header,
+            bodyContent : this.body,
+            draggable : true,
+            modal : false,
+            zIndex : 1000,
+            context: [CSS.REPAGINATECOMMAND, 'tr', 'br', ['beforeShow']],
+            centered: false,
+            width: '30em',
+            visible: false,
+            postmethod: 'form',
+            footerContent: null
+        };
+
+        var popup = { dialog: null };
+        popup.dialog = new M.core.dialogue(config);
+        popup.dialog.show();
+
+        hide.on('click', function() { popup.dialog.hide(); });
+    }
+});
+
+M.mod_quiz = M.mod_quiz || {};
+M.mod_quiz.repaginate = M.mod_quiz.repaginate || {};
+M.mod_quiz.repaginate.init = function() {
+    return new POPUP();
+};
+
+
+}, '@VERSION@', {
+    "requires": [
+        "base",
+        "event",
+        "node",
+        "io",
+        "graphics",
+        "json",
+        "event-move",
+        "moodle-core-notification-dialogue",
+        "moodle-core-notification-exception",
+        "moodle-core-notification-ajaxexception"
+    ]
+});
