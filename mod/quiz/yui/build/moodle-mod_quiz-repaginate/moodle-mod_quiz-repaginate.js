@@ -64,7 +64,7 @@ Y.extend(POPUP, Y.Base, {
             headerContent : this.header,
             bodyContent : this.body,
             draggable : true,
-            modal : false,
+            modal : true,
             zIndex : 1000,
             context: [CSS.REPAGINATECOMMAND, 'tr', 'br', ['beforeShow']],
             centered: false,
@@ -89,17 +89,4 @@ M.mod_quiz.repaginate.init = function() {
 };
 
 
-}, '@VERSION@', {
-    "requires": [
-        "base",
-        "event",
-        "node",
-        "io",
-        "graphics",
-        "json",
-        "event-move",
-        "moodle-core-notification-dialogue",
-        "moodle-core-notification-exception",
-        "moodle-core-notification-ajaxexception"
-    ]
-});
+}, '@VERSION@', {"requires": ["base", "event", "node", "io"]});

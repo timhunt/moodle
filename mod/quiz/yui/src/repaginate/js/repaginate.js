@@ -62,7 +62,7 @@ Y.extend(POPUP, Y.Base, {
             headerContent : this.header,
             bodyContent : this.body,
             draggable : true,
-            modal : false,
+            modal : true,
             zIndex : 1000,
             context: [CSS.REPAGINATECOMMAND, 'tr', 'br', ['beforeShow']],
             centered: false,

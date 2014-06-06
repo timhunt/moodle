@@ -31,7 +31,7 @@ $quizid = required_param('quizid', PARAM_INT);
 $slotnumber = required_param('slot', PARAM_INT);
 $repagtype = required_param('repag', PARAM_INT);
 $slotnumber++;
-$repage = new quiz_repaginate($quizid);
+$repage = new mod_quiz_repaginate($quizid);
 $repage->repaginate($slotnumber, $repagtype);
 
 redirect(new moodle_url('edit.php', array('cmid' => $cmid)));

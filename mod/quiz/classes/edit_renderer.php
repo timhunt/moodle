@@ -294,23 +294,17 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         $quiz->fullquestions = $questions;
 
-            // Get information about course modules and existing module types.
+        // Get information about course modules and existing module types.
         // format.php in course formats may rely on presence of these variables.
         $modinfo = get_fast_modinfo($course);
 
-        require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
-        $repaginate = new quiz_repaginate();
-
+        // Display repaginate button and popup.
         $header = html_writer::tag('span', get_string('repaginatecommand', 'quiz'), array('class' => 'repaginatecommand'));
-        $form = $repaginate->get_repaginate_form($cm, $quiz, $pageurl);
+        $form = $this->get_repaginate_form($cm, $quiz, $pageurl);
         $options = array('cmid' => $cm->id, 'header' => $header, 'form' => $form);
-
-        list($repaginatingdisabledhtml, $repaginatebutton) = $repaginate->get_repaginate_button($quiz, $options);
+        list($repaginatingdisabledhtml, $repaginatebutton) = $this->get_repaginate_button($quiz, $options);
         echo $repaginatebutton;
-
         if ($USER->editing && !$repaginatingdisabledhtml) {
-
-            // Display repaginate popup only if the quiz has at least two or more questions.
             $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init', $options);
         }
 
@@ -386,6 +380,60 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             echo $this->end_section_list();
 
             echo $this->question_chooser();
+    }
+
+    /**
+     * Return the repaginate button
+     * @param object $quiz
+     * @param object $options, array of options
+     */
+    protected function get_repaginate_button($quiz, $options) {
+        if ($quiz->shufflequestions) {
+            $repaginatingdisabledhtml = 'disabled="disabled"';
+            $quiz->questions = quiz_repaginate_questions($quiz->questions, $quiz->questionsperpage);
+        } else if (quiz_has_attempts($quiz->id) || !$quiz->fullquestions || count($quiz->fullquestions) < 2) {
+            $repaginatingdisabledhtml = 'disabled="disabled"';
+        } else {
+            $repaginatingdisabledhtml = '';
+        }
+
+        $rpbutton = '<input id="repaginatecommand"' . $repaginatingdisabledhtml .
+        ' type="submit" name="repaginate" value="'. get_string('repaginatecommand', 'quiz') . '"/>';
+        $rpcontainer = html_writer::tag('div', $rpbutton,
+                array_merge(array('id' => 'repaginatecontainer', 'class' => 'rpcontainerclass'), $options));
+        return array($repaginatingdisabledhtml, $rpcontainer);
+    }
+
+    /**
+     * Return the repaginate form
+     * @param object $cm
+     * @param object $quiz
+     * @param object $pageurl
+     * @param int $max, maximum number of questions per page
+     */
+    protected function get_repaginate_form($cm, $quiz, $pageurl, $max = 50) {
+        $perpage = array();
+        $perpage[0] = get_string('allinone', 'quiz');
+        for ($i = 1; $i <= $max; ++$i) {
+            $perpage[$i] = $i;
+        }
+
+        $select = html_writer::select($perpage, 'questionsperpage', $quiz->questionsperpage, false);
+
+        $gostring = get_string('go');
+
+        $formcontent = '<div class="bd">' .
+                '<form action="edit.php" method="post">' .
+                '<fieldset class="invisiblefieldset">' .
+                html_writer::input_hidden_params($pageurl) .
+                '<input type="hidden" name="sesskey" value="'.sesskey().'" />' .
+                '<input type="hidden" name="repaginate" value="'.$gostring.'" />' .
+                get_string('repaginate', 'quiz', $select) .
+                '<div class="quizquestionlistcontrols">' .
+                ' <input type="submit" name="repaginate" value="'. $gostring . '"  />' .
+                '</div></fieldset></form></div>';
+
+        return html_writer::tag('div', $formcontent, array('id' => 'repaginatedialog'));
     }
 
     /**
@@ -1219,9 +1267,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         static $info = 0;
         if ($question->qtype === 'description') {
             $info++;
-        	return 'i';
+            return 'i';
         }
-    	return $slotnumber - $info;
+        return $slotnumber - $info;
     }
 
     protected function get_previous_page($structure, $prevslotnumber) {

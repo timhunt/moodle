@@ -59,7 +59,7 @@ class quiz_repaginate_test extends advanced_testcase {
     private $repaginate = null;
 
     public function setUp() {
-        $this->repaginate = new quiz_repaginate_testable($this->get_quiz_slots());
+        $this->repaginate = new mod_quiz_repaginate_testable($this->get_quiz_slots());
     }
 
     public function tearDown() {
