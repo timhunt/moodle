@@ -317,7 +317,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         quiz_edit_include_ajax($course, $quiz, $qtypenamesused);
 
         // Include course format js module.
-        //$PAGE->requires->js('/mod/quiz/yui/edit.js');
+        $PAGE->requires->js('/mod/quiz/yui/edit.js');
 
         // Address missing question types.
         foreach ($slots as $slot) {
