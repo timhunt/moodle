@@ -576,6 +576,7 @@ $string['overridegroupeventname'] = '{$a->quiz} - {$a->group}';
 $string['overrides'] = 'Overrides';
 $string['overrideuser'] = 'Override user';
 $string['overrideusereventname'] = '{$a->quiz} - Override';
+$string['pageshort'] = 'P';
 $string['page-mod-quiz-x'] = 'Any quiz module page';
 $string['page-mod-quiz-attempt'] = 'Attempt quiz page';
 $string['page-mod-quiz-edit'] = 'Edit quiz page';

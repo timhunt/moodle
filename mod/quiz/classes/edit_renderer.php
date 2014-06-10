@@ -556,7 +556,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $slotid = $this->get_question_info($structure, $question->id, 'slotid');
         $slotnumber = $this->get_question_info($structure, $question->id, 'slot');
         $pagenumber = $this->get_question_info($structure, $question->id, 'page');
-        $page = $pagenumber ? get_string('page') . ' ' . $pagenumber : null;
+        $page = $pagenumber ? get_string('pageshort', 'quiz') . ' ' . $pagenumber : null;
         // Put page in a span for easier styling.
         $page = html_writer::tag('span', $page, array('class' => 'text'));
 

@@ -1433,8 +1433,13 @@ bank window's title is prominent enough*/
 }
 .path-mod-quiz ul.slots li.section li.activity.page,
 .path-mod-quiz ul.slots li.section li.activity.page_join {
-    background: #FFFFFF;
+    background: transparent;
 }
+
+.path-mod-quiz ul.slots li.section li.activity.page_join {
+    margin: -15px -25px;
+}
+
 .path-mod-quiz ul.slots li.section li.activity a.preview {
     margin-left: 5px
 }
