@@ -1471,3 +1471,7 @@ bank window's title is prominent enough*/
     clear: both;
     display: block;
 }
+
+.path-mod-quiz.editing span.editinstructions {
+    margin-left: 250px;
+}
