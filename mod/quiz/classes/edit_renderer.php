@@ -605,7 +605,8 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         if ($lastslot->id != $slotid) {
             // Add pink page button.
             $joinhtml = quiz_question_page_join_button($quiz, $question, $linkpage);
-            $output .= html_writer::tag('li', $joinhtml, array('class' => $dragdropclass.' page_join'));
+            $pagebreakclass = $linkpage == 1 ? 'break' : '';
+            $output .= html_writer::tag('li', $joinhtml, array('class' => $dragdropclass.' page_join '.$pagebreakclass));
         }
 
         return $output;

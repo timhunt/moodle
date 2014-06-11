@@ -1440,6 +1440,12 @@ bank window's title is prominent enough*/
     margin: -15px -25px;
 }
 
+.path-mod-quiz ul.slots li.section li.activity.page_join.break {
+    position: relative;
+    top: 10px;
+    margin-right: 50em;
+}
+
 .path-mod-quiz ul.slots li.section li.activity a.preview {
     margin-left: 5px
 }
