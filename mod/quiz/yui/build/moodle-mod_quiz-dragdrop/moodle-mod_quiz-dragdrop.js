@@ -460,6 +460,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
                     window.setTimeout(function() {
                         spinner.hide();
                     }, 250);
+                    window.location.reload(true);
                 },
                 failure: function(tid, response) {
                     this.ajax_failure(response);
