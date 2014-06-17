@@ -19,14 +19,19 @@ var CSS = {
     LIGHTBOX: 'lightbox',
     MOVEDOWN: 'movedown',
     MOVEUP: 'moveup',
-    PAGE : 'pagenumber',
+    PAGE : 'page',
     PAGECONTENT: 'page-content',
     RIGHT: 'right',
     SECTION: 'section',
     SECTIONADDMENUS: 'section_add_menus',
     SECTIONHANDLE: 'section-handle',
+    SLOTS: 'slots',
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
+},
+// The CSS selectors we use.
+SELECTOR = {
+    STATIC_IDS: {'page-1':1}
 };
 /**
  * Section drag and drop.
@@ -317,6 +322,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
             identifier: 'totopofsection',
             component: 'moodle'
         };
+        
 
         // Go through all sections
         var sectionlistselector = M.mod_quiz.edit.get_section_selector(Y);
@@ -340,7 +346,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
             });
             del.dd.plug(Y.Plugin.DDConstrained, {
                 // Keep it inside the .course-content
-                constrain: '#' + CSS.PAGECONTENT
+                constrain: '#' + CSS.SLOTS
             });
             del.dd.plug(Y.Plugin.DDWinScroll);
 
@@ -413,7 +419,7 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         // Get a reference to our drag node
         var dragnode = drag.get('node');
         var dropnode = e.drop.get('node');
-
+        
         // Add spinner if it not there
         var actionarea = dragnode.one(CSS.ACTIONAREA);
         var spinner = M.util.add_spinner(Y, actionarea);
@@ -475,6 +481,47 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
             },
             context:this
         });
+    },
+    
+    global_drop_over: function(e) {
+        //Overriding parent method so we can stop the slots being dragged before the first page node.
+        
+        // Check that drop object belong to correct group.
+        if (!e.drop || !e.drop.inGroup(this.groups)) {
+            return;
+        }
+
+        // Get a reference to our drag and drop nodes.
+        var drag = e.drag.get('node'),
+            drop = e.drop.get('node');
+        
+        // Save last drop target for the case of missed target processing.
+        this.lastdroptarget = e.drop;
+
+        // Are we dropping within the same parent node?
+        if (drop.hasClass(this.samenodeclass)) {
+            var where;
+
+            if (this.goingup) {
+                where = "before";
+            } else {
+                where = "after";
+            }
+
+            // Add the node contents so that it's moved, otherwise only the drag handle is moved.
+            // Don't insert above the first slot page element.
+            if(!SELECTOR.STATIC_IDS[drop.get('id')]) {
+                drop.insert(drag, where);
+            }
+        } else if ((drop.hasClass(this.parentnodeclass) || drop.test('[data-droptarget="1"]')) && !drop.contains(drag)) {
+            // We are dropping on parent node and it is empty
+            if (this.goingup) {
+                drop.append(drag);
+            } else {
+                drop.prepend(drag);
+            }
+        }
+        this.drop_over(e);
     }
 }, {
     NAME: 'mod_quiz-dragdrop-resource',

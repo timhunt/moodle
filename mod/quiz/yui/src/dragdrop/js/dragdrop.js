@@ -17,12 +17,17 @@ var CSS = {
     LIGHTBOX: 'lightbox',
     MOVEDOWN: 'movedown',
     MOVEUP: 'moveup',
-    PAGE : 'pagenumber',
+    PAGE : 'page',
     PAGECONTENT: 'page-content',
     RIGHT: 'right',
     SECTION: 'section',
     SECTIONADDMENUS: 'section_add_menus',
     SECTIONHANDLE: 'section-handle',
+    SLOTS: 'slots',
     SUMMARY: 'summary',
     SECTIONDRAGGABLE: 'sectiondraggable'
+},
+// The CSS selectors we use.
+SELECTOR = {
+    STATIC_IDS: {'page-1':1}
 };
