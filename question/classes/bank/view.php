@@ -634,15 +634,16 @@ class view {
     }
 
     protected function create_new_question_form($category, $canadd) {
-        global $CFG;
-        echo '<div class="createnewquestion">';
+        global $PAGE;
         if ($canadd) {
-            create_new_question_button($category->id, $this->editquestionurl->params(),
+            $renderer = $PAGE->get_renderer('core_question', 'bank');
+            $content = $renderer->create_question_action($category->id,
+                    $this->editquestionurl->params(),
                     get_string('createnewquestion', 'question'));
         } else {
-            print_string('nopermissionadd', 'question');
+            $content = get_string('nopermissionadd', 'question');
         }
-        echo '</div>';
+        echo html_writer::div($content, 'createnewquestion');
     }
 
     /**

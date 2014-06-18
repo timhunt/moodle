@@ -737,7 +737,7 @@ function quiz_print_question_list($quiz, $pageurl, $allowdelete, $reordertool,
  */
 function quiz_print_pagecontrols($quiz, $pageurl, $page, $hasattempts,
         $defaultcategoryobj, $canaddquestion, $canaddrandom) {
-    global $CFG, $OUTPUT;
+    global $CFG, $OUTPUT, $PAGE;
     static $randombuttoncount = 0;
     $randombuttoncount++;
     echo '<div class="pagecontrols">';
@@ -760,7 +760,9 @@ function quiz_print_pagecontrols($quiz, $pageurl, $page, $hasattempts,
         $returnurladdtoquiz = $returnurladdtoquiz->out_as_local_url(false);
         $newquestionparams = array('returnurl' => $returnurladdtoquiz,
                 'cmid' => $quiz->cmid, 'appendqnumstring' => 'addquestion');
-        create_new_question_button($defaultcategoryid, $newquestionparams,
+
+        $qrenderer = $PAGE->get_renderer('core_question', 'bank');
+        echo $qrenderer->create_question_action($defaultcategoryid, $newquestionparams,
                 get_string('addaquestion', 'quiz'),
                 get_string('createquestionandadd', 'quiz'), $hasattempts);
     }

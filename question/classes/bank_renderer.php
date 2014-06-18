@@ -49,30 +49,80 @@ class core_question_bank_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Print a control for creating a new question. This will open the question type
+     * chooser, which in turn goes to question/question.php before getting back to
+     * $params['returnurl'] (by default the question bank screen).
+     *
+     * @param int $categoryid The id of the category that the new question should be added to.
+     * @param array $params Other parameters to add to the URL. You need either $params['cmid'] or
+     *      $params['courseid'], and you should probably set $params['returnurl']
+     * @param string $caption the text to display on the button.
+     * @param string $tooltip a tooltip to add to the button (optional).
+     * @param bool $disabled if true, the button will be disabled (optional, defaults to false).
+     * @param array $allowedqtypes if not null, restrict the types of question
+     *      that can be added (optional). This list must be consistent for all
+     *      calls to this method on a page. (If you pass different values to
+     *      different calls to this method, only the first one will be used.)
+     */
+    public function create_question_action($categoryid, $params, $caption,
+            $tooltip = '', $disabled = false, $allowedqtypes = null) {
+        $output = '';
+
+        $params['category'] = $categoryid;
+        $url = new moodle_url('/question/addquestion.php', $params);
+
+        $buttonparams = array(
+            'type'  => 'button',
+            'value' => $caption,
+            'class' => 'core_question_add_question_action',
+        );
+        if ($disabled) {
+            $buttonparams['disabled'] = 'disabled';
+        }
+        if ($tooltip) {
+            $buttonparams['title'] = $tooltip;
+        }
+
+        $buttonparams['data-category'] = $categoryid;
+        if (isset($params['cmid'])) {
+            $buttonparams['data-cmid'] = $params['cmid'];
+        } else if (isset($params['courseid'])) {
+            $buttonparams['data-courseid'] = $params['courseid'];
+        }
+        if (isset($params['returnurl'])) {
+            $buttonparams['data-returnurl'] = $params['returnurl'];
+        }
+        if (isset($params['appendqnumstring'])) {
+            $buttonparams['data-appendqnumstring'] = $params['appendqnumstring'];
+        }
+        if (isset($params['scrollpos'])) {
+            $buttonparams['data-scrollpos'] = $params['scrollpos'];
+        }
+
+        $output .= html_writer::empty_tag('input', $buttonparams);
+
+        if ($this->page->requires->should_create_one_time_item_now('core_question_qtypechooser')) {
+            $this->page->requires->yui_module('moodle-question-chooser', 'M.question.init_chooser');
+            list($real, $fake) = question_bank::get_qtype_chooser_options($allowedqtypes);
+            $output .= html_writer::div($this->qbank_chooser($real, $fake),
+                    null, array('id' => 'qtypechoicecontainer'));
+        }
+
+        return $output;
+    }
+
+    /**
      * Build the HTML for the question chooser javascript popup.
      *
      * @param array $real A set of real question types
      * @param array $fake A set of fake question types
-     * @param object $course The course that will be displayed
-     * @param array $hiddenparams Any hidden parameters to add to the form
      * @return string The composed HTML for the questionbank chooser
      */
-    public function qbank_chooser($real, $fake, $course, $hiddenparams) {
-        global $OUTPUT;
+    public function qbank_chooser($real, $fake) {
 
         // Start the form content.
         $formcontent = html_writer::start_tag('form', array('action' => new moodle_url('/question/question.php'),
                 'id' => 'chooserform', 'method' => 'get'));
-
-        // Add the hidden fields.
-        $hiddenfields = '';
-        $hiddenfields .= html_writer::tag('input', '', array('type' => 'hidden', 'name' => 'category', 'id' => 'qbankcategory'));
-        $hiddenfields .= html_writer::tag('input', '', array('type' => 'hidden', 'name' => 'courseid', 'value' => $course->id));
-        foreach ($hiddenparams as $k => $v) {
-            $hiddenfields .= html_writer::tag('input', '', array('type' => 'hidden', 'name' => $k, 'value' => $v));
-        }
-        $hiddenfields .= html_writer::tag('input', '', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
-        $formcontent .= html_writer::div($hiddenfields, '', array('id' => 'typeformdiv'));
 
         // Put everything into one tag 'options'.
         $formcontent .= html_writer::start_tag('div', array('class' => 'options'));
@@ -99,9 +149,9 @@ class core_question_bank_renderer extends plugin_renderer_base {
 
         // Add the form submission buttons.
         $submitbuttons = '';
-        $submitbuttons .= html_writer::tag('input', '',
+        $submitbuttons .= html_writer::empty_tag('input',
                 array('type' => 'submit', 'name' => 'submitbutton', 'class' => 'submitbutton', 'value' => get_string('add')));
-        $submitbuttons .= html_writer::tag('input', '',
+        $submitbuttons .= html_writer::empty_tag('input',
                 array('type' => 'submit', 'name' => 'addcancel', 'class' => 'addcancel', 'value' => get_string('cancel')));
         $formcontent .= html_writer::div($submitbuttons, 'submitbuttons');
 
@@ -142,7 +192,7 @@ class core_question_bank_renderer extends plugin_renderer_base {
         $classes[] = 'option';
         $output .= html_writer::start_tag('div', array('class' => implode(' ', $classes)));
         $output .= html_writer::start_tag('label', array('for' => 'qtype_' . $qtype->plugin_name()));
-        $output .= html_writer::tag('input', '', array('type' => 'radio',
+        $output .= html_writer::empty_tag('input', array('type' => 'radio',
                 'name' => 'qtype', 'id' => 'qtype_' . $qtype->plugin_name(), 'value' => $qtype->name()));
 
         $output .= html_writer::start_tag('span', array('class' => 'modicon'));

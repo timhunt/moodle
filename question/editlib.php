@@ -439,39 +439,26 @@ function require_login_in_context($contextorid = null){
  *      the qtype radio buttons.
  * @param $allowedqtypes optional list of qtypes that are allowed. If given, only
  *      those qtypes will be shown. Example value array('description', 'multichoice').
+ * @deprecated since Moodle 2.8. Use core_question_bank_renderer::create_question_action or
+ *      core_question_bank_renderer::qbank_chooser instead.
  */
 function print_choose_qtype_to_add_form($hiddenparams, array $allowedqtypes = null, $enablejs = true) {
-    global $CFG, $PAGE, $OUTPUT;
+    global $PAGE;
+    debugging('create_new_question_button is deprecated. Please use ' .
+            'core_question_bank_renderer::create_question_action or ' .
+            'core_question_bank_renderer::qbank_chooser instead.', DEBUG_DEVELOPER);
 
-    if ($enablejs) {
-        // Add the chooser.
-        $PAGE->requires->yui_module('moodle-question-chooser',
-            'M.question.init_chooser',
-            array(array('courseid' => $PAGE->course->id))
-        );
-    }
-
-    $realqtypes = array();
-    $fakeqtypes = array();
-    foreach (question_bank::get_creatable_qtypes() as $qtypename => $qtype) {
-        if ($allowedqtypes && !in_array($qtypename, $allowedqtypes)) {
-            continue;
-        }
-        if ($qtype->is_real_question_type()) {
-            $realqtypes[] = $qtype;
-        } else {
-            $fakeqtypes[] = $qtype;
-        }
-    }
-
-    $renderer = $PAGE->get_renderer('question', 'bank');
-    echo $renderer->qbank_chooser($realqtypes, $fakeqtypes, $PAGE->course, $hiddenparams);
+    $PAGE->requires->yui_module('moodle-question-chooser',
+            'M.question.init_chooser');
+    list($real, $fake) = question_bank::get_qtype_chooser_options($allowedqtypes);
+    $renderer = $PAGE->get_renderer('core_question', 'bank');
+    echo $renderer->qbank_chooser($real, $fake, $PAGE->course, $hiddenparams);
 }
 
 /**
- * Print a button for creating a new question. This will open question/addquestion.php,
- * which in turn goes to question/question.php before getting back to $params['returnurl']
- * (by default the question bank screen).
+ * Print a button for creating a new question. This will open the question type
+ * chooser, which in turn goes to question/question.php before getting back to
+ * $params['returnurl'] (by default the question bank screen).
  *
  * @param int $categoryid The id of the category that the new question should be added to.
  * @param array $params Other paramters to add to the URL. You need either $params['cmid'] or
@@ -479,20 +466,11 @@ function print_choose_qtype_to_add_form($hiddenparams, array $allowedqtypes = nu
  * @param string $caption the text to display on the button.
  * @param string $tooltip a tooltip to add to the button (optional).
  * @param bool $disabled if true, the button will be disabled.
+ * @deprecated since Moodle 2.8. Use core_question_bank_renderer::create_question_action instead.
  */
 function create_new_question_button($categoryid, $params, $caption, $tooltip = '', $disabled = false) {
-    global $CFG, $PAGE, $OUTPUT;
-    static $choiceformprinted = false;
-    $params['category'] = $categoryid;
-    $url = new moodle_url('/question/addquestion.php', $params);
-    echo $OUTPUT->single_button($url, $caption, 'get', array('disabled'=>$disabled, 'title'=>$tooltip));
-
-    if (!$choiceformprinted) {
-        echo '<div id="qtypechoicecontainer">';
-        print_choose_qtype_to_add_form(array());
-        echo "</div>\n";
-        $choiceformprinted = true;
-    }
+    global $PAGE;
+    debugging('create_new_question_button is deprecated. Please use core_question_bank_renderer::create_question_action instead.', DEBUG_DEVELOPER);
+    $renderer = $PAGE->get_renderer('core_question', 'bank');
+    echo $renderer->create_question_action($categoryid, $params, $caption, $tooltip, $disabled);
 }
-
-

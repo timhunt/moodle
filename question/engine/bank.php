@@ -220,6 +220,33 @@ abstract class question_bank {
     }
 
     /**
+     * Get the options to disply in the qtype chooser.
+     *
+     * @param array optional, can be used to restrict the list of qtypes shown.
+     *      E.g. ['multichoice', truefalse'].
+     * @return array with two arrays of question types, ready to display in theme
+     *      qtype chooser.
+     */
+    public static function get_qtype_chooser_options($allowedqtypes = null) {
+        $realqtypes = array();
+        $fakeqtypes = array();
+
+        foreach (self::get_creatable_qtypes() as $qtypename => $qtype) {
+            if ($allowedqtypes && !in_array($qtypename, $allowedqtypes)) {
+                continue;
+            }
+
+            if ($qtype->is_real_question_type()) {
+                $realqtypes[] = $qtype;
+            } else {
+                $fakeqtypes[] = $qtype;
+            }
+        }
+
+        return array($realqtypes, $fakeqtypes);
+    }
+
+    /**
      * Load the question definition class(es) belonging to a question type. That is,
      * include_once('/question/type/' . $qtypename . '/question.php'), with a bit
      * of checking.

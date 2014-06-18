@@ -13,12 +13,10 @@ function Chooser() {
 
 Y.extend(Chooser, M.core.chooserdialogue, {
     initializer: function() {
-        Y.all('form').each(function(node) {
-            if (/question\/addquestion\.php/.test(node.getAttribute('action'))) {
-                node.on('submit', this.displayQuestionChooser, this);
-            }
-        }, this);
+        Y.delegate('click', this.displayQuestionChooser, 'body',
+                '.core_question_add_question_action', this);
     },
+
     displayQuestionChooser: function(e) {
         var dialogue = Y.one(SELECTORS.CREATENEWQUESTION + ' ' + SELECTORS.CHOOSERDIALOGUE),
             header = Y.one(SELECTORS.CREATENEWQUESTION + ' ' + SELECTORS.CHOOSERHEADER);
@@ -29,20 +27,30 @@ Y.extend(Chooser, M.core.chooserdialogue, {
             this.prepare_chooser();
         }
 
-        // Update all of the hidden fields within the questionbank form.
-        var originForm = e.target.ancestor('form', true),
-            targetForm = this.container.one('form'),
-            hiddenElements = originForm.all('input[type="hidden"]');
-
-        targetForm.all('input.customfield').remove();
-        hiddenElements.each(function(field) {
-            targetForm.appendChild(field.cloneNode())
-                .removeAttribute('id')
-                .addClass('customfield');
-        });
+        // Update all of the hidden fields for this particular instance of the chooser.
+        this.dataToHiddenField(e.target, 'category');
+        this.dataToHiddenField(e.target, 'cmid');
+        this.dataToHiddenField(e.target, 'courseid');
+        this.dataToHiddenField(e.target, 'returnurl');
+        this.dataToHiddenField(e.target, 'appendqnumstring');
+        this.dataToHiddenField(e.target, 'scrollpos');
 
         // Display the chooser dialogue.
         this.display_chooser(e);
+    },
+
+    dataToHiddenField: function(dataSource, name) {
+        var hidden = this.container.one('input[type="hidden"][name="' + name + '"]'),
+            value  = dataSource.getData(name);
+        if (value) {
+            if (!hidden) {
+                this.container.one('form').append('<input type="hidden" name="' + name + '">');
+                hidden = this.container.one('input[type="hidden"][name="' + name + '"]');
+            }
+            hidden.set('value', value);
+        } else if (hidden) {
+            hidden.remove();
+        }
     }
 }, {
     NAME: 'questionChooser'
@@ -54,4 +62,4 @@ M.question.init_chooser = function(config) {
 };
 
 
-}, '@VERSION@', {"requires": ["moodle-core-chooserdialogue"]});
+}, '@VERSION@', {"requires": ["moodle-core-chooserdialogue", "event-delegate"]});

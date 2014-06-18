@@ -1,5 +1,12 @@
 This files describes API changes for code that uses the question API.
 
+=== 2.8 ===
+
+1) Some display methods have been moved into core_question_edit_renderer:
+    create_new_question_button     -> new_question_action
+    print_choose_qtype_to_add_form -> no direct replacement. You should probably use new_question_action.
+
+
 === 2.7 ===
 
 1)  Changes to class question_bank_view:

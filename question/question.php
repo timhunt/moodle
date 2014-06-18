@@ -128,13 +128,6 @@ if ($id) {
         print_error('cannotenable', 'question', $returnurl, $qtype);
     }
 
-} else if ($categoryid) {
-    // Category, but no qtype. They probably came from the addquestion.php
-    // script without choosing a question type. Send them back.
-    $addurl = new moodle_url('/question/addquestion.php', $url->params());
-    $addurl->param('validationerror', 1);
-    redirect($addurl);
-
 } else {
     print_error('notenoughdatatoeditaquestion', 'question', $returnurl);
 }

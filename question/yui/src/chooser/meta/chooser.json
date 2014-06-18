@@ -1,7 +1,8 @@
 {
     "moodle-question-chooser": {
         "requires": [
-            "moodle-core-chooserdialogue"
+            "moodle-core-chooserdialogue",
+            "event-delegate"
         ]
     }
 }
