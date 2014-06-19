@@ -709,60 +709,74 @@ function message_get_recent_conversations($user, $limitfrom=0, $limitto=100) {
     //It unions that data then, within that set, it finds the most recent message you've exchanged with each user over all
     //It then joins with some other tables to get some additional data we need
 
-    //message ID is used instead of timecreated as it should sort the same and will be much faster
-
     //There is a separate query for read and unread queries as they are stored in different tables
     //They were originally retrieved in one query but it was so large that it was difficult to be confident in its correctness
     $sql = "SELECT $userfields, mr.id as mid, mr.notification, mr.smallmessage, mr.fullmessage, mr.fullmessagehtml, mr.fullmessageformat, mr.timecreated, mc.id as contactlistid, mc.blocked
               FROM {message_read} mr
               JOIN (
-                    SELECT messages.userid AS userid, MAX(messages.mid) AS mid
-                      FROM (
-                           SELECT mr1.useridto AS userid, MAX(mr1.id) AS mid
-                             FROM {message_read} mr1
-                            WHERE mr1.useridfrom = :userid1
-                                  AND mr1.notification = 0
-                         GROUP BY mr1.useridto
-                                  UNION
-                           SELECT mr2.useridfrom AS userid, MAX(mr2.id) AS mid
-                             FROM {message_read} mr2
-                            WHERE mr2.useridto = :userid2
-                                  AND mr2.notification = 0
-                         GROUP BY mr2.useridfrom
-                           ) messages
-                  GROUP BY messages.userid
-                   ) messages2 ON mr.id = messages2.mid AND (mr.useridto = messages2.userid OR mr.useridfrom = messages2.userid)
-              JOIN {user} u ON u.id = messages2.userid
+                    SELECT MAX(id) as maxid, latestmessages.userid
+                    FROM {message_read} mr
+                    JOIN (
+                        SELECT messages.userid AS userid, MAX(messages.maxtime) as maxtime
+                          FROM (
+                               SELECT mr1.useridto AS userid, MAX(mr1.timecreated) AS maxtime
+                                 FROM {message_read} mr1
+                                WHERE mr1.useridfrom = :userid1
+                                      AND mr1.notification = 0
+                             GROUP BY mr1.useridto
+                                      UNION
+                               SELECT mr2.useridfrom AS userid, MAX(mr2.timecreated) AS maxtime
+                                 FROM {message_read} mr2
+                                WHERE mr2.useridto = :userid2
+                                      AND mr2.notification = 0
+                             GROUP BY mr2.useridfrom
+                               ) messages
+                      GROUP BY messages.userid
+                          ) latestmessages
+                      ON mr.timecreated = latestmessages.maxtime
+                     AND (mr.useridto = latestmessages.userid OR mr.useridfrom = latestmessages.userid)
+                GROUP BY latestmessages.userid
+                  ) lastmessage
+                ON mr.id = lastmessage.maxid
+              JOIN {user} u ON u.id = lastmessage.userid
          LEFT JOIN {message_contacts} mc ON mc.userid = :userid3 AND mc.contactid = u.id
              WHERE u.deleted = '0'
-          ORDER BY mr.id DESC";
+          ORDER BY mr.timecreated DESC";
     $params = array('userid1' => $user->id, 'userid2' => $user->id, 'userid3' => $user->id);
     $read =  $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
 
     $sql = "SELECT $userfields, m.id as mid, m.notification, m.smallmessage, m.fullmessage, m.fullmessagehtml, m.fullmessageformat, m.timecreated, mc.id as contactlistid, mc.blocked
               FROM {message} m
               JOIN (
-                    SELECT messages.userid AS userid, MAX(messages.mid) AS mid
-                      FROM (
-                           SELECT m1.useridto AS userid, MAX(m1.id) AS mid
-                             FROM {message} m1
-                            WHERE m1.useridfrom = :userid1
-                                  AND m1.notification = 0
-                         GROUP BY m1.useridto
-                                  UNION
-                           SELECT m2.useridfrom AS userid, MAX(m2.id) AS mid
-                             FROM {message} m2
-                            WHERE m2.useridto = :userid2
-                                  AND m2.notification = 0
-                         GROUP BY m2.useridfrom
-                           ) messages
-                  GROUP BY messages.userid
-                   ) messages2 ON m.id = messages2.mid AND (m.useridto = messages2.userid OR m.useridfrom = messages2.userid)
-              JOIN {user} u ON u.id = messages2.userid
+                    SELECT MAX(id) as maxid, latestmessages.userid
+                    FROM {message} m
+                    JOIN (
+                        SELECT messages.userid AS userid, MAX(messages.maxtime) as maxtime
+                          FROM (
+                               SELECT m1.useridto AS userid, MAX(m1.timecreated) AS maxtime
+                                 FROM {message} m1
+                                WHERE m1.useridfrom = :userid1
+                                      AND m1.notification = 0
+                             GROUP BY m1.useridto
+                                      UNION
+                               SELECT m2.useridfrom AS userid, MAX(m2.timecreated) AS maxtime
+                                 FROM {message_read} m2
+                                WHERE m2.useridto = :userid2
+                                      AND m2.notification = 0
+                             GROUP BY m2.useridfrom
+                               ) messages
+                      GROUP BY messages.userid
+                          ) latestmessages
+                      ON m.timecreated = latestmessages.maxtime
+                     AND (m.useridto = latestmessages.userid OR m.useridfrom = latestmessages.userid)
+                GROUP BY latestmessages.userid
+                  ) lastmessage
+                ON m.id = lastmessage.maxid
+              JOIN {user} u ON u.id = lastmessage.userid
          LEFT JOIN {message_contacts} mc ON mc.userid = :userid3 AND mc.contactid = u.id
              WHERE u.deleted = '0'
-             ORDER BY m.id DESC";
-    $unread =  $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
+          ORDER BY m.timecreated DESC";
+    $unread = $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
 
     $conversations = array();
 
@@ -802,7 +816,7 @@ function message_get_recent_notifications($user, $limitfrom=0, $limitto=100) {
               FROM {message_read} mr
                    JOIN {user} u ON u.id=mr.useridfrom
              WHERE mr.useridto = :userid1 AND u.deleted = '0' AND mr.notification = :notification
-             ORDER BY mr.id DESC";//ordering by id should give the same result as ordering by timecreated but will be faster
+             ORDER BY mr.timecreated DESC";
     $params = array('userid1' => $user->id, 'notification' => 1);
 
     $notifications =  $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
