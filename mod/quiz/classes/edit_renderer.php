@@ -308,6 +308,13 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init', $options);
         }
 
+        // Add the form for random question.
+        $canaddrandom = has_capability('moodle/question:useall', $context);;
+        if ($USER->editing && $canaddrandom) {
+            $randomoptions = array('id' => 'randomquestiondialog', 'class' => 'addarandomquestion');
+            $PAGE->requires->yui_module('moodle-mod_quiz-randomquestion', 'M.mod_quiz.randomquestion.init', $randomoptions);
+        }
+
         $qtypes = question_bank::get_all_qtypes();
         $qtypenamesused = array();
         foreach ($qtypes as $qtypename => $qtypedata) {
@@ -377,9 +384,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
             echo $this->section_footer();
         }
 
-            echo $this->end_section_list();
+        echo $this->end_section_list();
 
-            echo $this->question_chooser();
+        echo $this->question_chooser();
     }
 
     /**
@@ -437,6 +444,75 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     }
 
     /**
+     * Return 'Add a random question' popup.
+     */
+    protected function add_a_randomquestion($page) {
+        global $CFG;
+        list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
+        question_edit_setup('editq', '/mod/quiz/edit.php', true);
+        $header = null;
+        $form = null;
+        $canaddrandom = $contexts->have_cap('moodle/question:useall');
+        if ($canaddrandom) {
+            $randomform = new quiz_add_random_form(new moodle_url('/mod/quiz/addrandom.php'), $contexts);
+            $randomform->set_data(array(
+                    'category' => $pagevars['cat'],
+                    'returnurl' => $thispageurl->out_as_local_url(true),
+                    'cmid' => $cm->id,
+                    'addonpage' => $page
+            ));
+            $string = get_string('addrandomquestiontoquiz', 'quiz', $quiz->name);
+            $displaycontent = $randomform->render();
+
+            $header = html_writer::tag('div', get_string('addrandomquestiontoquiz', 'quiz', $quiz->name),
+                    array('class' => 'hd'));
+
+            //prepare the form.
+            $action = $CFG->wwwroot . '/mod/quiz/addrandom.php';
+            $pageurl = new moodle_url('/mod/quiz/edit.php');
+            $returnurl = s(str_replace($CFG->wwwroot, '', $pageurl->out(false)));
+            $randombuttoncount = 0;
+            $disabled = '';
+            $form = '<div class="bd">
+                    <form class="randomquestionform" action="' . $action . '" method="post">
+                        <div class="randomquestioncontainer">
+                            <input type="hidden" class="addonpage_formelement" name="addonpage" value="' . $page . '" />
+                            <input type="hidden" name="cmid" value="' . $cm->id . '" />
+                            <input type="hidden" name="courseid" value="<?php echo $quiz->course; ?>" />
+                            <input type="hidden" name="category" value="' . $pageurl->param('cat') . '" />
+                            <input type="hidden" name="returnurl" value="' . $returnurl . '" />
+                        </div>
+                    </form>
+                    </div>';
+
+            $form .= html_writer::tag('div',  $displaycontent, array('class' => 'bd'));
+
+            return array($header, $form);
+        }
+        return null;
+    }
+
+//     protected function get_randomquestion_hidden_elements($quiz, $title, $returnurl, $cat, $page) {
+//         global $CFG;
+//         $action = $CFG->wwwroot . '/mod/quiz/addrandom.php';
+//         //$returnurl = s(str_replace($CFG->wwwroot, '', $pageurl->out(false)));// TODO: To be checked
+//         $output = '<div id="randomquestiondialog">';
+//         $output .= html_writer::tag('div', $title);
+//         $output .= '<div class="bd">';
+//         $output .= 	'<form class="randomquestionform" action="' . $action . '" method="get">';
+//         $output .= '<div>';
+//         $output .= '<input type="hidden" class="addonpage_formelement" name="addonpage" value="' . $page . '" />';
+//         $output .= '<input type="hidden" name="cmid" value="' . $quiz->cmid . '" />';
+//         $output .= '<input type="hidden" name="courseid" value="' . $quiz->course . '" />';
+//         $output .= '<input type="hidden" name="category" value="' . $cat . '" />';
+//         $output .= '<input type="hidden" name="returnurl" value="' . $returnurl . '" />';
+//         $output .= '</div>';
+//         $output .= '</form></div></div>';
+
+//         return $output;
+//     }
+
+     /**
      * Render the question chooser dialogue.
      */
     public function question_chooser() {
@@ -955,7 +1031,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $returnurl = new moodle_url($pageurl, array('addonpage' => $page));
         $params = array('returnurl' => $returnurl->out_as_local_url(false),
                 'cmid' => $quiz->cmid, 'category' => $questioncategoryid,
-                'appendqnumstring' => 'addquestion');
+                'addonpage' => $page, 'appendqnumstring' => 'addquestion');
 
         $actions['addaquestion'] = new action_menu_link_secondary(
             new moodle_url('/question/addquestion.php', $params),
@@ -974,13 +1050,15 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         );
 
         // Add a random question.
-        $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid));
+        $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid, 'addonpage' => $page));
         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid);
-        $actions['addarandomquestion'] = new action_menu_link_secondary(
-            new moodle_url('/mod/quiz/addrandom.php', $params),
-            new pix_icon('t/add', $str->addarandomquestion, 'moodle', array('class' => 'iconsmall', 'title' => '')),
-            $str->addarandomquestion, array('class' => 'editing_addarandomquestion', 'data-action' => 'addarandomquestion')
-        );
+        $url = new moodle_url('/mod/quiz/addrandom.php', $params);
+        $icon = new pix_icon('t/add', $str->addarandomquestion, 'moodle', array('class' => 'iconsmall', 'title' => ''));
+        $page = $question ? $question->page : 0;
+        list ($header, $form) = $this->add_a_randomquestion($page);
+        $attributes = array('class' => 'cm-edit-action addarandomquestion', 'data-action' => 'addarandomquestion');
+        $attributes = array_merge(array('header' => $header, 'form' => $form, 'addonpage' => $page), $attributes);
+        $actions['addarandomquestion'] = new action_menu_link_secondary($url, $icon, $str->addarandomquestion, $attributes);
 
 //         // Add a random selected question.
 //         // TODO: We have to refine the functionality when adding random selected questions.
