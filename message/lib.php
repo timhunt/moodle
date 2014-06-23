@@ -705,12 +705,18 @@ function message_get_recent_conversations($user, $limitfrom=0, $limitto=100) {
     global $DB;
 
     $userfields = user_picture::fields('u', array('lastaccess'));
-    //This query retrieves the last message received from and sent to each user
-    //It unions that data then, within that set, it finds the most recent message you've exchanged with each user over all
-    //It then joins with some other tables to get some additional data we need
 
-    //There is a separate query for read and unread queries as they are stored in different tables
-    //They were originally retrieved in one query but it was so large that it was difficult to be confident in its correctness
+    // This query retrieves the last message received from and sent to each user. It unions that data then, within that set,
+    // it finds the most recent message you've exchanged with each user over all.
+    //
+    // Points of interest.
+    // 1. The reason we retrieve the MAX(id) in the query is because we can not rely solely on the timecreated value. It is
+    //    possible that a user (maybe through bulk messaging) sent multiple messages at the same time to a particular user, or
+    //    that the users exchanged messages at the same time. In this case we then display the message that has the maximum id.
+    //    This will very rarely occur, but if it does the debugging message will be shown "Did you remember to make the first
+    //    column something unique in your call to get_records?". This will avoid that being shown.
+    // 2. There is a separate query for read and unread messages as they are stored in different tables. They were originally
+    //    retrieved in one query but it was so large that it was difficult to be confident in its correctness.
     $sql = "SELECT $userfields, mr.id as mid, mr.notification, mr.smallmessage, mr.fullmessage, mr.fullmessagehtml, mr.fullmessageformat, mr.timecreated, mc.id as contactlistid, mc.blocked
               FROM {message_read} mr
               JOIN (
