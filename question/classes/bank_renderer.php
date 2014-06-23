@@ -17,10 +17,9 @@
 /**
  * Renderers for outputting parts of the question bank.
  *
- * @package    moodlecore
- * @subpackage questionbank
- * @copyright  2011 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   core_question
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
@@ -30,8 +29,8 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * This renderer outputs parts of the question bank.
  *
- * @copyright  2011 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2011 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_question_bank_renderer extends plugin_renderer_base {
 
@@ -182,12 +181,11 @@ class core_question_bank_renderer extends plugin_renderer_base {
     /**
      * Return the HTML for the specified question type, adding any required classes.
      *
-     * @param object $qtype An object containing the title, and link. An icon, and help text may optionally be specified.
-     * If the module contains subtypes in the types option, then these will also be displayed.
+     * @param question_type $qtype The type to display.
      * @param array $classes Additional classes to add to the encompassing div element
      * @return string The composed HTML for the question type
      */
-    protected function qbank_chooser_qtype($qtype, $classes = array()) {
+    protected function qbank_chooser_qtype(question_type $qtype, $classes = array()) {
         $output = '';
         $classes[] = 'option';
         $output .= html_writer::start_tag('div', array('class' => implode(' ', $classes)));

@@ -10,11 +10,23 @@ function Chooser() {
 }
 
 Y.extend(Chooser, M.core.chooserdialogue, {
+
+    /**
+     * Set up the chooser dialogue.
+     *
+     * @method initializer
+     */
     initializer: function() {
         Y.delegate('click', this.displayQuestionChooser, 'body',
                 '.core_question_add_question_action', this);
     },
 
+    /**
+     * Prepare the chooser for display following a click on a specific button/link.
+     *
+     * @method displayQuestionChooser
+     * @param {Event} the event that is triggering the chooser being shown.
+     */
     displayQuestionChooser: function(e) {
         var dialogue = Y.one(SELECTORS.CREATENEWQUESTION + ' ' + SELECTORS.CHOOSERDIALOGUE),
             header = Y.one(SELECTORS.CREATENEWQUESTION + ' ' + SELECTORS.CHOOSERHEADER);
@@ -37,6 +49,16 @@ Y.extend(Chooser, M.core.chooserdialogue, {
         this.display_chooser(e);
     },
 
+    /**
+     * Copy one particular parameter from the element that was activated to
+     * display the chooser, into a hidden field in the chooser. Or, if that
+     * data attribute is missing or blank, remove the corresponding hidden field.
+     *
+     * @method dataToHiddenField
+     * @param {Node} dataSource Node that was activated, and which has the parameters.
+     * @param {String} name the name of the data attribute that should be synched
+     *      with a corresponding hidden field.
+     */
     dataToHiddenField: function(dataSource, name) {
         var hidden = this.container.one('input[type="hidden"][name="' + name + '"]'),
             value  = dataSource.getData(name);
