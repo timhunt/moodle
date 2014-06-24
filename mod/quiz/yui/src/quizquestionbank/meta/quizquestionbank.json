@@ -1,0 +1,10 @@
+{
+    "moodle-mod_quiz-quizquestionbank": {
+        "requires": [
+            "base",
+            "event",
+            "node",
+            "io"
+        ]
+    }
+}

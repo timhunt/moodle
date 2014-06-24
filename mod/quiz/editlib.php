@@ -357,6 +357,22 @@ class quiz_question_bank_view extends core_question\bank\view {
         return new moodle_url('/mod/quiz/edit.php', $params);
     }
 
+    /**
+     * Renders the html question bank (same as display, but returns the result).
+     *
+     * Note that you can only output this rendered result once per page, as
+     * it contains IDs which must be unique.
+     *
+     * @return string HTML code for the form
+     */
+    public function render($tabname, $page, $perpage, $cat, $recurse, $showhidden, $showquestiontext) {
+        ob_start();
+        $this->display($tabname, $page, $perpage, $cat, $recurse, $showhidden, $showquestiontext);
+        $out = ob_get_contents();
+        ob_end_clean();
+        return $out;
+    }
+
     public function display($tabname, $page, $perpage, $cat,
             $recurse, $showhidden, $showquestiontext) {
         global $OUTPUT;
