@@ -67,11 +67,11 @@ Y.extend(POPUP, Y.Base, {
             zIndex : 1000,
             context: [CSS.QBANK, 'tr', 'br', ['beforeShow']],
             centered: false,
-            width: '60%',
-            height: '90%',
+            width: null,
             visible: false,
             postmethod: 'form',
-            footerContent: null
+            footerContent: null,
+            extraClasses: ['mod_quiz_qbank_dialogue']
         };
 
         var popup = { dialog: null };

@@ -948,7 +948,9 @@ table#categoryquestions td,
     overflow: hidden;
     white-space: nowrap;
 }
-
+.mod_quiz_qbank_dialogue {
+    max-width: 80%;
+}
 .questionbankwindow.block {
     float: right;
     right: 0.3em;
