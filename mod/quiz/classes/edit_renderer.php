@@ -309,8 +309,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         }
 
         // Add the form for question bank.
-         $canaddfromqbank = true;//has_capability('moodle/question:useall', $context);;
-         //list($header, $form) = $this->add_from_questionbank();
+         $canaddfromqbank = has_capability('moodle/question:useall', $context);;
          $qbankoptions = array('class' => 'questionbank', 'cmid' => $cm->id);
          if ($USER->editing && $canaddfromqbank) {
              $PAGE->requires->yui_module('moodle-mod_quiz-quizquestionbank', 'M.mod_quiz.quizquestionbank.init', $qbankoptions);
@@ -520,12 +519,17 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 //         return $output;
 //     }
 
+    /**
+     * Return array of header and body for the qbank popup
+     * @param int $page
+     */
     protected function add_from_questionbank($page) {
         global $DB;
         list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
             question_edit_setup('editq', '/mod/quiz/edit.php', true);
 
-        $pagevars['qpage'] = $page;
+        $thispageurl = new moodle_url($thispageurl, array('addonpage' => $page));
+
         // Get the course object and related bits.
         $course = $DB->get_record('course', array('id' => $quiz->course));
         if (!$course) {
@@ -539,6 +543,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         // TODO: add_to_log() is deprecated, replace this with event.
         // Log this visit.
         // add_to_log($cm->course, 'quiz', 'editquestions', "view.php?id=$cm->id", "$quiz->id", $cm->id);
+
+        // TODO: remove the unnecessary code for the popup.
+        // recategorising questions is better to happen at the course level.
 
         // You need mod/quiz:manage in addition to question capabilities to access this page.
         require_capability('mod/quiz:manage', $contexts->lowest());
