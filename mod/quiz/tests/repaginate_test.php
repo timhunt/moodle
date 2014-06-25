@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
 
-class quiz_repaginate_testable extends quiz_repaginate {
+class mod_quiz_repaginate_testable extends mod_quiz_repaginate {
 
     public function set_pages($slots) {
         return parent::set_pages($slots);
@@ -262,127 +262,6 @@ class quiz_repaginate_test extends advanced_testcase {
             $expected[$slot->id] = $slot;
         }
         $actual = $this->repaginate->repaginate_n_question_per_page($slots, 1);
-        $this->assertEquals($expected, $actual);
-    }
-
-    /**
-     * Test repaginate() method when using 'join'
-     */
-    public function test_repaginate_join() {
-
-        // Expected slot 3 on page 2 and repagination after that.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(2, 3, 103, 13),
-            '104' => $this->get_test_slot(3, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-
-        $currentslotnumber = 2;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($this->get_quiz_slots(), $nextslotnumber, 'join');
-        $this->assertEquals($expected, $actual);
-
-        // Expected slot 2 on page 1 and repagination after that.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(1, 2, 102, 12),
-            '103' => $this->get_test_slot(2, 3, 103, 13),
-            '104' => $this->get_test_slot(3, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-        $currentslotnumber = 1;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($this->get_quiz_slots(), $nextslotnumber, 'join');
-        $this->assertEquals($expected, $actual);
-
-         // Expected slot 5 on page 4 and repagination after that.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(4, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-        $currentslotnumber = 4;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($this->get_quiz_slots(), $nextslotnumber, 'join');
-        $this->assertEquals($expected, $actual);
-
-        // Expected slot 4 on page 3 and repagination after that.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(3, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-        $currentslotnumber = 3;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($this->get_quiz_slots(), $nextslotnumber, 'join');
-        $this->assertEquals($expected, $actual);
-    }
-
-    /**
-     * Test repaginate() method when using 'separate'
-     */
-    public function test_repaginate_separate() {
-
-        $slots = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(2, 3, 103, 13),
-            '104' => $this->get_test_slot(3, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-
-        // Expected slot 3 on page 3 and repagination the rest.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(4, 4, 104, 14),
-            '105' => $this->get_test_slot(5, 5, 105, 15));
-
-        $currentslotnumber = 2;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($slots, $nextslotnumber, 'separate');
-        $this->assertEquals($expected, $actual);
-
-        $slots2 = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(1, 2, 102, 12),
-            '103' => $this->get_test_slot(2, 3, 103, 13),
-            '104' => $this->get_test_slot(3, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-
-        // Expected slot 2 on page 2 and repagination the rest.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(4, 4, 104, 14),
-            '105' => $this->get_test_slot(5, 5, 105, 15));
-
-        $currentslotnumber = 1;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($slots2, $nextslotnumber, 'separate');
-        $this->assertEquals($expected, $actual);
-
-        $slots3 = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(4, 4, 104, 14),
-            '105' => $this->get_test_slot(4, 5, 105, 15));
-
-        // Expected slot 5 on page 5 and repagination the rest.
-        $expected = array(
-            '101' => $this->get_test_slot(1, 1, 101, 11),
-            '102' => $this->get_test_slot(2, 2, 102, 12),
-            '103' => $this->get_test_slot(3, 3, 103, 13),
-            '104' => $this->get_test_slot(4, 4, 104, 14),
-            '105' => $this->get_test_slot(5, 5, 105, 15));
-
-        $currentslotnumber = 1;
-        $nextslotnumber = $currentslotnumber + 1;
-        $actual = $this->repaginate->repaginate($slots3, $nextslotnumber, 'separate');
         $this->assertEquals($expected, $actual);
     }
 }
