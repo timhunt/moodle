@@ -49,10 +49,10 @@ class mod_quiz_repaginate_testable extends mod_quiz_repaginate {
     }
 }
 
-/** Test for some parts of the of the quiz_reviewquestions report.
- * @copyright 2013 The Open Univsersity
+/** Test for some parts of the repaginate class.
+ * @copyright 2014 The Open University
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @group quiz_reviewquestions
+ * @group quiz_editing
  */
 class quiz_repaginate_test extends advanced_testcase {
 
@@ -263,5 +263,40 @@ class quiz_repaginate_test extends advanced_testcase {
         }
         $actual = $this->repaginate->repaginate_n_question_per_page($slots, 1);
         $this->assertEquals($expected, $actual);
+    }
+
+    public function test_repaginate_the_rest() {
+    	$slots = $this->get_quiz_slots();
+        $slotfrom = 1;
+        $type = mod_quiz_repaginate::LINK;
+        $expected = array();
+        foreach ($slots as $slot) {
+            if ($slot->slot > $slotfrom) {
+                $slot->page = $slot->page -1;
+                $expected[$slot->id] = $slot;
+            }
+        }
+        $actual = $this->repaginate->repaginate_the_rest($slots, $slotfrom, $type, false);
+        $this->assertEquals($expected, $actual);
+
+        $slotfrom = 2;
+        $newslots = array();
+        foreach ($slots as $s) {
+            if ($s->slot === $slotfrom) {
+                $s->page = $s->page - 1;
+            }
+            $newslots[$s->id] = $s;
+        }
+
+         $type = mod_quiz_repaginate::UNLINK;
+         $expected = array();
+         foreach ($slots as $slot) {
+             if ($slot->slot > ($slotfrom - 1)) {
+                 $slot->page = $slot->page -1;
+                 $expected[$slot->id] = $slot;
+             }
+         }
+         $actual = $this->repaginate->repaginate_the_rest($newslots, $slotfrom, $type, false);
+         $this->assertEquals($expected, $actual);
     }
 }

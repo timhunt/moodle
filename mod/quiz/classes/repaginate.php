@@ -244,8 +244,9 @@ class mod_quiz_repaginate {
      * @param object $quizslots
      * @param int $slotfrom
      * @param int $type
+     * @param bool $dbupdate
      */
-    public function repaginate_the_rest($quizslots, $slotfrom, $type) {
+    public function repaginate_the_rest($quizslots, $slotfrom, $type, $dbupdate = true) {
         global $DB;
         if (!$quizslots) {
             return null;
@@ -264,7 +265,9 @@ class mod_quiz_repaginate {
                 $slot->page = $slot->page + 1;
             }
             // Update DB.
-            $DB->update_record('quiz_slots', $slot);
+            if ($dbupdate) {
+                $DB->update_record('quiz_slots', $slot);
+            }
             $newslots[$slot->id] = $slot;
         }
         return $newslots;
