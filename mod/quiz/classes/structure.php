@@ -165,56 +165,120 @@ class structure {
         $this->sectiontoslotids = $sectiontoslotids;
     }
 
+    public function create_slot_to_slotids($slots) {
+        $slottoslotids = array();
+        foreach ($slots as $slot) {
+            $slottoslotids[$slot->slot] = $slot->id;
+        }
+        return $slottoslotids;
+    }
+
     /**
      * Move a slot from its current location to a new location.
      * Reorder the slot table accordingly.
      * @param stdClass $quiz
      * @param int $id id of slot to be moved
-     * @param int $idbefore id of slot to come after slot being moved
+     * @param int $idbefore id of slot to come before slot being moved
      * @return array
      */
-    public function move_slot($quiz, $id, $idbefore, $page) {
-        global $DB;
+    public function move_slot($quiz, $idmove, $idbefore, $page) {
+        global $DB, $CFG;
 
-        $movingslot = $this->slots[$id];
-        $targetslot = $this->slots[$idbefore];
-        $hasslotmoved = false;
-
-        if (empty($movingslot)) {
-            throw new moodle_exception('Bad slot ID ' . $id);
-        }
+        $slottoslotids = $this->create_slot_to_slotids($this->slots);
+        $movingslot = $this->slots[$idmove];
 
         // Empty target slot means move slot to first.
-        if (empty($targetslot)) {
-            $targetid = $DB->get_field('quiz_slots', 'id', array('slot' => 1, 'quizid' => $quiz->id));
-            $targetslot = $this->slots[$targetid];
+        if (empty($idbefore)) {
+            $targetslot = $this->slots[$slottoslotids[1]];
+        }
+        else {
+            $targetslot = $this->slots[$idbefore];
+        }
+        $hasslotmoved = false;
+        $pagehaschanged = false;
+
+        if (empty($movingslot)) {
+            throw new moodle_exception('Bad slot ID ' . $idmove);
         }
 
-        $slotreorder = array($movingslot->slot => $targetslot->slot);
-        if ($movingslot->slot < $targetslot->slot) {
-            $hasslotmoved = true;
-            for ($i = $movingslot->slot; $i < $targetslot->slot; $i += 1) {
-                $slotreorder[$i + 1] = $i;
-            }
-        } else if ($movingslot->slot > $targetslot->slot) {
-            $hasslotmoved = true;
-            for ($i = $targetslot->slot; $i < $movingslot->slot; $i += 1) {
-                $slotreorder[$i] = $i + 1;
-            }
-        }
+        // Unit tests convert slot values to strings. Need as int.
+        $movingslotnumber = intval($movingslot->slot);
+        $targetslotnumber = intval($targetslot->slot);
 
         $trans = $DB->start_delegated_transaction();
-        // Slot has moved record new order.
-        if ($hasslotmoved) {
-            update_field_with_unique_index('quiz_slots',
-                    'slot', $slotreorder, array('quizid' => $quiz->id));
+        // Move slots if slots haven't already been moved exit.
+        if ($targetslotnumber - $movingslotnumber !== -1  ) {
+
+            $slotreorder = array($movingslotnumber => $targetslotnumber);
+            if ($movingslotnumber < $targetslotnumber) {
+                $hasslotmoved = true;
+                for ($i = $movingslotnumber; $i < $targetslotnumber; $i += 1) {
+                    $slotreorder[$i + 1] = $i;
+                }
+            } else if ($movingslotnumber > $targetslotnumber) {
+                $hasslotmoved = true;
+                for ($i = $targetslotnumber; $i < $movingslotnumber; $i += 1) {
+                    $slotreorder[$i] = $i + 1;
+                }
+            }
+
+            // Slot has moved record new order.
+            if ($hasslotmoved) {
+                update_field_with_unique_index('quiz_slots',
+                        'slot', $slotreorder, array('quizid' => $quiz->id));
+            }
         }
+
         // Page has changed. Record it.
+        if (!$page) {
+            $page = 1;
+        }
+
         if ($movingslot->page !== $page) {
             $DB->set_field('quiz_slots', 'page', $page,
                     array('id' => $movingslot->id));
+            $pagehaschanged = true;
+        }
+
+
+        // Slot dropped back where it came from.
+        if (!$hasslotmoved && !$pagehaschanged){
+            $trans->allow_commit();
+            return;
+        }
+
+        require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+        require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
+
+        /*
+         * Update page numbering.
+         */
+
+        // Get slots ordered by page then slot.
+        $slots = $DB->get_records('quiz_slots', array('quizid' => $quiz->id), 'slot, page');
+
+        // Loop slots. Start Page number at 1 and increment as required.
+        $pagenumbers = array('new' => 0, 'old' => 0);
+        foreach ($slots as $slot) {
+            if ($slot->page !== $pagenumbers['old']) {
+                $pagenumbers['old'] = $slot->page;
+                ++$pagenumbers['new'];
+            }
+
+            if ($pagenumbers['new'] == $slot->page) {
+                continue;
+            }
+            $slot->page = $pagenumbers['new'];
+        }
+
+        // Record new page order.
+        foreach ($slots as $slot) {
+            $DB->set_field('quiz_slots', 'page', $slot->page,
+                    array('id' => $slot->id));
         }
         $trans->allow_commit();
+
+        $this->slots = $slots;
     }
 
     /**
@@ -295,7 +359,7 @@ class structure {
         $repagtype = $type;
         $quizslots = $DB->get_records('quiz_slots', array('quizid' => $quizid), 'slot');
 
-        $repaginate = new \quiz_repaginate($quizid, $quizslots);
+        $repaginate = new \mod_quiz_repaginate($quizid, $quizslots);
         $repaginate->repaginate($slotnumber, $repagtype);
         $updatedquizslots = $repaginate->get_slots();
 
@@ -307,5 +371,42 @@ class structure {
         $keys = array_keys($slots);
         $id = array_pop($keys);
         return $slots[$id];
+    }
+
+    public function set_quiz_slots(array $slots) {
+        $this->slots = $slots;
+    }
+
+    public function set_quiz_sections(array $sections) {
+        $this->sections = $sections;
+    }
+
+    public function save_quiz_slots_to_db(array $slots = array()) {
+        global $DB;
+        $table = 'quiz_slots';
+        $quizid = null;
+
+        if(!count($slots)){
+            $slots = $this->slots;
+        }
+
+        $existing_slots = $DB->get_records($table);
+
+        $slotreorder = array();
+        foreach ($existing_slots as $existing_slot) {
+            if (!$quizid) {
+                $quizid = $existing_slot->quizid;
+            }
+            $slotreorder[$existing_slot->slot] = $slots[$existing_slot->id]->slot;
+        }
+        update_field_with_unique_index('quiz_slots',
+                        'slot', $slotreorder, array('quizid' => $quizid));
+        foreach ($slots as $slot) {
+            if($DB->get_field($table, 'id', array('id' => $slot->id))){
+                $DB->update_record($table, $slot);
+            } else {
+                $DB->insert_record($table, $slot);
+            }
+        }
     }
 }

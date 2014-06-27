@@ -31,13 +31,6 @@ require_once($CFG->dirroot . '/mod/quiz/editlib.php');
 
 
 class mod_quiz_testable_structure extends \mod_quiz\structure {
-    public function set_quiz_slots(array $slots) {
-        $this->slots = $slots;
-    }
-
-    public function set_quiz_sections(array $sections) {
-        $this->sections = $sections;
-    }
 
 }
 
@@ -80,7 +73,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         quiz_add_quiz_question($saq->id, $quiz);
         quiz_add_quiz_question($numq->id, $quiz);
 
-        return $quiz;
+        return array($quiz, $cm, $course);
     }
 
     public function test_create() {
@@ -126,6 +119,90 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $sections = $structure->get_quiz_sections();
         $this->assertCount(count($testsections), $sections);
         $this->assertEquals($testsections, $sections);
+    }
+
+    public function test_move_slot() {
+        global $DB;
+
+        list($quiz, $cm, $course) = $this->prepare_quiz_data();
+        $structure = \mod_quiz\structure::create_for($quiz);
+
+        // Append slots to the quiz.
+        $testslots = $this->reset_slots($quiz, $structure);
+
+        $this->assertInstanceOf('\mod_quiz\structure', $structure);
+        $slots = $structure->get_quiz_slots();
+
+        // Slots don't move. Page unchanged
+        $structure->move_slot($quiz, '2', '1', '2');
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+        $this->assertEquals($testslots, $slotsmoved);
+
+        // Slots don't move. Page changed
+        $structure->move_slot($quiz, '2', '1', '1');
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+        $testslots[2]->page = '1';
+        $this->assertEquals($testslots, $slotsmoved);
+
+        $testslots = $this->reset_slots($quiz, $structure);
+
+        // Slots move 2 > 3. Page unchanged. Pages not reordered.
+        $structure->move_slot($quiz, '2', '3', '2');
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+        $testslots[3]->slot = '2';
+        $testslots[2]->slot = '3';
+        $this->assertEquals($testslots, $slotsmoved);
+
+        $testslots = $this->reset_slots($quiz, $structure);
+
+        // Slots move 6 > 7. Page changed. Pages not reordered.
+        $structure->move_slot($quiz, '6', '7', '3');
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+
+        // Set test data.
+        // Move slot and page.
+        $testslots[7]->slot = '6';
+        $testslots[6]->slot = '7';
+        $testslots[6]->page = '3';
+        $this->assertEquals($testslots, $slotsmoved);
+
+        $testslots = $this->reset_slots($quiz, $structure);
+
+        // Slots move 6 > 7. Page changed. Pages reordered.
+        $structure->move_slot($quiz, '1', '2', '2');
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+
+        // Set test data.
+        // Move slot and page.
+        $testslots[2]->slot = '1';
+        $testslots[1]->slot = '2';
+        $testslots[2]->page = '2';
+
+        // Now reorder the pages
+        $pagenumber = 1;
+        $slotnumber = 1;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = $pagenumber;
+        $testslots[$slotnumber++]->page = ++$pagenumber;
+        $testslots[$slotnumber++]->page = ++$pagenumber;
+        $this->assertEquals($testslots, $slotsmoved);
+
+    }
+
+    public function reset_slots($quiz, $structure) {
+        $testslots = $this->get_dummy_quiz_slots($quiz);
+        $structure->set_quiz_slots($testslots);
+        $structure->save_quiz_slots_to_db();
+        return $testslots;
+    }
+
+    public function get_saved_quiz_slots($quiz, $structure) {
+        $structure->populate_quiz_slots($quiz);
+        return $structure->get_quiz_slots();
     }
 
     /**
@@ -214,17 +291,17 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         // Define the data.
         $data = array();
         $uniqueid = 1;
-        $pagenumber = 0;
+        $pagenumber = 1;
 
         // Rows are in the format array(id, quizid, slot, page, questionid, maxmark).
-        $data[] = array($uniqueid++, $quiz->id, 1, $pagenumber, 1, 100);
-        $data[] = array($uniqueid++, $quiz->id, 2, ++$pagenumber, 2, 100);
-        $data[] = array($uniqueid++, $quiz->id, 3, $pagenumber, 3, 100);
-        $data[] = array($uniqueid++, $quiz->id, 4, $pagenumber, 4, 100);
-        $data[] = array($uniqueid++, $quiz->id, 5, $pagenumber, 5, 100);
-        $data[] = array($uniqueid++, $quiz->id, 6, $pagenumber, 6, 100);
-        $data[] = array($uniqueid++, $quiz->id, 7, ++$pagenumber, 7, 100);
-        $data[] = array($uniqueid++, $quiz->id, 8, ++$pagenumber, 8, 100);
+        $data[] = array($uniqueid++.'', $quiz->id, '1', $pagenumber.'', '1', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '2', ++$pagenumber.'', '2', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 3, $pagenumber.'', '3', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 4, $pagenumber.'', '4', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 5, $pagenumber.'', '5', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 6, $pagenumber.'', '6', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 7, ++$pagenumber.'', '7', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, 8, ++$pagenumber.'', '8', '1.0000000');
 
         // Translate data into records.
         $records = array();
@@ -267,5 +344,10 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         }
 
         return $records;
+    }
+
+    public function empty_database_table($table) {
+        global $DB;
+        $DB->delete_records($table);
     }
 }
