@@ -827,16 +827,18 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
             // Form fields.
             $addquestionformhtml = html_writer::tag('input', null,
-                    array('type' => 'hidden', 'name' => 'returnurl', 'value' => '/mod/quiz/edit.php?cmid='.$quiz->cmid));
+                    array('type' => 'hidden', 'name' => 'returnurl', 'value' => '/mod/quiz/edit.php?cmid='.$quiz->cmid.'&amp;addonpage=' . $pagenumber));
             $addquestionformhtml .= html_writer::tag('input', null,
                     array('type' => 'hidden', 'name' => 'cmid', 'value' => $quiz->cmid));
+            $addquestionformhtml .= html_writer::tag('input', null,
+                    array('type' => 'hidden', 'name' => 'appendqnumstring', 'value' => 'addquestion'));
             $addquestionformhtml .= html_writer::tag('input', null,
                     array('type' => 'hidden', 'name' => 'category', 'value' => $questioncategoryid));
             $addquestionformhtml .= html_writer::tag('div', $addquestionformhtml);
 
             // Form.
             $addquestionformhtml .= html_writer::tag('form', $addquestionformhtml,
-                    array('class' => 'addnewquestion', 'method' => 'get', 'action' => $addquestionurl));
+                    array('class' => 'addnewquestion', 'method' => 'post', 'action' => $addquestionurl));
 
             $output .= html_writer::tag('li', $page.$addmenu.$addquestionformhtml,
                     array('class' => $pagenumberclass . ' ' . $dragdropclass.' page', 'id' => 'page-' . $pagenumber));
