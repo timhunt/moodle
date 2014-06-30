@@ -1217,14 +1217,14 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         );
 
         // Call question bank.
-        $returnurl = new moodle_url($pageurl, array('addonpage' => $page));
-        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
-        $url = new moodle_url('/mod/quiz/edit.php', $params);
-        $icon = new pix_icon('t/add', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => ''));
-        list($header, $form) = $this->add_from_questionbank($page);
-        $attributes = array('class' => 'cm-edit-action questionbank', 'data-action' => 'questionbank', 'header' => $header, 'form' => $form);
-        $attributes = array_merge($attributes, $params);
-        $actions['questionbankcontents'] = new action_menu_link_secondary($url, $icon, $str->questionbankcontents, $attributes);
+//         $returnurl = new moodle_url($pageurl, array('addonpage' => $page));
+//         $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
+//         $url = new moodle_url('/mod/quiz/edit.php', $params);
+//         $icon = new pix_icon('t/add', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => ''));
+//         list($header, $form) = $this->add_from_questionbank($page);
+//         $attributes = array('class' => 'cm-edit-action questionbank', 'data-action' => 'questionbank', 'header' => $header, 'form' => $form);
+//         $attributes = array_merge($attributes, $params);
+//         $actions['questionbankcontents'] = new action_menu_link_secondary($url, $icon, $str->questionbankcontents, $attributes);
 
         // Add a random question.
         $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid, 'addonpage' => $page));
