@@ -158,7 +158,8 @@ function quiz_report_grade_method_sql($grademethod, $quizattemptsalias = 'quiza'
         case QUIZ_GRADEHIGHEST :
             return "NOT EXISTS (SELECT 1 FROM {quiz_attempts} qa2
                             WHERE qa2.quiz = $quizattemptsalias.quiz AND
-                                qa2.userid = $quizattemptsalias.userid AND (
+                                qa2.userid = $quizattemptsalias.userid AND
+                                 qa2.state = 'finished' AND (
                 COALESCE(qa2.sumgrades, 0) > COALESCE($quizattemptsalias.sumgrades, 0) OR
                (COALESCE(qa2.sumgrades, 0) = COALESCE($quizattemptsalias.sumgrades, 0) AND qa2.attempt < $quizattemptsalias.attempt)
                                 ))";
@@ -170,12 +171,14 @@ function quiz_report_grade_method_sql($grademethod, $quizattemptsalias = 'quiza'
             return "NOT EXISTS (SELECT 1 FROM {quiz_attempts} qa2
                             WHERE qa2.quiz = $quizattemptsalias.quiz AND
                                 qa2.userid = $quizattemptsalias.userid AND
+                                 qa2.state = 'finished' AND
                                qa2.attempt < $quizattemptsalias.attempt)";
 
         case QUIZ_ATTEMPTLAST :
             return "NOT EXISTS (SELECT 1 FROM {quiz_attempts} qa2
                             WHERE qa2.quiz = $quizattemptsalias.quiz AND
                                 qa2.userid = $quizattemptsalias.userid AND
+                                 qa2.state = 'finished' AND
                                qa2.attempt > $quizattemptsalias.attempt)";
     }
 }

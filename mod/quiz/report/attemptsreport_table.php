@@ -387,10 +387,13 @@ abstract class quiz_attempts_report_table extends table_sql {
     public function base_sql($reportstudents) {
         global $DB;
 
+        $params = array();
         $fields = $DB->sql_concat('u.id', "'#'", 'COALESCE(quiza.attempt, 0)') . ' AS uniqueid,';
 
         if ($this->qmsubselect) {
-            $fields .= "\n(CASE WHEN $this->qmsubselect THEN 1 ELSE 0 END) AS gradedattempt,";
+            $fields .= "\n(CASE WHEN quiza.state = :gradedattemptstate AND {$this->qmsubselect}
+                                    THEN 1 ELSE 0 END) AS gradedattempt,";
+            $params['gradedattemptstate'] = quiz_attempt::FINISHED;
         }
 
         $extrafields = get_extra_user_fields_sql($this->context, 'u', '',
@@ -422,11 +425,7 @@ abstract class quiz_attempts_report_table extends table_sql {
         $from = "\n{user} u";
         $from .= "\nLEFT JOIN {quiz_attempts} quiza ON
                                     quiza.userid = u.id AND quiza.quiz = :quizid";
-        $params = array('quizid' => $this->quiz->id);
-
-        if ($this->qmsubselect && $this->options->onlygraded) {
-            $from .= " AND $this->qmsubselect";
-        }
+        $params['quizid'] = $this->quiz->id;
 
         switch ($this->options->attempts) {
             case quiz_attempts_report::ALL_WITH:
@@ -461,6 +460,11 @@ abstract class quiz_attempts_report_table extends table_sql {
                     SQL_PARAMS_NAMED, 'state');
             $params += $stateparams;
             $where .= " AND (quiza.state $statesql OR quiza.state IS NULL)";
+        }
+
+        if ($this->qmsubselect && $this->options->onlygraded) {
+            $from .= " AND (quiza.state <> :finishedstate OR $this->qmsubselect)";
+            $params['finishedstate'] = quiz_attempt::FINISHED;
         }
 
         return array($fields, $from, $where, $params);
