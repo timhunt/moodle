@@ -168,7 +168,21 @@ class mod_quiz_structure_testcase extends advanced_testcase {
 
         $testslots = $this->reset_slots($quiz, $structure);
 
-        // Slots move 6 > 7. Page changed. Pages reordered.
+        // Slots unmoved . Page changed slot 6 . Pages not reordered.
+        $movingslotnumber = 7; $targetslotnumber = 6; $pagenumber = 2;
+        $structure->move_slot($quiz, strval($movingslotnumber), strval($targetslotnumber), strval($pagenumber));
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+
+        // Set test data.
+        // Move slot and page.
+
+        $testslots[$movingslotnumber]->page = strval($pagenumber);
+        $testslots[8]->page = strval(++$pagenumber);
+        $this->assertEquals($testslots, $slotsmoved);
+
+        $testslots = $this->reset_slots($quiz, $structure);
+
+        // Slots move 1 > 2. Page changed. Pages reordered.
         $structure->move_slot($quiz, '1', '2', '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
@@ -190,7 +204,6 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots[$slotnumber++]->page = ++$pagenumber;
         $testslots[$slotnumber++]->page = ++$pagenumber;
         $this->assertEquals($testslots, $slotsmoved);
-
     }
 
     public function reset_slots($quiz, $structure) {
@@ -296,12 +309,12 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         // Rows are in the format array(id, quizid, slot, page, questionid, maxmark).
         $data[] = array($uniqueid++.'', $quiz->id, '1', $pagenumber.'', '1', '1.0000000');
         $data[] = array($uniqueid++.'', $quiz->id, '2', ++$pagenumber.'', '2', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 3, $pagenumber.'', '3', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 4, $pagenumber.'', '4', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 5, $pagenumber.'', '5', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 6, $pagenumber.'', '6', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 7, ++$pagenumber.'', '7', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, 8, ++$pagenumber.'', '8', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '3', $pagenumber.'', '3', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '4', $pagenumber.'', '4', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '5', $pagenumber.'', '5', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '6', $pagenumber.'', '6', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '7', ++$pagenumber.'', '7', '1.0000000');
+        $data[] = array($uniqueid++.'', $quiz->id, '8', ++$pagenumber.'', '8', '1.0000000');
 
         // Translate data into records.
         $records = array();

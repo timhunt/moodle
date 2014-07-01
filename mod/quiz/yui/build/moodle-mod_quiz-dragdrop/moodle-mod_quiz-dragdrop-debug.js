@@ -31,7 +31,9 @@ var CSS = {
 },
 // The CSS selectors we use.
 SELECTOR = {
-    STATIC_IDS: {'page-1':1}
+    STATIC_IDS: {'page-1':1},
+    PAGE: 'li.page',
+    SLOT: 'li.slot'
 };
 /**
  * Section drag and drop.
@@ -442,12 +444,14 @@ Y.extend(DRAGRESOURCE, M.core.dragdrop, {
         params.id = Number(Y.Moodle.mod_quiz.util.slot.getId(dragnode));
         params.sectionId = Y.Moodle.core_course.util.section.getId(dropnode.ancestor(M.mod_quiz.edit.get_section_wrapper(Y), true));
 
-        if (dragnode.previous('li')) {
-            params.beforeId = Number(Y.Moodle.mod_quiz.util.slot.getId(dragnode.previous('li')));
+        var previousslot = dragnode.previous(SELECTOR.SLOT);
+        if (previousslot) {
+            params.previousid = Number(Y.Moodle.mod_quiz.util.slot.getId(previousslot));
         }
 
-        if (dragnode.previous('li.page')) {
-            params.page = Number(Y.Moodle.mod_quiz.util.page.getId(dragnode.previous('li.page')));
+        var previouspage = dragnode.previous(SELECTOR.PAGE);
+        if (previouspage) {
+            params.page = Number(Y.Moodle.mod_quiz.util.page.getId(previouspage));
         }
 
         // Do AJAX request

@@ -234,7 +234,7 @@ class structure {
             $page = 1;
         }
 
-        if ($movingslot->page !== $page) {
+        if (intval($movingslot->page) !== intval($page)) {
             $DB->set_field('quiz_slots', 'page', $page,
                     array('id' => $movingslot->id));
             $pagehaschanged = true;

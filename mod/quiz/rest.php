@@ -37,7 +37,7 @@ $class      = required_param('class', PARAM_ALPHA);
 $field      = optional_param('field', '', PARAM_ALPHA);
 $instanceid = optional_param('instanceId', 0, PARAM_INT);
 $sectionid  = optional_param('sectionId', 0, PARAM_INT);
-$beforeid   = optional_param('beforeId', 0, PARAM_INT);
+$previousid   = optional_param('previousid', 0, PARAM_INT);
 $value      = optional_param('value', 0, PARAM_INT);
 $column     = optional_param('column', 0, PARAM_ALPHA);
 $id         = optional_param('id', 0, PARAM_INT);
@@ -79,7 +79,7 @@ switch($requestmethod) {
                 switch ($field) {
                     case 'move':
                         require_capability('mod/quiz:manage', $modcontext);
-                        $structure->move_slot($quiz, $id, $beforeid, $page);
+                        $structure->move_slot($quiz, $id, $previousid, $page);
                         quiz_delete_previews($quiz);
                         echo json_encode(array('visible' => true));
                         break;
