@@ -1294,11 +1294,11 @@ function quiz_question_page_join_button($quiz, $question, $link_page) {
 
     if($link_page == 1) {
         $title = get_string('linkpage', 'quiz');
-        $image = $OUTPUT->pix_icon('e/insert_edit_link', $title); //remove_link
+        $image = $OUTPUT->pix_icon('e/insert_page_break', $title); //remove_link
         $action = 'linkpage';
     } else {
         $title = get_string('unlinkpage', 'quiz');
-        $image = $OUTPUT->pix_icon('e/remove_link', $title);
+        $image = $OUTPUT->pix_icon('e/remove_page_break', $title);
         $action = 'unlinkpage';
     }
     // Disable the link if quiz has attempta.
