@@ -387,11 +387,13 @@ abstract class quiz_attempts_report_table extends table_sql {
     public function base_sql($reportstudents) {
         global $DB;
 
+        $params = array();
         $fields = $DB->sql_concat('u.id', "'#'", 'COALESCE(quiza.attempt, 0)') . ' AS uniqueid,';
 
         if ($this->qmsubselect) {
-            $fields .= "\n(CASE WHEN quiza.state = 'finished' AND {$this->qmsubselect}
+            $fields .= "\n(CASE WHEN quiza.state = :gradedattemptstate AND {$this->qmsubselect}
                                     THEN 1 ELSE 0 END) AS gradedattempt,";
+            $params['gradedattemptstate'] = quiz_attempt::FINISHED;
         }
 
         $extrafields = get_extra_user_fields_sql($this->context, 'u', '',
@@ -423,7 +425,7 @@ abstract class quiz_attempts_report_table extends table_sql {
         $from = "\n{user} u";
         $from .= "\nLEFT JOIN {quiz_attempts} quiza ON
                                     quiza.userid = u.id AND quiza.quiz = :quizid";
-        $params = array('quizid' => $this->quiz->id);
+        $params['quizid'] = $this->quiz->id;
 
         switch ($this->options->attempts) {
             case quiz_attempts_report::ALL_WITH:
