@@ -305,7 +305,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         list($repaginatingdisabledhtml, $repaginatebutton) = $this->get_repaginate_button($quiz, $options);
         echo $repaginatebutton;
         if ($USER->editing && !$repaginatingdisabledhtml) {
-            $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init', $options);
+            $PAGE->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init');
         }
 
         // Add the form for question bank.
@@ -414,7 +414,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         $rpbutton = '<input id="repaginatecommand"' . $repaginatingdisabledhtml .
         ' type="submit" name="repaginate" value="'. get_string('repaginatecommand', 'quiz') . '"/>';
         $rpcontainer = html_writer::tag('div', $rpbutton,
-                array_merge(array('id' => 'repaginatecontainer', 'class' => 'rpcontainerclass'), $options));
+                array_merge(array('class' => 'rpcontainerclass'), $options));
         return array($repaginatingdisabledhtml, $rpcontainer);
     }
 
