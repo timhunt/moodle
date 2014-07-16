@@ -25,17 +25,12 @@ YUI.add('moodle-mod_quiz-randomquestion', function (Y, NAME) {
  */
 
 var CSS = {
-    RQCONTAINER: '.cm-edit-action .addarandomquestion',
-    RANDOMQUESTIONLINK: 'a.addarandomquestion',
-    RANDOMQUESTION: '.addarandomquestion',
-    RANDOMQUESTIONDIALOG: '#randomquestiondialog',
-    RANDOMQUESTIONFORM: 'form.randomquestionform'
+        RANDOMQUESTIONFORM: 'div.randomquestionformforpopup',
+        RANDOMQUESTIONLINK: 'a.addarandomquestion',
+        RANDOMQUESTION: '.addarandomquestion'
 };
 
-
 var PARAMS = {
-    CMID: 'cmid',
-    ID: 'id',
     PAGE: 'addonpage',
     HEADER: 'header',
     FORM: 'form'
@@ -47,40 +42,53 @@ var POPUP = function() {
 
 Y.extend(POPUP, Y.Base, {
     rq: Y.one(CSS.RANDOMQUESTION),
+    rqlink: Y.all(CSS.RANDOMQUESTIONLINK),
     page: 0,
     header: 'header',
     body: 'body',
 
-    initializer : function() {
-        Y.all(CSS.RANDOMQUESTIONLINK).each(function(node) {
-            node.on('click', this.display_dialog, this);
-        }, this);
-    },
-
-    display_dialog : function (e) {
-        e.preventDefault();
-
-        this.page = this.rq._node.getAttribute(PARAMS.PAGE);
-        this.header = this.rq._node.getAttribute(PARAMS.HEADER);
-        this.body = this.rq._node.getAttribute(PARAMS.FORM);
-
-        var config = {
-            headerContent : this.header,
-            bodyContent : this.body,
+    dialogue: function(header, body, hideshow) {
+        // Create a dialogue on the page and hide it.
+        config = {
+            headerContent : header,
+            bodyContent : body,
             draggable : true,
             modal : true,
             zIndex : 1000,
-            context: [CSS.REPAGINATECOMMAND, 'tr', 'br', ['beforeShow']],
+            context: [CSS.RANDOMQUESTIONLINK, 'tr', 'br', ['beforeShow']],
             centered: false,
-            width: '80%',
+            width: 'auto',
             visible: false,
             postmethod: 'form',
             footerContent: null
         };
-
         var popup = { dialog: null };
         popup.dialog = new M.core.dialogue(config);
-        popup.dialog.show();
+        if (hideshow === 'hide') {
+            popup.dialog.hide();
+        } else {
+            popup.dialog.show();
+        }
+    },
+ 
+    initializer : function() {
+        this.dialogue(Y.one(CSS.RANDOMQUESTION)._node.getAttribute(PARAMS.HEADER), Y.one(CSS.RANDOMQUESTIONFORM), 'hide');
+        this.rqlink.each(function(node) {
+            var formid = node.getAttribute(PARAMS.PAGE);
+            node.on('click', this.display_dialog, this, formid);
+        }, this);
+    },
+
+    display_dialog : function (e, formid) {
+        e.preventDefault();
+        var rq = Y.one('li#page-' + formid + ' ' + CSS.RANDOMQUESTIONLINK);
+        this.header = rq._node.getAttribute(PARAMS.HEADER);
+        var body = Y.one(CSS.RANDOMQUESTIONFORM);
+
+        var formparampage = Y.one(CSS.RANDOMQUESTIONFORM + ' ' +  'input#rform_qpage');
+        formparampage.set('value', formid);
+
+        this.dialogue(this.header, body, 'show');
     }
 });
 

@@ -1371,6 +1371,9 @@ bank window's title is prominent enough*/
     margin-bottom: -0.7em;
 }
 
+#page-mod-quiz-edit .randomquestionformforpopup {
+    padding-left: 2em;
+}
 
 /** 
  * Edit Quiz 
