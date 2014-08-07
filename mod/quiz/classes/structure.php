@@ -48,6 +48,11 @@ class structure {
      */
     protected $sectiontoslotids = array();
 
+    /**
+     * @var int[] slot number => slot id.
+     */
+    protected $slottoslotids = array();
+
 
     /**
      * Create an instance of this class representing an empty quiz.
@@ -83,6 +88,36 @@ class structure {
             throw new dml_missing_record_exception('quiz_slots');
         }
         return $this->slots[$slotid];
+    }
+
+    /**
+     * Get a slot by it's id. Throws an exception if it is missing.
+     * @return stdClass the requested slot.
+     */
+    public function get_slot_by_slot_number($slotnumber) {
+        $slotnumber = strval($slotnumber);
+        foreach ($this->slots as $slot) {
+            if ($slot->slot !== $slotnumber) {
+                continue;
+            }
+
+            return $slot;
+        }
+
+        throw new dml_missing_record_exception('quiz_slots');
+    }
+
+    /**
+     * Get a slot by it's id. Throws an exception if it is missing.
+     * @return stdClass the requested slot.
+     */
+    public function get_slot_id_by_slot_number($slotnumber) {
+        $slot = $this->get_slot_by_slot_number($slotnumber);
+        if(!$slot){
+            return null;
+        }
+
+        return $slot->id;
     }
 
     /**
@@ -133,7 +168,7 @@ class structure {
      */
     public function populate_quiz_sections($quiz) {
         $this->sections = array(
-            1 => (object) array('id' => 1, 'quizid' => $quiz->id, 1,
+            1 => (object) array('id' => 1, 'quizid' => $quiz->id,
                     'heading' => 'Section 1', 'firstslot' => 1, 'shuffle' => false)
         );
     }
@@ -179,6 +214,7 @@ class structure {
      * @param stdClass $quiz
      * @param int $id id of slot to be moved
      * @param int $idbefore id of slot to come before slot being moved
+     * @param int $page new page number of slot being moved
      * @return array
      */
     public function move_slot($quiz, $idmove, $idbefore, $page) {
@@ -247,13 +283,27 @@ class structure {
             return;
         }
 
-        require_once($CFG->dirroot . '/mod/quiz/locallib.php');
-        require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
+//         require_once($CFG->dirroot . '/mod/quiz/locallib.php');
+//         require_once($CFG->dirroot . '/mod/quiz/classes/repaginate.php');
 
         /*
-         * Update page numbering.
+         * Refresh page numbering.
          */
 
+        $slots = $this->refresh_page_numbers($quiz);
+
+        $trans->allow_commit();
+
+        $this->set_quiz_slots($slots);
+        $this->populate_slots_with_sectionids($quiz);
+    }
+
+    /**
+     * Refresh page numbering of quiz slots
+     * @param object $quiz the quiz object.
+     */
+    public function refresh_page_numbers($quiz) {
+        global $DB;
         // Get slots ordered by page then slot.
         $slots = $DB->get_records('quiz_slots', array('quizid' => $quiz->id), 'slot, page');
 
@@ -276,9 +326,8 @@ class structure {
             $DB->set_field('quiz_slots', 'page', $slot->page,
                     array('id' => $slot->id));
         }
-        $trans->allow_commit();
 
-        $this->slots = $slots;
+        return $slots;
     }
 
     /**
@@ -381,32 +430,16 @@ class structure {
         $this->sections = $sections;
     }
 
-    public function save_quiz_slots_to_db(array $slots = array()) {
-        global $DB;
-        $table = 'quiz_slots';
-        $quizid = null;
+    public function set_quiz_slottoslotids(array $slottoslotids) {
+        $this->slottoslotids = $slottoslotids;
+    }
 
-        if(!count($slots)){
-            $slots = $this->slots;
-        }
-
-        $existing_slots = $DB->get_records($table);
-
-        $slotreorder = array();
-        foreach ($existing_slots as $existing_slot) {
-            if (!$quizid) {
-                $quizid = $existing_slot->quizid;
-            }
-            $slotreorder[$existing_slot->slot] = $slots[$existing_slot->id]->slot;
-        }
-        update_field_with_unique_index('quiz_slots',
-                        'slot', $slotreorder, array('quizid' => $quizid));
+    public function find_slot_by_slotnumber($slots, $slotnumber) {
         foreach ($slots as $slot) {
-            if($DB->get_field($table, 'id', array('id' => $slot->id))){
-                $DB->update_record($table, $slot);
-            } else {
-                $DB->insert_record($table, $slot);
+            if ($slot->slot !== $slotnumber) {
+                continue;
             }
+            return $slot;
         }
     }
 }

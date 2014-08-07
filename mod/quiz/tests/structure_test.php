@@ -29,12 +29,6 @@ global $CFG;
 require_once($CFG->dirroot . '/mod/quiz/attemptlib.php');
 require_once($CFG->dirroot . '/mod/quiz/editlib.php');
 
-
-class mod_quiz_testable_structure extends \mod_quiz\structure {
-
-}
-
-
 /**
  * Unit tests for quiz events.
  *
@@ -46,6 +40,7 @@ class mod_quiz_testable_structure extends \mod_quiz\structure {
 class mod_quiz_structure_testcase extends advanced_testcase {
 
     public $sections = array();
+    public $defaultslots = array();
 
     protected function prepare_quiz_data() {
 
@@ -62,17 +57,6 @@ class mod_quiz_structure_testcase extends advanced_testcase {
 
         $cm = get_coursemodule_from_instance('quiz', $quiz->id, $course->id);
 
-        // Create a couple of questions.
-        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
-
-        $cat = $questiongenerator->create_question_category();
-        $saq = $questiongenerator->create_question('shortanswer', null, array('category' => $cat->id));
-        $numq = $questiongenerator->create_question('numerical', null, array('category' => $cat->id));
-
-        // Add them to the quiz.
-        quiz_add_quiz_question($saq->id, $quiz);
-        quiz_add_quiz_question($numq->id, $quiz);
-
         return array($quiz, $cm, $course);
     }
 
@@ -83,9 +67,9 @@ class mod_quiz_structure_testcase extends advanced_testcase {
     }
 
     public function test_get_quiz_slots() {
-        // Get empty quiz.
-        $quiz = $this->get_dummy_quiz();
-        $structure = new mod_quiz_testable_structure();
+        // Get basic quiz.
+        list($quiz, $cm, $course) = $this->prepare_quiz_data();
+        $structure = \mod_quiz\structure::create_for($quiz);
 
         // When no slots exist or slots propery is not set.
         $slots = $structure->get_quiz_slots();
@@ -94,7 +78,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
 
         // Append slots to the quiz.
         $testslots = $this->get_dummy_quiz_slots($quiz);
-        $structure->set_quiz_slots($testslots);
+        $structure = \mod_quiz\structure::create_for($quiz);
 
         // Are the correct slots returned?
         $slots = $structure->get_quiz_slots();
@@ -102,23 +86,23 @@ class mod_quiz_structure_testcase extends advanced_testcase {
     }
 
     public function test_get_quiz_sections() {
-
-        // When no sections exist or sections propery is not set.
-        $quiz = $this->get_dummy_quiz();
-        $structure = new mod_quiz_testable_structure();
-
-        $sections = $structure->get_quiz_sections();
-        $this->assertInternalType('array', $sections);
-        $this->assertCount(0, $sections);
+        // Get basic quiz
+        list($quiz, $cm, $course) = $this->prepare_quiz_data();
+        $structure = \mod_quiz\structure::create_for($quiz);
 
         // Append sections to the quiz.
         $testsections = $this->get_dummy_quiz_sections($quiz);
-        $structure->set_quiz_sections($testsections);
 
         // Are the correct sections returned?
         $sections = $structure->get_quiz_sections();
         $this->assertCount(count($testsections), $sections);
         $this->assertEquals($testsections, $sections);
+
+        // When no sections exist or sections property is not set.
+        $structure->set_quiz_sections(array());
+        $sections = $structure->get_quiz_sections();
+        $this->assertInternalType('array', $sections);
+        $this->assertCount(0, $sections);
     }
 
     public function test_move_slot() {
@@ -134,88 +118,145 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $slots = $structure->get_quiz_slots();
 
         // Slots don't move. Page unchanged
-        $structure->move_slot($quiz, '2', '1', '2');
+        $idmove = $structure->get_slot_id_by_slot_number('2');
+        $idbefore = $structure->get_slot_id_by_slot_number('1');
+        $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+
         $this->assertEquals($testslots, $slotsmoved);
 
         // Slots don't move. Page changed
-        $structure->move_slot($quiz, '2', '1', '1');
+        $idmove = $structure->get_slot_id_by_slot_number('2');
+        $idbefore = $structure->get_slot_id_by_slot_number('1');
+        $structure->move_slot($quiz, $idmove, $idbefore, '1');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
-        $testslots[2]->page = '1';
+        $testslots[$idmove]->page = '1';
+
         $this->assertEquals($testslots, $slotsmoved);
 
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots move 2 > 3. Page unchanged. Pages not reordered.
-        $structure->move_slot($quiz, '2', '3', '2');
+        $idmove = $structure->get_slot_id_by_slot_number('2');
+        $idbefore = $structure->get_slot_id_by_slot_number('3');
+        $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
-        $testslots[3]->slot = '2';
-        $testslots[2]->slot = '3';
+        $testslots[$idbefore]->slot = '2';
+        $testslots[$idmove]->slot = '3';
+        $testslots[$idmove]->page = '2';
+
         $this->assertEquals($testslots, $slotsmoved);
 
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots move 6 > 7. Page changed. Pages not reordered.
-        $structure->move_slot($quiz, '6', '7', '3');
+        $idmove = $structure->get_slot_id_by_slot_number('6');
+        $idbefore = $structure->get_slot_id_by_slot_number('7');
+        $structure->move_slot($quiz, $idmove, $idbefore, '3');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
         // Set test data.
         // Move slot and page.
-        $testslots[7]->slot = '6';
-        $testslots[6]->slot = '7';
-        $testslots[6]->page = '3';
+        $testslots[$idbefore]->slot = '6';
+        $testslots[$idmove]->slot = '7';
+        $testslots[$idmove]->page = '3';
         $this->assertEquals($testslots, $slotsmoved);
 
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots unmoved . Page changed slot 6 . Pages not reordered.
-        $movingslotnumber = 7; $targetslotnumber = 6; $pagenumber = 2;
-        $structure->move_slot($quiz, strval($movingslotnumber), strval($targetslotnumber), strval($pagenumber));
+        $idmove = $structure->get_slot_id_by_slot_number('6');
+        $idbefore = $structure->get_slot_id_by_slot_number('5');
+        $pagenumber = 2;
+        $structure->move_slot($quiz, $idmove, $idbefore, strval($pagenumber));
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
         // Set test data.
         // Move slot and page.
 
-        $testslots[$movingslotnumber]->page = strval($pagenumber);
-        $testslots[8]->page = strval(++$pagenumber);
+        $testslots[$idmove]->page = strval($pagenumber);
         $this->assertEquals($testslots, $slotsmoved);
 
         $testslots = $this->reset_slots($quiz, $structure);
 
-        // Slots move 1 > 2. Page changed. Pages reordered.
-        $structure->move_slot($quiz, '1', '2', '2');
+        // Slots move 1 > 2. Page changed. Page 2 becomes page 1. Pages reordered.
+        $idmove = $structure->get_slot_id_by_slot_number('1');
+        $idbefore = $structure->get_slot_id_by_slot_number('2');
+        $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
         // Set test data.
         // Move slot and page.
-        $testslots[2]->slot = '1';
-        $testslots[1]->slot = '2';
-        $testslots[2]->page = '2';
+        $testslots[$idbefore]->slot = '1';
+        $testslots[$idbefore]->page = '1';
+        $testslots[$idmove]->slot = '2';
+        $testslots[$idmove]->page = '1';
 
         // Now reorder the pages
         $pagenumber = 1;
         $slotnumber = 1;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = $pagenumber;
-        $testslots[$slotnumber++]->page = ++$pagenumber;
-        $testslots[$slotnumber++]->page = ++$pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number($slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
+        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
         $this->assertEquals($testslots, $slotsmoved);
+
     }
 
     public function reset_slots($quiz, $structure) {
         $testslots = $this->get_dummy_quiz_slots($quiz);
         $structure->set_quiz_slots($testslots);
-        $structure->save_quiz_slots_to_db();
-        return $testslots;
+        $this->save_quiz_slots_to_db($structure);
+        $structure->populate_slots_with_sectionids($quiz);
+        return $structure->get_quiz_slots();
     }
 
     public function get_saved_quiz_slots($quiz, $structure) {
         $structure->populate_quiz_slots($quiz);
-        return $structure->get_quiz_slots();
+        $structure->populate_slots_with_sectionids($quiz);
+        $slots = $structure->get_quiz_slots();
+        return $slots;
+    }
+
+    public function save_quiz_slots_to_db($structure, array $slots = array()) {
+        global $DB;
+        $table = 'quiz_slots';
+        $quizid = null;
+
+        if(!count($slots)){
+            $slots = $structure->get_quiz_slots();
+        }
+
+        $savedslots = $DB->get_records($table);
+
+        $slotreorder = array();
+        $new_slots = array();
+        foreach ($savedslots as $savedslot) {
+            if (!$quizid) {
+                $quizid = $savedslot->quizid;
+            }
+            $slotreorder[$savedslot->slot] = $slots[$savedslot->id]->slot;
+        }
+        update_field_with_unique_index('quiz_slots',
+                        'slot', $slotreorder, array('quizid' => $quizid));
+
+        foreach ($slots as $slot) {
+            if($DB->get_field($table, 'id', array('id' => $slot->id))){
+                $DB->update_record($table, $slot);
+            } else {
+                $DB->insert_record($table, $slot);
+            }
+        }
+
+        // Get updated slot ids.
+        $savedslots = $DB->get_records($table);
+
+        $structure->set_quiz_slots($slots);
+        $structure->set_quiz_slottoslotids($structure->create_slot_to_slotids($slots));
     }
 
     /**
@@ -290,8 +331,16 @@ class mod_quiz_structure_testcase extends advanced_testcase {
      * @return object
      */
     public function get_dummy_quiz() {
-        $quiz = new stdClass();
-        $quiz->id = 1;
+        global $SITE;
+//         $quiz = new stdClass();
+//         $quiz->id = 1;
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_quiz');
+        $this->assertInstanceOf('mod_quiz_generator', $generator);
+
+        $this->assertEquals('quiz', $generator->get_modulename());
+
+        $quiz = $generator->create_instance(array('course' => $SITE->id));
         return $quiz;
     }
 
@@ -301,35 +350,68 @@ class mod_quiz_structure_testcase extends advanced_testcase {
      * @return array
      */
     public function get_dummy_quiz_slots($quiz) {
-        // Define the data.
-        $data = array();
-        $uniqueid = 1;
-        $pagenumber = 1;
+        global $DB;
 
         // Rows are in the format array(id, quizid, slot, page, questionid, maxmark).
-        $data[] = array($uniqueid++.'', $quiz->id, '1', $pagenumber.'', '1', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '2', ++$pagenumber.'', '2', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '3', $pagenumber.'', '3', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '4', $pagenumber.'', '4', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '5', $pagenumber.'', '5', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '6', $pagenumber.'', '6', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '7', ++$pagenumber.'', '7', '1.0000000');
-        $data[] = array($uniqueid++.'', $quiz->id, '8', ++$pagenumber.'', '8', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '1', 1.'', '1', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '2', 2.'', '2', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '3', 2.'', '3', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '4', 2.'', '4', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '5', 2.'', '5', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '6', 2.'', '6', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '7', 3.'', '7', '1.0000000');
+//         $data[] = array($uniqueid++.'', $quiz->id, '8', 4.'', '8', '1.0000000');
 
-        // Translate data into records.
-        $records = array();
-        foreach ($data as $row) {
-            $record = new \stdClass();
-            $record->id = $row[0];
-            $record->quizid = $row[1];
-            $record->slot = $row[2];
-            $record->page = $row[3];
-            $record->questionid = $row[4];
-            $record->maxmark = $row[5];
-            $records[$record->id] = $record;
+        $table = 'quiz_slots';
+
+        // Slots already exist. Reset them.
+        if ($DB->get_records($table, array('quizid' => $quiz->id), 'slot')) {
+            $records = $this->get_default_slots();
+            foreach ($records as $record) {
+                $DB->update_record($table, $record);
+            }
+            return $records;
         }
 
-        return $records;
+        // Create slots.
+        $pagenumber = 1;
+        $pagenumberdefaults = array(2,7,8);
+
+        // Create a couple of questions.
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+
+        $cat = $questiongenerator->create_question_category();
+        for ($i=0; $i<8; $i++) {
+            $numq = $questiongenerator->create_question('numerical', null, array('category' => $cat->id));
+
+            if(in_array($i+1, $pagenumberdefaults)){
+                $pagenumber++;
+            }
+            // Add them to the quiz.
+            quiz_add_quiz_question($numq->id, $quiz, $pagenumber);
+        }
+
+        $records = $DB->get_records($table, array('quizid' => $quiz->id), 'slot');
+
+        foreach ($records as $record) {
+            $record->sectionid = 1;
+        }
+
+        $this->set_default_slots($records);
+
+        return $this->get_default_slots();
+    }
+
+    public function set_default_slots($slots) {
+        $this->defaultslots = $slots;
+    }
+
+    public function get_default_slots() {
+        $slots = array();
+        foreach ($this->defaultslots as $slot) {
+            $slots[$slot->id] = $slot;
+        }
+        return $slots;
     }
 
     /**
@@ -342,7 +424,8 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         // TODO MDL-43089: When DB structure in place, get these from DB.
         $data = array();
         // Rows are in the format array(id, quizid, firstslot, heading, shuffle).
-        $data[] = array(1, $quiz->id, 1, 'Section 1', true);
+        // Match \mod_quiz\structure::populate_quiz_sections()
+        $data[] = array(1, $quiz->id, 1, 'Section 1', false);
         $records = array();
 
         // Temp: create number of sections.
