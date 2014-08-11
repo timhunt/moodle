@@ -77,7 +77,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $this->assertCount(0, $slots);
 
         // Append slots to the quiz.
-        $testslots = $this->get_dummy_quiz_slots($quiz);
+        $testslots = $this->get_default_quiz_slots($quiz);
         $structure = \mod_quiz\structure::create_for($quiz);
 
         // Are the correct slots returned?
@@ -205,10 +205,16 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
         $this->assertEquals($testslots, $slotsmoved);
 
+        $testslots = $this->reset_slots($quiz, $structure);
+
     }
 
     public function reset_slots($quiz, $structure) {
-        $testslots = $this->get_dummy_quiz_slots($quiz);
+        global $Out;
+
+        $testslots = $this->get_default_quiz_slots($quiz);
+//         $Out->backtrace(2);
+//         $Out->print_fields($testslots, 'id, slot, page', '$testslots (5) = ');
         $structure->set_quiz_slots($testslots);
         $this->save_quiz_slots_to_db($structure);
         $structure->populate_slots_with_sectionids($quiz);
@@ -349,7 +355,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
      * @param object $quiz
      * @return array
      */
-    public function get_dummy_quiz_slots($quiz) {
+    public function get_default_quiz_slots($quiz) {
         global $DB;
 
         // Rows are in the format array(id, quizid, slot, page, questionid, maxmark).
@@ -362,15 +368,9 @@ class mod_quiz_structure_testcase extends advanced_testcase {
 //         $data[] = array($uniqueid++.'', $quiz->id, '7', 3.'', '7', '1.0000000');
 //         $data[] = array($uniqueid++.'', $quiz->id, '8', 4.'', '8', '1.0000000');
 
-        $table = 'quiz_slots';
-
-        // Slots already exist. Reset them.
-        if ($DB->get_records($table, array('quizid' => $quiz->id), 'slot')) {
-            $records = $this->get_default_slots();
-            foreach ($records as $record) {
-                $DB->update_record($table, $record);
-            }
-            return $records;
+        // Slots already created return them.
+        if ($this->get_default_slots()) {
+            return $this->get_default_slots();
         }
 
         // Create slots.
@@ -391,7 +391,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
             quiz_add_quiz_question($numq->id, $quiz, $pagenumber);
         }
 
-        $records = $DB->get_records($table, array('quizid' => $quiz->id), 'slot');
+        $records = $DB->get_records('quiz_slots', array('quizid' => $quiz->id), 'slot');
 
         foreach ($records as $record) {
             $record->sectionid = 1;
@@ -409,7 +409,7 @@ class mod_quiz_structure_testcase extends advanced_testcase {
     public function get_default_slots() {
         $slots = array();
         foreach ($this->defaultslots as $slot) {
-            $slots[$slot->id] = $slot;
+            $slots[$slot->id] = clone $slot;
         }
         return $slots;
     }
