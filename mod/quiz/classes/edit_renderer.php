@@ -395,7 +395,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         echo $this->question_chooser();
 
         // Call random question form.
-        echo $this->get_randomquestion_form();
+        if (!quiz_has_attempts($quiz->id)) {
+            echo $this->get_randomquestion_form();
+        }
     }
 
     /**
