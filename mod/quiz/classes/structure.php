@@ -85,13 +85,13 @@ class structure {
      */
     public function get_slot_by_id($slotid) {
         if (!array_key_exists($slotid, $this->slots)) {
-            throw new dml_missing_record_exception('quiz_slots');
+            throw new \coding_exception('The \'slotid\' could not be found.');
         }
         return $this->slots[$slotid];
     }
 
     /**
-     * Get a slot by it's id. Throws an exception if it is missing.
+     * Get a slot by it's slot number. Throws an exception if it is missing.
      * @return stdClass the requested slot.
      */
     public function get_slot_by_slot_number($slotnumber) {
@@ -104,11 +104,11 @@ class structure {
             return $slot;
         }
 
-        throw new dml_missing_record_exception('quiz_slots');
+        throw new \coding_exception('The \'slotnumber\' could not be found.');
     }
 
     /**
-     * Get a slot by it's id. Throws an exception if it is missing.
+     * Get a slotid by it's slot number. Throws an exception if it is missing.
      * @return stdClass the requested slot.
      */
     public function get_slot_id_by_slot_number($slotnumber) {
@@ -242,18 +242,21 @@ class structure {
         $targetslotnumber = intval($targetslot->slot);
 
         $trans = $DB->start_delegated_transaction();
-        // Move slots if slots haven't already been moved exit.
+        // Move slots if slots haven't already been moved ignore.
         if ($targetslotnumber - $movingslotnumber !== -1  ) {
 
-            $slotreorder = array($movingslotnumber => $targetslotnumber);
+            $slotreorder = array();
             if ($movingslotnumber < $targetslotnumber) {
                 $hasslotmoved = true;
+                $slotreorder[$movingslotnumber] = $targetslotnumber;
                 for ($i = $movingslotnumber; $i < $targetslotnumber; $i += 1) {
                     $slotreorder[$i + 1] = $i;
                 }
             } else if ($movingslotnumber > $targetslotnumber) {
                 $hasslotmoved = true;
-                for ($i = $targetslotnumber; $i < $movingslotnumber; $i += 1) {
+                $previousslotnumber = $targetslotnumber + 1;
+                $slotreorder[$movingslotnumber] = $previousslotnumber;
+                for ($i = $previousslotnumber; $i < $movingslotnumber; $i += 1) {
                     $slotreorder[$i] = $i + 1;
                 }
             }

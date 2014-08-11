@@ -118,16 +118,16 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $slots = $structure->get_quiz_slots();
 
         // Slots don't move. Page unchanged
-        $idmove = $structure->get_slot_id_by_slot_number('2');
-        $idbefore = $structure->get_slot_id_by_slot_number('1');
+        $idmove = $this->get_slot_id_by_slot_number('2');
+        $idbefore = $this->get_slot_id_by_slot_number('1');
         $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
         $this->assertEquals($testslots, $slotsmoved);
 
         // Slots don't move. Page changed
-        $idmove = $structure->get_slot_id_by_slot_number('2');
-        $idbefore = $structure->get_slot_id_by_slot_number('1');
+        $idmove = $this->get_slot_id_by_slot_number('2');
+        $idbefore = $this->get_slot_id_by_slot_number('1');
         $structure->move_slot($quiz, $idmove, $idbefore, '1');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
         $testslots[$idmove]->page = '1';
@@ -137,8 +137,8 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots move 2 > 3. Page unchanged. Pages not reordered.
-        $idmove = $structure->get_slot_id_by_slot_number('2');
-        $idbefore = $structure->get_slot_id_by_slot_number('3');
+        $idmove = $this->get_slot_id_by_slot_number('2');
+        $idbefore = $this->get_slot_id_by_slot_number('3');
         $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
         $testslots[$idbefore]->slot = '2';
@@ -150,8 +150,8 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots move 6 > 7. Page changed. Pages not reordered.
-        $idmove = $structure->get_slot_id_by_slot_number('6');
-        $idbefore = $structure->get_slot_id_by_slot_number('7');
+        $idmove = $this->get_slot_id_by_slot_number('6');
+        $idbefore = $this->get_slot_id_by_slot_number('7');
         $structure->move_slot($quiz, $idmove, $idbefore, '3');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
@@ -165,8 +165,8 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots unmoved . Page changed slot 6 . Pages not reordered.
-        $idmove = $structure->get_slot_id_by_slot_number('6');
-        $idbefore = $structure->get_slot_id_by_slot_number('5');
+        $idmove = $this->get_slot_id_by_slot_number('6');
+        $idbefore = $this->get_slot_id_by_slot_number('5');
         $pagenumber = 2;
         $structure->move_slot($quiz, $idmove, $idbefore, strval($pagenumber));
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
@@ -180,8 +180,8 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         $testslots = $this->reset_slots($quiz, $structure);
 
         // Slots move 1 > 2. Page changed. Page 2 becomes page 1. Pages reordered.
-        $idmove = $structure->get_slot_id_by_slot_number('1');
-        $idbefore = $structure->get_slot_id_by_slot_number('2');
+        $idmove = $this->get_slot_id_by_slot_number('1');
+        $idbefore = $this->get_slot_id_by_slot_number('2');
         $structure->move_slot($quiz, $idmove, $idbefore, '2');
         $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
 
@@ -195,26 +195,84 @@ class mod_quiz_structure_testcase extends advanced_testcase {
         // Now reorder the pages
         $pagenumber = 1;
         $slotnumber = 1;
-        $testslots[$structure->get_slot_id_by_slot_number($slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
-        $testslots[$structure->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number($slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = $pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
+        $testslots[$this->get_slot_id_by_slot_number(++$slotnumber)]->page = ++$pagenumber;
         $this->assertEquals($testslots, $slotsmoved);
 
         $testslots = $this->reset_slots($quiz, $structure);
 
+        // Slots move 6 > 3. Page changed. Page 2 becomes page 1. Pages reordered.
+        $idmove = $this->get_slot_id_by_slot_number('6');
+        $idbefore = $this->get_slot_id_by_slot_number('2');
+        $pagenumber = 2;
+
+        $structure->move_slot($quiz, $idmove, $idbefore, $pagenumber);
+        $slotsmoved = $this->get_saved_quiz_slots($quiz, $structure);
+
+        // Now reorder the pages
+        $pagenumber = 2;
+        $slotnumber = 5;
+        $this->update_slot_page_and_slot ($testslots, $slotnumber, $pagenumber, $slotnumber+1);
+        $this->update_slot_page_and_slot ($testslots, --$slotnumber, $pagenumber, $slotnumber+1);
+        $this->update_slot_page_and_slot ($testslots, --$slotnumber, $pagenumber, $slotnumber+1);
+
+        $moveslot = $testslots[$idmove];
+
+        // Move slot and page.
+        $moveslot->slot = '3';
+        $moveslot->page = '2';
+
+        $this->assertEquals($testslots, $slotsmoved);
+
+    }
+
+    private function update_slot_page_and_slot ($slots, $slotnumber, $pagenumber, $slot) {
+        $currentslot = $slots[$this->get_slot_id_by_slot_number($slotnumber, $slots)];
+        $currentslot->page = $pagenumber;
+        $currentslot->slot = $slot;
+    }
+
+    /**
+     * Get a slot by it's slot number. Throws an exception if it is missing.
+     * @return stdClass the requested slot.
+     */
+    public function get_slot_by_slot_number($slotnumber, $slots=array()) {
+        $slotnumber = strval($slotnumber);
+        if (!count($slots)) {
+            $slots = $this->defaultslots;
+        }
+        foreach ($slots as $slot) {
+            if ($slot->slot !== $slotnumber) {
+                continue;
+            }
+
+            return $slot;
+        }
+
+        throw new \coding_exception('The \'slotnumber\' could not be found.');
+    }
+
+    /**
+     * Get a slotid by it's slot number. Throws an exception if it is missing.
+     * @return stdClass the requested slot.
+     */
+    public function get_slot_id_by_slot_number($slotnumber, $slots=array()) {
+        $slot = $this->get_slot_by_slot_number($slotnumber, $slots);
+        if(!$slot){
+            return null;
+        }
+
+        return $slot->id;
     }
 
     public function reset_slots($quiz, $structure) {
-        global $Out;
-
         $testslots = $this->get_default_quiz_slots($quiz);
-//         $Out->backtrace(2);
-//         $Out->print_fields($testslots, 'id, slot, page', '$testslots (5) = ');
         $structure->set_quiz_slots($testslots);
         $this->save_quiz_slots_to_db($structure);
         $structure->populate_slots_with_sectionids($quiz);
