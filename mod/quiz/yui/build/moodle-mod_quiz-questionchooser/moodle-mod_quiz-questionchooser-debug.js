@@ -65,4 +65,4 @@ M.mod_quiz.init_questionchooser = function(config) {
 };
 
 
-}, '@VERSION@', {"requires": ["moodle-core-chooserdialogue"]});
+}, '@VERSION@', {"requires": ["moodle-core-chooserdialogue", "moodle-mod_quiz-util"]});
