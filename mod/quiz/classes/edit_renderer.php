@@ -241,10 +241,15 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      *
      * @param stdClass $course The course entry from DB
      * @param array $quiz Array containing quiz data
+     * @param mod_quiz\structure $structure
      * @param int $cm Course Module ID
-     * @param int $context The page context ID
+     * @param question_edit_contexts $contexts the relevant question bank contexts.
+     * @param moodle_url $pageurl the URL to reload this page.
+     * @param array $pagevars the variables from {@link question_edit_setup()}.
+     * @return string HTML to output.
      */
-    public function edit_page($course, $quiz, $structure, $cm, $context, $pageurl) {
+    public function edit_page($course, $quiz, mod_quiz\structure  $structure, $cm,
+            question_edit_contexts $contexts, moodle_url $pageurl, array $pagevars) {
         global $DB, $CFG, $PAGE, $USER;
 
         $modinfo = get_fast_modinfo($course);
@@ -396,7 +401,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Call random question form.
         if (!quiz_has_attempts($quiz->id)) {
-            echo $this->get_randomquestion_form();
+            echo $this->get_randomquestion_form($pageurl, $contexts, $pagevars, $cm);
         }
     }
 
@@ -457,26 +462,19 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     /**
      * Return randm question form.
      */
-    protected function get_randomquestion_form() {
-        global $CFG;
-        list($thispageurl, $contexts, $cmid, $cm, $quiz, $pagevars) =
-        question_edit_setup('editq', '/mod/quiz/edit.php', true);
+    protected function get_randomquestion_form(moodle_url $thispageurl, question_edit_contexts $contexts, array $pagevars, $cm) {
 
-        $thispageurl = new moodle_url($thispageurl);
-        $header = null;
-
-        $form = null;
-        $canaddrandom = $contexts->have_cap('moodle/question:useall');
-        if ($canaddrandom) {
-            $randomform = new quiz_add_random_form(new moodle_url('/mod/quiz/addrandom.php'), $contexts);
-            $randomform-> set_data(array(
-                    'category' => $pagevars['cat'],
-                    'returnurl' => $thispageurl->out_as_local_url(true),
-                    'cmid' => $cm->id
-            ));
-            return html_writer::tag('div', $randomform->render(), array('class' => 'randomquestionformforpopup'));
+        if (!$contexts->have_cap('moodle/question:useall')) {
+            return '';
         }
-        return null;
+
+        $randomform = new quiz_add_random_form(new moodle_url('/mod/quiz/addrandom.php'), $contexts);
+        $randomform-> set_data(array(
+                'category' => $pagevars['cat'],
+                'returnurl' => $thispageurl->out_as_local_url(true),
+                'cmid' => $cm->id
+        ));
+        return html_writer::tag('div', $randomform->render(), array('class' => 'randomquestionformforpopup'));
     }
 
     /**

@@ -431,7 +431,7 @@ if ($completion->is_enabled() && $ajaxenabled) {
 // Course wrapper start.
 echo html_writer::start_tag('div', array('class' => 'course-content'));
 
-$output->edit_page($course, $quiz, $structure, $cm, $contexts, $thispageurl);
+$output->edit_page($course, $quiz, $structure, $cm, $contexts, $thispageurl, $pagevars);
 
 // Content wrapper end.
 echo html_writer::end_tag('div');
