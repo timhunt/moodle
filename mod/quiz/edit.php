@@ -389,45 +389,8 @@ for ($pageiter = 1; $pageiter <= $numberoflisteners; $pageiter++) {
 
 $PAGE->requires->data_for_js('quiz_edit_config', $quizeditconfig);
 $PAGE->requires->js('/question/qengine.js');
-$module = array(
-    'name'      => 'mod_quiz_edit',
-    'fullpath'  => '/mod/quiz/edit.js',
-    'requires'  => array('yui2-dom', 'yui2-event', 'yui2-container'),
-    'strings'   => array(),
-    'async'     => false,
-);
 
-global $USER;
-$USER->editing = 1;
-// Prevent caching of this page to stop confusion when changing page after making AJAX changes.
-    $PAGE->set_cacheable(false);
-
-$ajaxenabled = true; // TODO MDL-40987.
-
-$completion = new completion_info($course);
-if ($completion->is_enabled() && $ajaxenabled) {
-    $PAGE->requires->string_for_js('completion-title-manual-y', 'completion');
-    $PAGE->requires->string_for_js('completion-title-manual-n', 'completion');
-    $PAGE->requires->string_for_js('completion-alt-manual-y', 'completion');
-    $PAGE->requires->string_for_js('completion-alt-manual-n', 'completion');
-
-    $PAGE->requires->js_init_call('M.core_completion.init');
-}
-
-if ($completion->is_enabled() && $ajaxenabled) {
-    // This value tracks whether there has been a dynamic change to the page.
-    // It is used so that if a user does this - (a) set some tickmarks, (b)
-    // go to another page, (c) clicks Back button - the page will
-    // automatically reload. Otherwise it would start with the wrong tick
-    // values.
-    echo html_writer::start_tag('form', array('action' => '.', 'method' => 'get'));
-    echo html_writer::start_tag('div');
-    echo html_writer::empty_tag('input', array('type' => 'hidden', 'id' => 'completion_dynamic_change',
-            'name' => 'completion_dynamic_change', 'value' => '0'));
-    echo html_writer::end_tag('div');
-    echo html_writer::end_tag('form');
-}
-
+// TODO MDL-40987 either we don't need it, or we should rename course -> mod_quiz.
 // Course wrapper start.
 echo html_writer::start_tag('div', array('class' => 'course-content'));
 
