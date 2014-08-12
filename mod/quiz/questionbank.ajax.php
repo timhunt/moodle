@@ -24,8 +24,7 @@
  */
 
 
-// DONOTCOMMIT uncomment this.
-// define('AJAX_SCRIPT', true);
+define('AJAX_SCRIPT', true);
 
 
 require_once('../../config.php');
@@ -115,4 +114,7 @@ require_capability('mod/quiz:manage', $contexts->lowest());
 $output = $PAGE->get_renderer('mod_quiz', 'edit');
 
 // Course wrapper start.
-echo $output->get_questionbank_form($thispageurl, $contexts, $pagevars, $course, $cm, $quiz);
+echo json_encode(array(
+    'status'   => 'OK',
+    'contents' => $output->get_questionbank_contents($thispageurl, $contexts, $pagevars, $course, $cm, $quiz)
+));

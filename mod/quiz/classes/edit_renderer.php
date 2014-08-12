@@ -482,14 +482,32 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      */
     public function get_questionbank_form(moodle_url $thispageurl,
             question_edit_contexts $contexts, array $pagevars, $course, $cm, $quiz) {
-        //$thispageurl = new moodle_url($thispageurl, array('addonpage' => $page));
+
+        return html_writer::tag('div', html_writer::empty_tag('img',
+                array('alt' => 'loading', 'class' => 'loading-icon', 'src' => $this->pix_url('i/loading'))),
+                array('class' => 'questionbankformforpopup'));
+    }
+
+    /**
+     * Return the questionbank form
+     * @param int $page the page the question will be added on.
+     * @param moodle_url $thispageurl the URL to reload this page.
+     * @param question_edit_contexts $contexts the relevant question bank contexts.
+     * @param array $pagevars the variables from {@link question_edit_setup()}.
+     * @param stdClass $course the course settings.
+     * @param stdClass $cm course_modules row.
+     * @param stdClass $quiz the quiz settings.
+     * @return array with two elements. The question bank pop-up header and contents.
+     */
+    public function get_questionbank_contents(moodle_url $thispageurl,
+            question_edit_contexts $contexts, array $pagevars, $course, $cm, $quiz) {
 
         // Create quiz question bank view.
         $questionbank = new quiz_question_bank_view($contexts, $thispageurl, $course, $cm, $quiz);
         $questionbank->set_quiz_has_attempts(quiz_has_attempts($quiz->id));
 
         // TODO: remove the unnecessary code for the popup.
-        // Recategorising questions is better done on the stand-alone question bank page.
+        // Recategorising questions is better done on the stand-alone questionbank page.
         $output = $questionbank->render('editq',
                                         $pagevars['qpage'],
                                         $pagevars['qperpage'],

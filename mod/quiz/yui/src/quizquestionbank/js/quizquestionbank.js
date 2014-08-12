@@ -42,6 +42,7 @@ Y.extend(POPUP, Y.Base, {
     qbank: Y.one(CSS.QBANK),
     qbankform: Y.one(CSS.QBANKFORM),
     qbanklink: Y.all(CSS.QBANKLINK),
+    popup: null,
 
     dialogue: function(header, body, hideshow) {
         // Create a dialogue on the page and hide it.
@@ -59,12 +60,12 @@ Y.extend(POPUP, Y.Base, {
             footerContent: null,
             extraClasses: ['mod_quiz_qbank_dialogue']
         };
-        var popup = { dialog: null };
-        popup.dialog = new M.core.dialogue(config);
+        this.popup = { dialog: null };
+        this.popup.dialog = new M.core.dialogue(config);
         if (hideshow === 'hide') {
-            popup.dialog.hide();
+            this.popup.dialog.hide();
         } else {
-            popup.dialog.show();
+            this.popup.dialog.show();
         }
     },
 
@@ -84,6 +85,41 @@ Y.extend(POPUP, Y.Base, {
     display_dialog : function (e, header, page, body) {
         e.preventDefault();
         this.dialogue(header, body, 'show');
+        this.load_content();
+    },
+
+    load_content : function() {
+        Y.log('Starting load.');
+
+        Y.io('https://tjh238.vledev2.open.ac.uk/moodle_head/mod/quiz/questionbank.ajax.php?cmid=3', {
+            method:  'GET',
+            on:      {
+                success: this.load_done,
+                failure: this.save_failed
+            },
+            context: this
+        });
+
+        Y.log('Load started.');
+    },
+
+    load_done: function(transactionid, response) {
+        var result = JSON.parse(response.responseText);
+        if (!result.status || result.status !== 'OK') {
+            // Because IIS is useless, Moodle can't send proper HTTP response
+            // codes, so we have to detect failures manually.
+            this.load_failed(transactionid, response);
+            return;
+        }
+
+        Y.log('Load completed.');
+
+        this.popup.dialog.bodyNode.setHTML(result.contents);
+        this.popup.dialog.centerDialogue();
+    },
+
+    load_failed: function() {
+        Y.log('Load failed.');
     }
 });
 
