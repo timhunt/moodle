@@ -388,6 +388,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Call random question form.
         if (!quiz_has_attempts($quiz->id)) {
+            echo $this->get_questionbank_form($pageurl, $contexts, $pagevars, $course, $cm, $quiz);
             echo $this->get_randomquestion_form($pageurl, $contexts, $pagevars, $cm);
         }
     }
@@ -469,7 +470,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Return array of header and body for the qbank popup
+     * Return the questionbank form
      * @param int $page the page the question will be added on.
      * @param moodle_url $thispageurl the URL to reload this page.
      * @param question_edit_contexts $contexts the relevant question bank contexts.
@@ -479,9 +480,9 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param stdClass $quiz the quiz settings.
      * @return array with two elements. The question bank pop-up header and contents.
      */
-    protected function add_from_questionbank($page, moodle_url $thispageurl,
+    protected function get_questionbank_form(moodle_url $thispageurl,
             question_edit_contexts $contexts, array $pagevars, $course, $cm, $quiz) {
-        $thispageurl = new moodle_url($thispageurl, array('addonpage' => $page));
+        //$thispageurl = new moodle_url($thispageurl, array('addonpage' => $page));
 
         // Create quiz question bank view.
         $questionbank = new quiz_question_bank_view($contexts, $thispageurl, $course, $cm, $quiz);
@@ -496,11 +497,8 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
                                         $pagevars['recurse'],
                                         $pagevars['showhidden'],
                                         $pagevars['qbshowtext']);
-        // Call questionbank.
-        $header = get_string('questionbank', 'question');
         $form = html_writer::tag('div', $output, array('class' => 'bd'));
-
-        return array($header, $form);
+        return html_writer::tag('div', $form, array('class' => 'questionbankformforpopup'));
     }
 
     /**
@@ -1014,7 +1012,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
         static $str;
         if (!isset($str)) {
             $str = get_strings(array('addaquestion', 'addarandomquestion',
-                    'addarandomselectedquestion', 'questionbankcontents'), 'quiz');
+                    'addarandomselectedquestion', 'questionbank'), 'quiz');
         }
 
         // Get section, page, slotnumber and maxmark.
@@ -1034,14 +1032,12 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
 
         // Call question bank.
         $returnurl = new moodle_url($pageurl, array('addonpage' => $page));
-        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1);
-        $url = new moodle_url('/mod/quiz/edit.php', $params);
-        $icon = new pix_icon('t/add', $str->questionbankcontents, 'moodle', array('class' => 'iconsmall', 'title' => ''));
-        list($header, $form) = $this->add_from_questionbank($page, $pageurl,
-                $contexts, $pagevars, $course, $cm, $quiz);
-        $attributes = array('class' => 'cm-edit-action questionbank', 'data-action' => 'questionbank', 'header' => $header, 'form' => $form);
-        $attributes = array_merge($attributes, $params);
-        $actions['questionbankcontents'] = new action_menu_link_secondary($url, $icon, $str->questionbankcontents, $attributes);
+        $params = array('returnurl' => $returnurl, 'cmid' => $quiz->cmid, 'qbanktool' => 1, 'appendqnumstring' => 'questionbank');
+        $icon = new pix_icon('t/add', $str->questionbank, 'moodle', array('class' => 'iconsmall', 'title' => ''));
+        $attributes = array('class' => 'cm-edit-action questionbank', 'data-action' => 'questionbank');
+        $header = html_writer::tag('div', get_string('questionbank', 'question') . ' (Page ' . $page . ')', array('class' => 'hd'));
+        $attributes = array_merge(array('header' => $header, 'addonpage' => $page), $attributes);
+        $actions['questionbank'] = new action_menu_link_secondary($returnurl, $icon, $str->questionbank, $attributes);
 
         // Add a random question.
         $returnurl = new moodle_url('/mod/quiz/edit.php', array('cmid' => $quiz->cmid, 'addonpage' => $page));

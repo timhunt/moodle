@@ -22,46 +22,32 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 var CSS = {
-        QBANK: '.questionbank',
-        QBANKLINK: 'a.questionbank'
+        QBANKFORM: 'div.questionbankformforpopup',
+        QBANKLINK: 'a.questionbank',
+        QBANK: '.questionbank'
 };
 
 var PARAMS = {
-    CMID: 'cmid',
     PAGE: 'addonpage',
     HEADER: 'header',
-    FORM: 'form'
 };
 
 var POPUP = function() {
     POPUP.superclass.constructor.apply(this, arguments);
 };
 
-
 Y.extend(POPUP, Y.Base, {
     qbank: Y.one(CSS.QBANK),
-    page: 0,
-    header: 'header',
-    body: 'body',
+    qbankform: Y.one(CSS.QBANKFORM),
+    qbanklink: Y.all(CSS.QBANKLINK),
 
-    initializer : function() {
-        console.log('qqbank = ' + this.qbank);
-        Y.all(CSS.QBANKLINK).each(function(node) {
-            node.on('click', this.display_dialog, this);
-        }, this);
-    },
-
-    display_dialog : function (e) {
-        e.preventDefault();
-
-        this.page = this.qbank._node.getAttribute(PARAMS.PAGE);
-        this.header = this.qbank._node.getAttribute(PARAMS.HEADER);
-        this.body = this.qbank._node.getAttribute(PARAMS.FORM);
-
-        var config = {
-            headerContent : this.header,
-            bodyContent : this.body,
+    dialogue: function(header, body, hideshow) {
+        // Create a dialogue on the page and hide it.
+        config = {
+            headerContent : header,
+            bodyContent : body,
             draggable : true,
             modal : true,
             zIndex : 1000,
@@ -73,10 +59,31 @@ Y.extend(POPUP, Y.Base, {
             footerContent: null,
             extraClasses: ['mod_quiz_qbank_dialogue']
         };
-
         var popup = { dialog: null };
         popup.dialog = new M.core.dialogue(config);
-        popup.dialog.show();
+        if (hideshow === 'hide') {
+            popup.dialog.hide();
+        } else {
+            popup.dialog.show();
+        }
+    },
+
+    initializer : function() {
+        var header = this.qbank._node.getAttribute(PARAMS.HEADER);
+        var body = this.qbankform;
+
+        this.dialogue(header, body, 'hide');
+
+        this.qbanklink.each(function(node) {
+            var page = node.getAttribute(PARAMS.PAGE);
+            header = node.getAttribute(PARAMS.HEADER);
+            node.on('click', this.display_dialog, this, header, page, body);
+        }, this);
+    },
+
+    display_dialog : function (e, header, page, body) {
+        e.preventDefault();
+        this.dialogue(header, body, 'show');
     }
 });
 
