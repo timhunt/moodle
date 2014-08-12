@@ -480,7 +480,7 @@ class mod_quiz_edit_renderer extends plugin_renderer_base {
      * @param stdClass $quiz the quiz settings.
      * @return array with two elements. The question bank pop-up header and contents.
      */
-    protected function get_questionbank_form(moodle_url $thispageurl,
+    public function get_questionbank_form(moodle_url $thispageurl,
             question_edit_contexts $contexts, array $pagevars, $course, $cm, $quiz) {
         //$thispageurl = new moodle_url($thispageurl, array('addonpage' => $page));
 
