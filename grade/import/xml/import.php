@@ -48,7 +48,8 @@ raise_memory_limit(MEMORY_EXTRA);
 
 $text = download_file_content($url);
 if ($text === false) {
-    print_error('cannotreadfile');
+    print_error('cannotreadfile', 'error',
+            $CFG->wwwroot . '/grade/import/xml/index.php?id=' . $id, $url);
 }
 
 $error = '';
@@ -75,5 +76,6 @@ if ($importcode !== false) {
     }
 
 } else {
-    print_error('errorduringimport', 'gradeimport_xml', $error);
+    print_error('errorduringimport', 'gradeimport_xml',
+            $CFG->wwwroot . '/grade/import/xml/index.php?id=' . $id, $error);
 }
