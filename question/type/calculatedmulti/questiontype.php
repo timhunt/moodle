@@ -194,7 +194,7 @@ class qtype_calculatedmulti extends qtype_calculated {
         $question->synchronised = $questiondata->options->synchronize;
 
         $this->initialise_combined_feedback($question, $questiondata, true);
-        $this->initialise_question_answers($question, $questiondata);
+        $this->initialise_question_answers($question, $questiondata, false);
 
         foreach ($questiondata->options->answers as $a) {
             $question->answers[$a->id]->correctanswerlength = $a->correctanswerlength;
