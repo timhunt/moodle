@@ -39,7 +39,7 @@ class quiz_access_manager {
     protected $quizobj;
     /** @var int the time to be considered as 'now'. */
     protected $timenow;
-    /** @var array of quiz_access_rule_base. */
+    /** @var quiz_access_rule_base[] Teh rules that apply to this quiz. */
     protected $rules = array();
 
     /**

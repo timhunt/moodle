@@ -33,6 +33,7 @@ require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 $id = required_param('cmid', PARAM_INT); // Course module id
 $forcenew = optional_param('forcenew', false, PARAM_BOOL); // Used to force a new preview
 $page = optional_param('page', -1, PARAM_INT); // Page to jump to in the attempt.
+$inpopup = optional_param('inpopup', false, PARAM_BOOL);
 
 if (!$cm = get_coursemodule_from_id('quiz', $id)) {
     print_error('invalidcoursemodule');
@@ -47,7 +48,6 @@ $PAGE->set_url($quizobj->view_url());
 
 // Check login and sesskey.
 require_login($quizobj->get_course(), false, $quizobj->get_cm());
-require_sesskey();
 $PAGE->set_heading($quizobj->get_course()->fullname);
 
 // If no questions have been set up yet redirect to edit.php or display an error.
@@ -63,7 +63,6 @@ if (!$quizobj->has_questions()) {
 $timenow = time();
 $accessmanager = $quizobj->get_access_manager($timenow);
 if ($quizobj->is_preview_user() && $forcenew) {
-    $accessmanager->current_attempt_finished();
 }
 
 // Check capabilities.
@@ -73,6 +72,7 @@ if (!$quizobj->is_preview_user()) {
 
 // Check to see if a new preview was requested.
 if ($quizobj->is_preview_user() && $forcenew) {
+    $accessmanager->current_attempt_finished();
     // To force the creation of a new preview, we mark the current attempt (if any)
     // as finished. It will then automatically be deleted below.
     $DB->set_field('quiz_attempts', 'state', quiz_attempt::FINISHED,

@@ -1720,13 +1720,10 @@ class quiz_attempt {
                 return;
 
             case 'autoabandon':
+            default:
                 $this->process_abandon($timestamp, $studentisonline);
                 return;
         }
-
-        // This is an overdue attempt with no overdue handling defined, so just abandon.
-        $this->process_abandon($timestamp, $studentisonline);
-        return;
     }
 
     /**
