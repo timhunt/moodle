@@ -152,6 +152,39 @@ class qtype_multichoice_single_question_test extends advanced_testcase {
             ), $mc->classify_response(array()));
     }
 
+    public function test_classify_response_choice_deleted_after_attempt() {
+        $mc = test_question_maker::make_a_multichoice_single_question();
+        $firststep = new question_attempt_step();
+
+        $mc->start_attempt($firststep, 1);
+        $response = $mc->prepare_simulated_post_data(array('answer' => 'B'));
+
+        $mc = test_question_maker::make_a_multichoice_single_question();
+        unset($mc->answers[13]);
+        $mc->apply_attempt_state($firststep);
+
+        $this->assertEquals(array(
+                    $mc->id => new question_classified_response(14, 'B', -0.3333333)
+                ), $mc->classify_response($response));
+    }
+
+    public function test_classify_response_choice_added_after_attempt() {
+        $mc = test_question_maker::make_a_multichoice_single_question();
+        $firststep = new question_attempt_step();
+
+        $mc->start_attempt($firststep, 1);
+        $response = $mc->prepare_simulated_post_data(array('answer' => 'B'));
+
+        $mc = test_question_maker::make_a_multichoice_single_question();
+        $mc->answers[16] = new question_answer(16, 'D', -0.3333333, 'D is wrong', FORMAT_HTML),
+        unset($mc->answers[13]);
+        $mc->apply_attempt_state($firststep);
+
+        $this->assertEquals(array(
+                    $mc->id => new question_classified_response(14, 'B', -0.3333333)
+                ), $mc->classify_response($response));
+    }
+
     public function test_make_html_inline() {
         $mc = test_question_maker::make_a_multichoice_single_question();
         $this->assertEquals('Frog', $mc->make_html_inline('<p>Frog</p>'));
