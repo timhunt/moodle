@@ -165,10 +165,13 @@ abstract class testing_util {
         $tables = $DB->get_tables(false);
         if ($tables) {
             if (!$DB->get_manager()->table_exists('config')) {
-                return false;
+                return true; // Config table not there. Cannot be a real Moodle install.
+            }
+            if (!get_config('allversionhash', $framework . 'test')) {
+                return true; // Install did not complete, can't be a real site.
             }
             if (!get_config('core', $framework . 'test')) {
-                return false;
+                return false; // Test config not set, not a test site.
             }
         }
 
