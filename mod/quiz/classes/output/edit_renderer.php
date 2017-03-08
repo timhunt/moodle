@@ -62,10 +62,22 @@ class edit_renderer extends \plugin_renderer_base {
         $output .= $this->quiz_information($structure);
         $output .= $this->maximum_grade_input($structure, $pageurl);
         $output .= $this->repaginate_button($structure, $pageurl);
+        $output .= $this->selectmultiple_button($structure);
         $output .= $this->total_marks($quizobj->get_quiz());
 
         // Show the questions organised into sections and pages.
         $output .= $this->start_section_list($structure);
+
+        // Bulk action button delete and bulk action button cancel.
+        $output .= html_writer::tag('div', html_writer::empty_tag('input', array('type' => 'button',
+                'id' => 'selectmultipledeletecommand', 'value' => get_string('deleteselected', 'mod_quiz'))) . " " .
+                html_writer::empty_tag('input', array('type' => 'button', 'id' => 'selectmultiplecancelcommand',
+                'value' => get_string('cancel', 'moodle'))), array('class' => 'selectmultiplecommand actions'));
+
+        // Select all/deselect all questions.
+        $output .= html_writer::tag('div', html_writer::link('#', get_string('selectall', 'quiz'),
+                array('id' => 'questionselectall')) . " / " . html_writer::link('#', get_string('selectnone', 'quiz'),
+                array('id' => 'questiondeselectall')), array('class' => 'selectmultiplecommandbuttons'));
 
         foreach ($structure->get_sections() as $section) {
             $output .= $this->start_section($structure, $section);
@@ -207,8 +219,27 @@ class edit_renderer extends \plugin_renderer_base {
             $this->page->requires->yui_module('moodle-mod_quiz-repaginate', 'M.mod_quiz.repaginate.init');
         }
 
-        return html_writer::tag('div',
-                html_writer::empty_tag('input', $buttonoptions), $containeroptions);
+        return html_writer::start_tag('div', $containeroptions) .
+                html_writer::empty_tag('input', $buttonoptions);
+    }
+
+    /**
+     * Generate the bulk action button
+     * @param structure $structure the structure of the quiz being edited.
+     * @return string HTML to output.
+     */
+    protected function selectmultiple_button(structure $structure) {
+        $buttonoptions = array(
+            'type'  => 'button',
+            'name'  => 'selectmultiple',
+            'id'    => 'selectmultiplecommand',
+            'value' => get_string('selectmultipleitems', 'quiz'),
+            'class' => 'btn btn-secondary m-b-1'
+        );
+        if (!$structure->can_be_edited()) {
+            $buttonoptions['disabled'] = 'disabled';
+        }
+        return html_writer::empty_tag('input', $buttonoptions) . html_writer::end_tag('div');
     }
 
     /**
@@ -640,6 +671,10 @@ class edit_renderer extends \plugin_renderer_base {
         }
 
         $output .= html_writer::start_div('mod-indent-outer');
+        $output .= html_writer::tag('input', '', array('id' => 'selectquestion-' .
+                $structure->get_displayed_number_for_slot($slot), 'name' => 'selectquestion[]',
+               'type' => 'checkbox', 'class' => 'select-multiple-checkbox',
+               'value' => $structure->get_displayed_number_for_slot($slot)));
         $output .= $this->question_number($structure->get_displayed_number_for_slot($slot));
 
         // This div is used to indent the content.
@@ -1026,6 +1061,7 @@ class edit_renderer extends \plugin_renderer_base {
         unset($config->pagehtml);
         unset($config->addpageiconhtml);
 
+        $this->page->requires->strings_for_js(array('areyousureremoveselected'), 'quiz');
         $this->page->requires->yui_module('moodle-mod_quiz-toolboxes',
                 'M.mod_quiz.init_section_toolbox',
                 array(array(

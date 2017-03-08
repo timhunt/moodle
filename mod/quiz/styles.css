@@ -879,10 +879,6 @@ table.quizreviewsummary td.cell {
     width: 100%;
 }
 
-#page-mod-quiz-edit ul.slots li.section li.activity .mod-indent-outer {
-    padding-left: 22px;
-}
-
 #page-mod-quiz-edit ul.slots .activityinstance form {
     display: inline;
 }
@@ -1115,6 +1111,68 @@ table#categoryquestions {
 .questionbank .categorypagingbarcontainer,
 .questionbank .categoryselectallcontainer {
     background-color: #fff;
+}
+
+/* Bulk edit actions */
+
+.selectmultiplecommandbuttons {
+    margin: 0.6em 0.4em;
+}
+
+.selectmultiplecommand,
+.selectmultiplecommandbuttons,
+.select-multiple-checkbox {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple .selectmultiplecommand,
+#page-mod-quiz-edit.select-multiple .selectmultiplecommandbuttons,
+#page-mod-quiz-edit.select-multiple .select-multiple-checkbox {
+    display: inherit;
+}
+
+#page-mod-quiz-edit.select-multiple input.select-multiple-checkbox[type="checkbox"] {
+    display: inline;
+}
+
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section .activity .editing_move,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section .activity .commands {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section .page_split_join_wrapper {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section .activity .actions .editing_delete,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section .activity .actions .editing_maxmark {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple#page-mod-quiz-edit .maxgrade,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .last-add-menu {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section-heading,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section-heading form,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section-heading .instancesectioncontainer,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section-heading .instanceshufflequestions,
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .section-heading .instancesectioncontainer h3 {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple .mod-quiz-edit-content .rpcontainerclass {
+    display: none;
+}
+
+#page-mod-quiz-edit.select-multiple#page-mod-quiz-edit ul.slots li.section li.activity .mod-indent-outer {
+    padding-left: 3px;
+}
+
+.section .summary .iconsmall,
+.section .activity .iconsmall {
+    float: left;
 }
 
 /* Base theme needs extra support. */
