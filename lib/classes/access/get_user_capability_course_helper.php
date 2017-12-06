@@ -71,10 +71,10 @@ class get_user_capability_course_helper {
                         continue;
                     }
 
-                    // Check path is /1 or matches a path the user has.
-                    if ($rolepath === '/' . $systemcontext->id) {
-                        // Note /1 is listed first in the array so this entry will be overridden
-                        // if there is an override for the role on this actual level.
+                    // Check a role definition or override above userpath.
+                    if (preg_match('~^' . $rolepath . '($|/)~', $userpath)) {
+                        // Note that $rdefs is sorted by path, so if a more specific override
+                        // exists, it will be processed later and override this one.
                         $effectivepath = $userpath;
                     } else if (preg_match('~^' . $userpath . '($|/)~', $rolepath)) {
                         $effectivepath = $rolepath;
