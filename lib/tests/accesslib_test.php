@@ -1712,11 +1712,11 @@ class core_accesslib_testcase extends advanced_testcase {
         // All tests work with the single capability 'moodle/course:view'.
         //
         //             ROLE DEF/OVERRIDE                        ROLE ASSIGNS
-        //    Role:  Allow    Prohib    Empty   Def user      u1  u2  u3  u4   u5  u6  u7
+        //    Role:  Allow    Prohib    Empty   Def user      u1  u2  u3  u4   u5  u6  u7  u8
         // System    ALLOW    PROHIBIT                            A   E   A+E
         //   cat1                       ALLOW
         //     C1                               (ALLOW)                            P
-        //     C2                                                                      E
+        //     C2             ALLOW                                                    E   P
         //     cat2                     PREVENT
         //       C3                     ALLOW                                      E
         //       C4
@@ -1761,6 +1761,8 @@ class core_accesslib_testcase extends advanced_testcase {
                 context_course::instance($c6->id)->id);
         assign_capability($cap, CAP_ALLOW, $emptyroleid,
                 context_course::instance($c3->id)->id);
+        assign_capability($cap, CAP_ALLOW, $prohibitroleid,
+                context_course::instance($c2->id)->id);
 
         // User 1 has no roles except default user role.
         $u1 = $generator->create_user();
@@ -1827,6 +1829,14 @@ class core_accesslib_testcase extends advanced_testcase {
         // Should get C1 by the default user role override, and C2 by the cat1 level override.
         $courses = get_user_capability_course($cap, $u7->id, true, '', 'id');
         $this->assert_course_ids([$c1->id, $c2->id], $courses);
+
+        // User 8 has prohibit role as system context, to verify that prohibits can't be overridden.
+        $u8 = $generator->create_user();
+        role_assign($prohibitroleid, $u8->id, context_course::instance($c2->id)->id);
+
+        // Should get C1 by the default user role override, no other courses because the prohibit cannot be overridden.
+        $courses = get_user_capability_course($cap, $u8->id, true, '', 'id');
+        $this->assert_course_ids([$c1->id], $courses);
 
         // Admin user gets everything....
         $courses = get_user_capability_course($cap, get_admin()->id, true, '', 'id');
