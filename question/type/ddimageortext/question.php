@@ -64,7 +64,8 @@ class qtype_ddimageortext_drag_item {
     /**
      * Drag item object setup.
      *
-     * @param string $alttextlabel The alt text of the drag item
+     * @param string $alttextlabel The alt text of the drag item. This string may contain multilang tags, so it needs to be passed
+     * through format_string on output.
      * @param int $no Which number drag item this is
      * @param int $group Group of the drag item
      * @param bool $infinite True if the item can be used an unlimited number of times
@@ -122,7 +123,8 @@ class qtype_ddimageortext_drop_zone {
     /**
      * Create a drop zone object.
      *
-     * @param string $alttextlabel The alt text of the drop zone
+     * @param string $alttextlabel The alt text of the drop zone. This string may contain multilang tags, so it needs to be passed
+     * through format_string on output.
      * @param int $no Which number drop zone this is
      * @param int $group Group of the drop zone
      * @param int $x X location
