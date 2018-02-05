@@ -92,13 +92,14 @@ class quiz_overview_table extends quiz_attempts_report_table {
         }
     }
 
-
     /**
-     * Add an average grade over the attempts of a set of users.
+     * Calculate the average overall and question scores for a set of attempts at the quiz.
+     *
      * @param string $label the title ot use for this row.
-     * @param \core\dml\sql_join $usersjoins (joins, wheres, params) for the users to average over.
+     * @param \core\dml\sql_join $usersjoins to indicate a set of users.
+     * @return array of table cells that make up the average row.
      */
-    protected function add_average_row($label, \core\dml\sql_join $usersjoins) {
+    public function compute_average_row($label, \core\dml\sql_join $usersjoins) {
         global $DB;
 
         list($fields, $from, $where, $params) = $this->base_sql($usersjoins);
@@ -114,10 +115,10 @@ class quiz_overview_table extends quiz_attempts_report_table {
             $namekey = 'fullname';
         }
         $averagerow = array(
-            $namekey    => $label,
-            'sumgrades' => $this->format_average($record),
-            'feedbacktext'=> strip_tags(quiz_report_feedback_for_grade(
-                                        $record->grade, $this->quiz->id, $this->context))
+            $namekey       => $label,
+            'sumgrades'    => $this->format_average($record),
+            'feedbacktext' => strip_tags(quiz_report_feedback_for_grade(
+                                         $record->grade, $this->quiz->id, $this->context))
         );
 
         if ($this->options->slotmarks) {
@@ -128,6 +129,17 @@ class quiz_overview_table extends quiz_attempts_report_table {
             $averagerow += $this->format_average_grade_for_questions($avggradebyq);
         }
 
+        return $averagerow;
+    }
+
+    /**
+     * Add an average grade row for a set of users.
+     *
+     * @param string $label the title ot use for this row.
+     * @param \core\dml\sql_join $usersjoins (joins, wheres, params) for the users to average over.
+     */
+    protected function add_average_row($label, \core\dml\sql_join $usersjoins) {
+        $averagerow = $this->compute_average_row($label, $usersjoins);
         $this->add_data_keyed($averagerow);
     }
 
@@ -163,7 +175,8 @@ class quiz_overview_table extends quiz_attempts_report_table {
 
     /**
      * Format an entry in an average row.
-     * @param object $record with fields grade and numaveraged
+     * @param object $record with fields grade and numaveraged.
+     * @return string HTML fragment for an average score (with number of things included in the average).
      */
     protected function format_average($record, $question = false) {
         if (is_null($record->grade)) {
