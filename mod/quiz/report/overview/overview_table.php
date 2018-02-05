@@ -104,9 +104,13 @@ class quiz_overview_table extends quiz_attempts_report_table {
 
         list($fields, $from, $where, $params) = $this->base_sql($usersjoins);
         $record = $DB->get_record_sql("
-                SELECT AVG(quiza.sumgrades) AS grade, COUNT(quiza.sumgrades) AS numaveraged
-                  FROM $from
-                 WHERE $where", $params);
+                SELECT AVG(quizaouter.sumgrades) AS grade, COUNT(quizaouter.sumgrades) AS numaveraged
+                  FROM {quiz_attempts} quizaouter
+                 WHERE quizaouter.id IN (
+                        SELECT DISTINCT quiza.id
+                          FROM $from
+                         WHERE $where
+                       )", $params);
         $record->grade = quiz_rescale_grade($record->grade, $this->quiz, false);
 
         if ($this->is_downloading()) {
@@ -123,7 +127,12 @@ class quiz_overview_table extends quiz_attempts_report_table {
 
         if ($this->options->slotmarks) {
             $dm = new question_engine_data_mapper();
-            $qubaids = new qubaid_join($from, 'quiza.uniqueid', $where, $params);
+            $qubaids = new qubaid_join('{quiz_attempts} quizaouter', 'quizaouter.uniqueid', "
+                    quizaouter.id IN (
+                          SELECT DISTINCT quiza.id
+                            FROM $from
+                           WHERE $where
+                    )", $params);
             $avggradebyq = $dm->load_average_marks($qubaids, array_keys($this->questions));
 
             $averagerow += $this->format_average_grade_for_questions($avggradebyq);
@@ -176,6 +185,7 @@ class quiz_overview_table extends quiz_attempts_report_table {
     /**
      * Format an entry in an average row.
      * @param object $record with fields grade and numaveraged.
+     * @param bool $question true if this is a question score, false if it is an overall score.
      * @return string HTML fragment for an average score (with number of things included in the average).
      */
     protected function format_average($record, $question = false) {
