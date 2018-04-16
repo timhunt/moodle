@@ -1334,6 +1334,16 @@ class question_attempt {
                         $step->get_timecreated(), $step->get_user_id(), $step->get_id());
                 $this->finish($step->get_timecreated(), $step->get_user_id());
 
+            } else if ($step->has_behaviour_var('comment') && !$this->get_state()->is_finished()) {
+                // In the original attempt, was manually graded now, but in the new attempt,
+                // presumably due to changes in the question, we are not yet finished.
+                // To avoid errors, we need to finish the attempt first.
+                $this->finish($step->get_timecreated(), $step->get_user_id());
+
+                // Then we can re-process the manual grading.
+                $this->process_action($step->get_submitted_data(),
+                        $step->get_timecreated(), $step->get_user_id(), $step->get_id());
+
             } else {
                 // This is the normal case. Replay the next step of the attempt.
                 $this->process_action($step->get_submitted_data(),
