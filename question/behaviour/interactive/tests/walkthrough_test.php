@@ -416,7 +416,7 @@ class qbehaviour_interactive_walkthrough_test extends qbehaviour_walkthrough_tes
     }
 
     public function test_interactive_regrade_changing_num_tries_leaving_open() {
-        // Create a multichoice multiple question.
+        // Create a short-answer question.
         $q = test_question_maker::make_question('shortanswer');
         $q->hints = array(
             new question_hint_with_parts(0, 'This is the first hint.', FORMAT_HTML, true, true),
@@ -446,6 +446,54 @@ class qbehaviour_interactive_walkthrough_test extends qbehaviour_walkthrough_tes
         // Verify.
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
+    }
+
+    public function test_interactive_regrade_after_quiz_close_with_manual_mark_question_changes_so_does_not_finish_itself() {
+        // Create a short-answer question.
+        $q = test_question_maker::make_question('shortanswer');
+        $q->hints = array(
+                new question_hint_with_parts(0, 'This is the first hint.', FORMAT_HTML, true, true),
+                new question_hint_with_parts(0, 'This is the second hint.', FORMAT_HTML, true, true),
+        );
+        $this->start_attempt_at_question($q, 'interactive', 3);
+
+        // Check the initial state.
+        $this->check_current_state(question_state::$todo);
+        $this->check_current_mark(null);
+        $this->check_current_output(
+                $this->get_tries_remaining_expectation(3));
+
+        // Submit the right answer.
+        $this->process_submission(array('answer' => 'frog', '-submit' => 1));
+
+        // Verify.
+        $this->check_current_state(question_state::$gradedright);
+        $this->check_current_mark(3);
+
+        // Equivalent of quiz 'Submit all and finish.
+        $this->finish();
+
+        // Verify.
+        $this->check_current_state(question_state::$gradedright);
+        $this->check_current_mark(3);
+
+        // Manual grading.
+        $this->manual_grade('I hate you!', 0, FORMAT_HTML);
+
+        // Verify.
+        $this->check_current_state(question_state::$mangrwrong);
+        $this->check_current_mark(0);
+
+        // Now change the question so that answer is only partially right, and regrade.
+        $q->answers[13]->fraction = 0.6666667;
+        $q->answers[14]->fraction = 1;
+
+        // Regrade, with true argument, since we are supposing the quiz attempt is finished.
+        $this->quba->regrade_all_questions(true);
+
+        // Verify.
+        $this->check_current_state(question_state::$mangrwrong);
+        $this->check_current_mark(0);
     }
 
     public function test_interactive_regrade_changing_num_tries_finished() {

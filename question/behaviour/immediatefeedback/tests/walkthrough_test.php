@@ -243,4 +243,50 @@ class qbehaviour_immediatefeedback_walkthrough_test extends qbehaviour_walkthrou
         $this->assertRegExp('/B|C/',
                 $this->quba->get_response_summary($this->slot));
     }
+
+    public function test_immediatefeedback_regrade_after_quiz_close_with_manual_mark_question_changes_so_does_not_finish_itself() {
+        // Create a matching question.
+        $q = test_question_maker::make_a_matching_question();
+        $q->shufflestems = false;
+        $this->start_attempt_at_question($q, 'immediatefeedback', 4);
+
+        $choiceorder = $q->get_choice_order();
+        $orderforchoice = array_combine(array_values($choiceorder), array_keys($choiceorder));
+        $choices = array(0 => get_string('choose') . '...');
+        foreach ($choiceorder as $key => $choice) {
+            $choices[$key] = $q->choices[$choice];
+        }
+
+        // Check the initial state.
+        $this->check_current_state(question_state::$todo);
+        $this->check_current_mark(null);
+
+        // Submit a partial response.
+        $this->process_submission(array('sub0' => $orderforchoice[1],
+                'sub1' => $orderforchoice[2], 'sub2' => '0', 'sub3' => '0', '-submit' => 1));
+
+        // Verify.
+        $this->check_current_state(question_state::$invalid);
+
+        // Equivalent of quiz 'Submit all and finish.
+        $this->finish();
+
+        // Verify.
+        $this->check_current_state(question_state::$gradedpartial);
+        $this->check_current_mark(2);
+
+        // Manual grading.
+        $this->manual_grade('I hate you!', 0, FORMAT_HTML);
+
+        // Verify.
+        $this->check_current_state(question_state::$mangrwrong);
+        $this->check_current_mark(0);
+
+        // Regrade, with true argument, since we are supposing the quiz attempt is finished.
+        $this->quba->regrade_all_questions(true);
+
+        // Verify.
+        $this->check_current_state(question_state::$mangrwrong);
+        $this->check_current_mark(0);
+    }
 }
