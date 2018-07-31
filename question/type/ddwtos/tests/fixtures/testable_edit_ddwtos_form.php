@@ -1,0 +1,74 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Unit tests for the drag-and-drop words into sentences question definition class.
+ *
+ * @package qtype_ddwtos
+ * @copyright 2018 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+global $CFG;
+
+require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
+require_once($CFG->dirroot . '/question/type/edit_question_form.php');
+require_once($CFG->dirroot . '/question/type/ddwtos/edit_ddwtos_form.php');
+
+/**
+ * Subclass of edit_ddwtos_form that is easier to used in unit tests.
+ *
+ * @package qtype_ddwtos
+ * @copyright 2018 The Open University
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class edit_ddwtos_form_testable extends qtype_ddwtos_edit_form {
+
+    /**
+     * Class constructor.
+     */
+    public function __construct() {
+        $syscontext = context_system::instance();
+        $category = question_make_default_categories(array($syscontext));
+        $fakequestion = new stdClass();
+        $fakequestion->qtype = 'stack';
+        $fakequestion->contextid = $syscontext->id;
+        $fakequestion->createdby = 2;
+        $fakequestion->category = $category->id;
+        $fakequestion->questiontext = 'Test [[1]] question [[2]]';
+        $fakequestion->options = new stdClass();
+        $fakequestion->options->answers = array();
+        $fakequestion->formoptions = new stdClass();
+        $fakequestion->formoptions->movecontext = null;
+        $fakequestion->formoptions->repeatelements = true;
+        $fakequestion->inputs = null;
+        parent::__construct(new moodle_url('/'), $fakequestion, $category,
+                new question_edit_contexts($syscontext));
+    }
+
+    /**
+     * Creates an array with elements for a choice group.
+     *
+     * @param object $mform The Moodle form we are working with
+     * @param int $maxgroup The number of max group generate element select.
+     * @return array Array for form elements
+     * @throws coding_exception
+     */
+    public function choice_group($mform, $maxgroup = self::MAX_GROUPS) {
+        return parent::choice_group($mform, $maxgroup);
+    }
+}

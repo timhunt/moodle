@@ -35,6 +35,11 @@ require_once($CFG->dirroot . '/question/type/gapselect/edit_form_base.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_ddwtos_edit_form extends qtype_gapselect_edit_form_base {
+    /**
+     * Maximum number of different groups of drag items there can be in a question.
+     */
+    const MAX_GROUPS = 8;
+
     public function qtype() {
         return 'ddwtos';
     }
@@ -47,8 +52,15 @@ class qtype_ddwtos_edit_form extends qtype_gapselect_edit_form_base {
         return $question;
     }
 
-    protected function choice_group($mform) {
-        $grouparray = parent::choice_group($mform);
+    /**
+     * Creates an array with elements for a choice group.
+     *
+     * @param object $mform The Moodle form we are working with
+     * @param int $maxgroup The number of max group generate element select.
+     * @return array Array for form elements
+     */
+    protected function choice_group($mform, $maxgroup = self::MAX_GROUPS) {
+        $grouparray = parent::choice_group($mform, $maxgroup);
         $grouparray[] = $mform->createElement('checkbox', 'infinite', ' ',
                 get_string('infinite', 'qtype_ddwtos'), null,
                 array('size' => 1, 'class' => 'tweakcss'));

@@ -35,7 +35,7 @@ class qtype_gapselect_edit_form_base extends question_edit_form {
     /**
      * Maximum number of different groups of drag items there can be in a question.
      */
-    const MAX_GROUPS = 8;
+    const MAX_GROUPS = 20;
 
     /** @var array of HTML tags allowed in choices / drag boxes. */
     protected $allowedhtmltags = array(
@@ -170,11 +170,12 @@ class qtype_gapselect_edit_form_base extends question_edit_form {
      * Creates an array with elements for a choice group.
      *
      * @param object $mform The Moodle form we are working with
+     * @param int $maxgroup The number of max group generate element select.
      * @return array Array for form elements
      */
-    protected function choice_group($mform) {
+    protected function choice_group($mform, $maxgroup = self::MAX_GROUPS) {
         $options = array();
-        for ($i = 1; $i <= self::MAX_GROUPS; $i += 1) {
+        for ($i = 1; $i <= $maxgroup; $i += 1) {
             $options[$i] = $i;
         }
         $grouparray = array();

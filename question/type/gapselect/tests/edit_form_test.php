@@ -68,6 +68,17 @@ class qtype_gapselect_edit_form_base_testable extends qtype_gapselect_edit_form_
     public function set_allowed_tags(array $allowed) {
         $this->allowedhtmltags = $allowed;
     }
+
+    /**
+     * Creates an array with elements for a choice group.
+     *
+     * @param object $mform The Moodle form we are working with
+     * @param int $maxgroup The number of max group generate element select.
+     * @return array Array for form elements
+     */
+    public function choice_group($mform, $maxgroup = self::MAX_GROUPS) {
+        return parent::choice_group($mform, $maxgroup);
+    }
 }
 
 
@@ -126,5 +137,43 @@ class qtype_gapselect_edit_form_test extends advanced_testcase {
         $a->tag = '&lt;i&gt;';
         $this->assertEquals(get_string('tagsnotallowedatall', 'qtype_gapselect', $a),
                 $form->get_illegal_tag_error('<i><br /></i>'));
+    }
+
+    /**
+     * Test generate array with elements for a choice group without optional param.
+     *
+     * @return void Array for form elements
+     */
+    public function test_choice_group_without_optional_param() {
+        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
+        $form = $this->get_form();
+        $arrayformelements = $form->choice_group($mform);
+        $quickformselect = new MoodleQuickForm_select();
+        foreach ($arrayformelements as $arrayformelement) {
+            if ($arrayformelement instanceof MoodleQuickForm_select) {
+                $quickformselect = $arrayformelement;
+                break;
+            }
+        }
+        $this->assertEquals(20, count($quickformselect->_options));
+    }
+
+    /**
+     * Test generate array with elements for a choice group with optional param.
+     *
+     * @return void Array for form elements
+     */
+    public function test_choice_group_with_optional_param() {
+        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
+        $form = $this->get_form();
+        $arrayformelements = $form->choice_group($mform, 10);
+        $quickformselect = new MoodleQuickForm_select();
+        foreach ($arrayformelements as $arrayformelement) {
+            if ($arrayformelement instanceof MoodleQuickForm_select) {
+                $quickformselect = $arrayformelement;
+                break;
+            }
+        }
+        $this->assertEquals(10, count($quickformselect->_options));
     }
 }
