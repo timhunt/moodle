@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for the select missing words question definition class.
+ * Unit tests for the select missing words question edit form.
  *
  * @package   qtype_gapselect
  * @copyright 2012 The Open University
@@ -28,7 +28,7 @@ global $CFG;
 
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 require_once($CFG->dirroot . '/question/type/edit_question_form.php');
-require_once($CFG->dirroot . '/question/type/gapselect/edit_form_base.php');
+require_once($CFG->dirroot . '/question/type/gapselect/edit_gapselect_form.php');
 
 
 /**
@@ -38,7 +38,39 @@ require_once($CFG->dirroot . '/question/type/gapselect/edit_form_base.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_gapselect_edit_form_base_testable extends qtype_gapselect_edit_form_base {
-    public function __construct() {
+    public function get_illegal_tag_error($text) {
+        return parent::get_illegal_tag_error($text);
+    }
+
+    /**
+     * Set the list of allowed tags.
+     * @param array $allowed
+     */
+    public function set_allowed_tags(array $allowed) {
+        $this->allowedhtmltags = $allowed;
+    }
+}
+
+
+/**
+ * Unit tests for select missing words question edit form.
+ *
+ * @copyright  2012 The Open University
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class qtype_gapselect_edit_form_test extends advanced_testcase {
+
+    /**
+     * Helper method.
+     *
+     * @param string $classname the question form class to instantiate.
+     *
+     * @return question_edit_form great a question form instance that can be tested.
+     */
+    protected function get_form($classname) {
+        $this->setAdminUser();
+        $this->resetAfterTest();
+
         $syscontext = context_system::instance();
         $category = question_make_default_categories(array($syscontext));
         $fakequestion = new stdClass();
@@ -53,56 +85,12 @@ class qtype_gapselect_edit_form_base_testable extends qtype_gapselect_edit_form_
         $fakequestion->formoptions->movecontext = null;
         $fakequestion->formoptions->repeatelements = true;
         $fakequestion->inputs = null;
-        parent::__construct(new moodle_url('/'), $fakequestion, $category,
+        return new $classname(new moodle_url('/'), $fakequestion, $category,
                 new question_edit_contexts($syscontext));
     }
 
-    public function get_illegal_tag_error($text) {
-        return parent::get_illegal_tag_error($text);
-    }
-
-    /**
-     * Set the list of allowed tags.
-     * @param array $allowed
-     */
-    public function set_allowed_tags(array $allowed) {
-        $this->allowedhtmltags = $allowed;
-    }
-
-    /**
-     * Creates an array with elements for a choice group.
-     *
-     * @param object $mform The Moodle form we are working with
-     * @param int $maxgroup The number of max group generate element select.
-     * @return array Array for form elements
-     */
-    public function choice_group($mform, $maxgroup = self::MAX_GROUPS) {
-        return parent::choice_group($mform, $maxgroup);
-    }
-}
-
-
-/**
- * Unit tests for Stack question editing form.
- *
- * @copyright  2012 The Open University
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class qtype_gapselect_edit_form_test extends advanced_testcase {
-
-    /**
-     * Helper method.
-     * @return qtype_gapselect_edit_form_base_testable a new form instance that can be tested.
-     */
-    protected function get_form() {
-        $this->setAdminUser();
-        $this->resetAfterTest();
-
-        return new qtype_gapselect_edit_form_base_testable();
-    }
-
     public function test_get_illegal_tag_error() {
-        $form = $this->get_form();
+        $form = $this->get_form('qtype_gapselect_edit_form_base_testable');
 
         $this->assertEquals('', $form->get_illegal_tag_error('frog'));
         $this->assertEquals('', $form->get_illegal_tag_error('<i>toad</i>'));
@@ -140,40 +128,16 @@ class qtype_gapselect_edit_form_test extends advanced_testcase {
     }
 
     /**
-     * Test generate array with elements for a choice group without optional param.
-     *
-     * @return void Array for form elements
+     * Test the form shows the right number of groups of choices.
      */
-    public function test_choice_group_without_optional_param() {
-        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
-        $form = $this->get_form();
-        $arrayformelements = $form->choice_group($mform);
-        $quickformselect = new MoodleQuickForm_select();
-        foreach ($arrayformelements as $arrayformelement) {
-            if ($arrayformelement instanceof MoodleQuickForm_select) {
-                $quickformselect = $arrayformelement;
-                break;
-            }
-        }
-        $this->assertEquals(20, count($quickformselect->_options));
-    }
-
-    /**
-     * Test generate array with elements for a choice group with optional param.
-     *
-     * @return void Array for form elements
-     */
-    public function test_choice_group_with_optional_param() {
-        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
-        $form = $this->get_form();
-        $arrayformelements = $form->choice_group($mform, 10);
-        $quickformselect = new MoodleQuickForm_select();
-        foreach ($arrayformelements as $arrayformelement) {
-            if ($arrayformelement instanceof MoodleQuickForm_select) {
-                $quickformselect = $arrayformelement;
-                break;
-            }
-        }
-        $this->assertEquals(10, count($quickformselect->_options));
+    public function test_number_of_choice_groups() {
+        $form = $this->get_form('qtype_gapselect_edit_form');
+        // Use reflection to get the protected property we need.
+        $property = new ReflectionProperty('qtype_gapselect_edit_form', '_form');
+        $property->setAccessible(true);
+        $mform = $property->getValue($form);
+        $choices = $mform->getElement('choices[0]');
+        $groupoptions = $choices->_elements[1];
+        $this->assertCount(20, $groupoptions->_options);
     }
 }

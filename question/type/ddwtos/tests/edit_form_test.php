@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Unit tests for the drag-and-drop words into sentences question definition class.
+ * Unit tests for the drag-and-drop words into sentences edit form.
  *
  * @package   qtype_ddwtos
  * @copyright 2018 The Open University
@@ -25,13 +25,12 @@
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
-require_once($CFG->dirroot . '/question/type/ddwtos/tests/fixtures/testable_edit_ddwtos_form.php');
 require_once($CFG->dirroot . '/question/engine/tests/helpers.php');
 require_once($CFG->dirroot . '/question/type/edit_question_form.php');
 require_once($CFG->dirroot . '/question/type/ddwtos/edit_ddwtos_form.php');
 
 /**
- * Unit tests for Stack question editing form.
+ * Unit tests for the drag-and-drop words into sentences edit form.
  *
  * @copyright  2012 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -39,50 +38,44 @@ require_once($CFG->dirroot . '/question/type/ddwtos/edit_ddwtos_form.php');
 class qtype_ddwtos_edit_form_test extends advanced_testcase {
     /**
      * Helper method.
-     * @return edit_ddwtos_form_testable a new form instance that can be tested.
+     *
+     * @param string $classname the question form class to instantiate.
+     *
+     * @return question_edit_form great a question form instance that can be tested.
      */
-    protected function get_form() {
+    protected function get_form($classname) {
         $this->setAdminUser();
         $this->resetAfterTest();
 
-        return new edit_ddwtos_form_testable();
+        $syscontext = context_system::instance();
+        $category = question_make_default_categories(array($syscontext));
+        $fakequestion = new stdClass();
+        $fakequestion->qtype = 'stack';
+        $fakequestion->contextid = $syscontext->id;
+        $fakequestion->createdby = 2;
+        $fakequestion->category = $category->id;
+        $fakequestion->questiontext = 'Test [[1]] question [[2]]';
+        $fakequestion->options = new stdClass();
+        $fakequestion->options->answers = array();
+        $fakequestion->formoptions = new stdClass();
+        $fakequestion->formoptions->movecontext = null;
+        $fakequestion->formoptions->repeatelements = true;
+        $fakequestion->inputs = null;
+        return new $classname(new moodle_url('/'), $fakequestion, $category,
+                new question_edit_contexts($syscontext));
     }
 
     /**
-     * Test generate array with elements for a choice group.
-     *
-     * @return void Array for form elements
+     * Test the form shows the right number of groups of choices.
      */
-    public function test_choice_group_with_optional_param() {
-        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
-        $form = $this->get_form();
-        $arrayformelements = $form->choice_group($mform, 10);
-        $quickformselect = new MoodleQuickForm_select();
-        foreach ($arrayformelements as $arrayformelement) {
-            if ($arrayformelement instanceof MoodleQuickForm_select) {
-                $quickformselect = $arrayformelement;
-                break;
-            }
-        }
-        $this->assertEquals(10, count($quickformselect->_options));
-    }
-
-    /**
-     * Test generate array with elements for a choice group.
-     *
-     * @return void Array for form elements
-     */
-    public function test_choice_group_without_optional_param() {
-        $mform = new MoodleQuickForm('fakeform', 'POST', new moodle_url('/'));
-        $form = $this->get_form();
-        $arrayformelements = $form->choice_group($mform);
-        $quickformselect = new MoodleQuickForm_select();
-        foreach ($arrayformelements as $arrayformelement) {
-            if ($arrayformelement instanceof MoodleQuickForm_select) {
-                $quickformselect = $arrayformelement;
-                break;
-            }
-        }
-        $this->assertEquals(8, count($quickformselect->_options));
+    public function test_number_of_choice_groups() {
+        $form = $this->get_form('qtype_ddwtos_edit_form');
+        // Use reflection to get the protected property we need.
+        $property = new ReflectionProperty('qtype_ddwtos_edit_form', '_form');
+        $property->setAccessible(true);
+        $mform = $property->getValue($form);
+        $choices = $mform->getElement('choices[0]');
+        $groupoptions = $choices->_elements[1];
+        $this->assertCount(8, $groupoptions->_options);
     }
 }
