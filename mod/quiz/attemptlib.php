@@ -1101,7 +1101,7 @@ class quiz_attempt {
      * @return question_usage_by_activity the usage.
      */
     public function get_question_usage() {
-        if (!PHPUNIT_TEST) {
+        if (!PHPUNIT_TEST || !defined('BEHAT_TEST')) {
             throw new coding_exception('get_question_usage is only for use in unit tests. ' .
                     'For other operations, use the quiz_attempt api, or extend it properly.');
         }

@@ -561,4 +561,82 @@ class behat_mod_quiz extends behat_question_base {
                 "contains(., {$questionnumberliteral}) and contains(preceding-sibling::h3[1], {$headingliteral})]";
         $this->find('xpath', $xpath);
     }
+
+    /**
+     * Attempt a quiz.
+     *
+     * The first row should be column names:
+     * | slot | actualquestion | response |
+     * The first two of those are required. The others are optional.
+     *
+     * slot            The slot
+     * question        needs to uniquely match a question name.
+     * response        question reponse
+     *
+     * Then there should be a number of rows of data, one for each question you want to add.
+     * @param string $quizname the name of the quiz the user will attempt.
+     * @param string $username the name of the user that will attempt.
+     * @param TableNode $tosubmit information about the questions to add.
+     * @throws ExpectationException
+     * @Given /^I attempt "([^"]*)" quiz as "([^"]*)" user setting the following responses:$/
+     */
+    public function i_attempt_quiz_as_user_setting_the_following_responses($quizname, $username, TableNode $data) {
+        global $DB, $CFG;
+
+        require_once ($CFG->dirroot.'/lib/testing/generator/data_generator.php');
+        $generator = new testing_data_generator();
+        $timenow = time();
+        $quiz = $DB->get_record('quiz', array('name' => $quizname), 'id', MUST_EXIST);
+        $user = $DB->get_record('user', array('username' => $username), 'id', MUST_EXIST);
+
+        // Build quiz object and load questions.
+        $quizobj = quiz::create($quiz->id, $user->id);
+        $quizobj->preload_questions();
+        $quizobj->load_questions();
+
+        // Build question usage by activity object.
+        $quba = question_engine::make_questions_usage_by_activity('mod_quiz', $quizobj->get_context());
+        $quba->set_preferred_behaviour('deferredfeedback');
+
+        // Validate permissions and others.
+        $accessmanager = $quizobj->get_access_manager($timenow);
+        list($currentattemptid, $attemptnumber, $lastattempt, $messages, $page) =
+            quiz_validate_new_attempt($quizobj, $accessmanager, true, -1, false);
+
+        // Start a new attempt.
+        $attemptobj = quiz_create_attempt($quizobj, $attemptnumber, $lastattempt, $timenow, $quizobj->is_preview_user(), $user->id);
+        $attempt = quiz_start_new_attempt($quizobj, $quba, $attemptobj, $attemptnumber, $timenow);
+
+        // Get behat responses
+        $responses = $data->getHash();
+        $questionnamecolumn = array_column($responses, 'question');
+        $questions = $quizobj->get_questions();
+
+        $tosubmit = [];
+        foreach ($questions as $question) {
+            $qtype = $question->qtype;
+            $questionname = (string) $question->name;
+            question_bank::load_question_definition_classes($qtype);
+            $questiondef = question_bank::load_question($question->id);
+            $quba->add_question($questiondef);
+            $quba->set_id_from_database($question->id);
+            $qa = $quba->get_question_attempt($question->slot);
+            $qubaiterator = $quba->get_attempt_iterator();
+
+            // Get the question type data generator.
+            $qtypegenerator = $generator->get_plugin_generator('qtype_' . $qtype);
+
+            // Match question name provided by behat with the quiz question name.
+            $key = array_search($questionname, $questionnamecolumn);
+            if ($key !== false) {
+                $tosubmit += $qtypegenerator->get_simulated_post_data($qa, $responses[$key]['response']);;
+            }
+
+            $qubaiterator->next();
+        }
+
+        $qa->process_action($tosubmit, $timenow, $user->id);
+//        $qa->process_attempt
+        $qa->finish();
+    }
 }
