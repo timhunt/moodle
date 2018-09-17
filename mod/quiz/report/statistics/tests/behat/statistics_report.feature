@@ -1,4 +1,4 @@
-@mod @mod_quiz
+@mod @mod_quiz @quiz @quiz_statistics
 Feature: Statistics Report
   In order to evaluate students attempts
   As a teacher
@@ -32,11 +32,11 @@ Feature: Statistics Report
       | Question A | 1    |
       | Question B | 1    |
       | Question C | 2    |
-    And I attempt "Quiz 1" quiz as "student1" user setting the following responses:
-      | slot | question    | response |
-      |   1  | Question A | true     |
-      |   2  | Question B | false    |
-      |   3  | Question C | false    |
+    And I attempt quiz "Quiz 1" as "student1" with the following responses:
+      | slot | response |
+      |   1  | True     |
+      |   2  | False    |
+      |   3  | False    |
 
   @javascript
   Scenario: view stats
@@ -45,5 +45,5 @@ Feature: Statistics Report
     And I follow "Quiz 1"
     And I navigate to "Results > Statistics" in current page administration
     And "1" row "Attempts" column of "questionstatistics" table should contain "1"
-    And "1" row "Random guess score" column of "questionstatistics" table should contain "50.00%"
-    And "1" row "Intended weight" column of "questionstatistics" table should contain "100.00%"
+    And "1" row "Random guess score" column of "questionstatistics" table should contain "50.00 %"
+    And "1" row "Intended weight" column of "questionstatistics" table should contain "33.33%"
