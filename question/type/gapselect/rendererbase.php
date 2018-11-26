@@ -126,8 +126,7 @@ abstract class qtype_elements_embedded_in_question_text_renderer
             if ($i > 0) {
                 $group = $question->places[$i];
                 $choice = $question->choices[$group][$question->rightchoices[$i]];
-                $correctanswer .= '[' . str_replace('-', '&#x2011;',
-                        $choice->text) . ']';
+                $correctanswer .= '[' . str_replace('-', '&#x2011;', $choice->text) . ']';
             }
             $correctanswer .= $fragment;
         }

@@ -57,14 +57,12 @@ class qtype_ddtoimage_question_base extends qtype_gapselect_question_base {
     public function summarise_response(array $response) {
         $allblank = true;
         foreach ($this->places as $placeno => $place) {
-            $summariseplace = format_string($place->summarise(), true, array('context' => $this->contextid,
-                    'escape' => false));
+            $summariseplace = format_string($place->summarise(), true, ['escape' => false]);
             if (array_key_exists($this->field($placeno), $response) &&
                                                                 $response[$this->field($placeno)]) {
                 $selected = $this->get_selected_choice($place->group,
                                                                 $response[$this->field($placeno)]);
-                $summarisechoice = format_string($selected->summarise(), true, array('context' => $this->contextid,
-                        'escape' => false));
+                $summarisechoice = format_string($selected->summarise(), true, ['escape' => false]);
                 $allblank = false;
             } else {
                 $summarisechoice = '';

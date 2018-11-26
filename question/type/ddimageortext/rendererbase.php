@@ -57,7 +57,7 @@ class qtype_ddtoimage_renderer_base extends qtype_with_combined_feedback_rendere
         $question = $qa->get_question();
         $response = $qa->get_last_qt_data();
 
-        $questiontext = format_string($question->format_questiontext($qa), true, array('context' => $question->contextid));
+        $questiontext = $question->format_questiontext($qa);
 
         $output = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
 
@@ -82,13 +82,12 @@ class qtype_ddtoimage_renderer_base extends qtype_with_combined_feedback_rendere
                 if ($dragimage->infinite) {
                     $classes[] = 'infinite';
                 }
+                $draglabel = format_string($dragimage->text, true, ['context' => $options->context]);
                 if ($dragimageurl === null) {
-                    $dragimagehomesgroup .= html_writer::tag('div', format_string($dragimage->text, true,
-                        array('context' => $question->contextid)), array('src' => $dragimageurl, 'class' => join(' ', $classes)));
+                    $dragimagehomesgroup .= html_writer::tag('div', $draglabel, array('src' => $dragimageurl, 'class' => join(' ', $classes)));
                 } else {
                     $dragimagehomesgroup .= html_writer::empty_tag('img',
-                        array('src' => $dragimageurl, 'alt' => format_string($dragimage->text, true,
-                        array('context' => $question->contextid)), 'class' => join(' ', $classes)));
+                        array('src' => $dragimageurl, 'alt' => $draglabel, 'class' => join(' ', $classes)));
                 }
             }
             $dragimagehomes .= html_writer::tag('div', $dragimagehomesgroup,

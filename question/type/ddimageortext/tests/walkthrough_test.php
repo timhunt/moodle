@@ -872,8 +872,8 @@ class qtype_ddimageortext_walkthrough_test extends qbehaviour_walkthrough_test_b
         $this->check_current_state(question_state::$todo);
         $this->check_current_mark(null);
         $this->check_current_output(
-            new question_pattern_expectation('~<div class="group1 draghome dragitemhomes1 choice1 yui3-cssfonts">cat</div>~'),
-            new question_pattern_expectation('~<div class="group1 draghome dragitemhomes2 choice2 yui3-cssfonts">mat</div>~')
+            new question_pattern_expectation('~<div class="group1 draghome choice1">cat</div>~'),
+            new question_pattern_expectation('~<div class="group1 draghome choice2">mat</div>~')
         );
     }
 }

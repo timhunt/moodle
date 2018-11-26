@@ -37,7 +37,7 @@ require_once($CFG->dirroot . '/question/type/gapselect/questionbase.php');
 class qtype_ddwtos_question extends qtype_gapselect_question_base {
 
     public function summarise_choice($choice) {
-        return $this->html_to_text($choice->text, FORMAT_HTML);
+        return $this->html_to_text(format_string($choice->text), FORMAT_HTML);
     }
 }
 

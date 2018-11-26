@@ -72,7 +72,8 @@ class qtype_ddmarker_renderer extends qtype_ddtoimage_renderer_base {
                 $OUTPUT->image_icon('crosshairs', '', $componentname, array('class' => 'target'));
 
             $markertextattrs = array('class' => 'markertext');
-            $markertext = html_writer::tag('span', $drag->text, $markertextattrs);
+            $markertext = html_writer::tag('span',
+                    format_string($drag->text, false, ['context' => $options->context]), $markertextattrs);
             $draghomesattrs = array('class' => join(' ', $classes));
             $draghomes .= html_writer::tag('span', $targeticonhtml . $markertext, $draghomesattrs);
             $hiddenfields .= $this->hidden_field_choice($qa, $choiceno, $drag->infinite, $drag->noofdrags);
@@ -92,6 +93,10 @@ class qtype_ddmarker_renderer extends qtype_ddtoimage_renderer_base {
 
         if ($question->showmisplaced && $qa->get_state()->is_finished()) {
             $visibledropzones = $question->get_drop_zones_without_hit($response);
+            foreach($visibledropzones as $visibledropzone) {
+                $visibledropzone->markertext = format_string($visibledropzone->markertext,
+                        false, ['context' => $options->context]);
+            }
         } else {
             $visibledropzones = array();
         }
@@ -111,7 +116,8 @@ class qtype_ddmarker_renderer extends qtype_ddtoimage_renderer_base {
                 $wrongpartsstringspans = array();
                 foreach ($wrongparts as $wrongpart) {
                     $wrongpartsstringspans[] = html_writer::nonempty_tag('span',
-                                    $wrongpart->markertext, array('class' => 'wrongpart'));
+                            format_string($wrongpart->markertext, false, ['context' => $options->context]),
+                            ['class' => 'wrongpart']);
                 }
                 $wrongpartsstring = join(', ', $wrongpartsstringspans);
                 $output .= html_writer::nonempty_tag('span',
@@ -144,7 +150,7 @@ class qtype_ddmarker_renderer extends qtype_ddtoimage_renderer_base {
             $wrongparts = array();
             foreach ($wrongdrags as $wrongdrag) {
                 $wrongparts[] = html_writer::nonempty_tag('span',
-                                                $wrongdrag, array('class' => 'wrongpart'));
+                        format_string($wrongdrag), array('class' => 'wrongpart'));
             }
             $output .= html_writer::nonempty_tag('div',
                     get_string('followingarewrong', 'qtype_ddmarker', join(', ', $wrongparts)),
