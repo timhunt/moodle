@@ -154,4 +154,15 @@ class filter_multilang_filter_testcase extends advanced_testcase {
         $filtered = format_text($html, FORMAT_HTML, array('context' => context_system::instance()));
         $this->assertEquals('Française', $filtered);
     }
+
+    public function test_parent_language_of_english() {
+        global $SESSION;
+        $SESSION->forcelang = 'en_us';
+
+        // Example with both parent and child language present - reverse order.
+        $html = '<span lang="de" class="multilang">Deutsch</span>
+                <span lang="en" class="multilang">English</span>';
+        $filtered = format_text($html, FORMAT_HTML, array('context' => context_system::instance()));
+        $this->assertEquals('English', $filtered);
+    }
 }
