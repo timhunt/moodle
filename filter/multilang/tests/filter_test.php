@@ -165,4 +165,18 @@ class filter_multilang_filter_testcase extends advanced_testcase {
         $filtered = format_text($html, FORMAT_HTML, array('context' => context_system::instance()));
         $this->assertEquals('English', $filtered);
     }
+
+    public function test_bold_inside_multilang_span() {
+        $html = '<span lang="en" class="multilang">Eng<b>lish</b></span>
+                <span lang="fr" class="multilang">Fran<b>çaise</b></span>';
+        $filtered = format_text($html, FORMAT_HTML, array('context' => context_system::instance()));
+        $this->assertEquals('Eng<b>lish</b>', $filtered);
+    }
+
+    public function test_other_span_inside_multilang_span() {
+        $html = '<span lang="en" class="multilang">Text <span class="orange">in</span> English</span>
+                <span lang="fr" class="multilang">Texte <span class="green">en</span> Française</span>';
+        $filtered = format_text($html, FORMAT_HTML, array('context' => context_system::instance()));
+        $this->assertEquals('Text <span class="orange">in</span> English', $filtered);
+    }
 }
