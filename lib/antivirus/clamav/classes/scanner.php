@@ -211,13 +211,15 @@ class scanner extends \core\antivirus\scanner {
             // this is to avoid unexpected newline characters on different systems.
             $perms = fileperms($file);
             chmod($file, 0640);
+            $starttime = microtime(true);
             fwrite($socket, "nSCAN ".$file."\n");
             $output = stream_get_line($socket, 4096);
+            $processingtime = microtime(true) - $starttime;
             fclose($socket);
             // After scanning we revert permissions to initial ones.
             chmod($file, $perms);
             // Parse the output.
-            return $this->parse_unixsocket_response($output);
+            return $this->parse_unixsocket_response($output, $processingtime, $file, filesize($file));
         }
     }
 
@@ -245,6 +247,8 @@ class scanner extends \core\antivirus\scanner {
             // Initiate data stream scanning.
             // Using 'n' as command prefix is forcing clamav to only treat \n as newline delimeter,
             // this is to avoid unexpected newline characters on different systems.
+            $starttime = microtime(true);
+            $datasize = strlen($data);
             fwrite($socket, "nINSTREAM\n");
             // Send data in chunks of ANTIVIRUS_CLAMAV_SOCKET_CHUNKSIZE size.
             while (strlen($data) > 0) {
@@ -258,10 +262,11 @@ class scanner extends \core\antivirus\scanner {
             fwrite($socket, pack('N', 0));
 
             $output = stream_get_line($socket, 4096);
+            $processingtime = microtime(true) - $starttime;
             fclose($socket);
 
             // Parse the output.
-            return $this->parse_unixsocket_response($output);
+            return $this->parse_unixsocket_response($output, $processingtime, '[DATA]', $datasize);
         }
     }
 
@@ -271,7 +276,10 @@ class scanner extends \core\antivirus\scanner {
      * @param string $output The unix socket command response.
      * @return int Scanning result constant.
      */
-    private function parse_unixsocket_response($output) {
+    private function parse_unixsocket_response($output, $processingtime, $filename, $datasize) {
+        if ($output === false) {
+            $output = "[Call to stream_get_line failed.]";
+        }
         $splitoutput = explode(': ', $output);
         $message = trim($splitoutput[1]);
         if ($message === 'OK') {
@@ -283,6 +291,7 @@ class scanner extends \core\antivirus\scanner {
                 return self::SCAN_RESULT_FOUND;
             } else {
                 $notice = get_string('clamfailed', 'antivirus_clamav', $this->get_clam_error_code(2));
+                $notice .= "\n\nHost: " . gethostname() . ", file: $filename, size: $datasize, time taken: $processingtime.";
                 $notice .= "\n\n" . $output;
                 $this->set_scanning_notice($notice);
                 return self::SCAN_RESULT_ERROR;
