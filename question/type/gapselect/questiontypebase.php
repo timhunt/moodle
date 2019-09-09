@@ -123,6 +123,15 @@ abstract class qtype_gapselect_base extends question_type {
      */
     protected abstract function make_choice($choicedata);
 
+    /**
+     * Used by {@link qtype_ddtoimage_question_base::apply_attempt_state()}
+     * to fill in a misssing choice that was deleted.
+     * @param int $number The number of the choice that was deleted.
+     * @param int $group the group the deleted choices was in.
+     * @return object an appropriate object for representing the choice.
+     */
+    public abstract function make_deleted_choice_placeholder($number, $group);
+
     protected function initialise_question_instance(question_definition $question, $questiondata) {
         parent::initialise_question_instance($question, $questiondata);
 

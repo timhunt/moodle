@@ -69,6 +69,8 @@ class qtype_ddimageortext_test_helper extends question_test_helper {
                             new qtype_ddimageortext_drop_zone('', 3, 2),
                             new qtype_ddimageortext_drop_zone('', 4, 2)
         ));
+        // Yes, it really should be 3 => 1 here. See the comment in
+        // qtype_ddtoimage_base::initialise_question_instance().
         $dd->rightchoices = array(1 => 1, 2 => 2, 3 => 1, 4 => 4);
 
         return $dd;

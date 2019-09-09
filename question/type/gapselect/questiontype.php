@@ -46,6 +46,10 @@ class qtype_gapselect extends qtype_gapselect_base {
         return new qtype_gapselect_choice($choicedata->answer, $choicedata->feedback);
     }
 
+    public function make_deleted_choice_placeholder($number, $group) {
+        return new qtype_gapselect_choice(get_string('deletedchoice', 'qtype_ddimageortext'), $group);
+    }
+
     protected function feedback_to_choice_options($feedback) {
         return array('selectgroup' => $feedback);
     }

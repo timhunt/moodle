@@ -36,7 +36,7 @@ require_once($CFG->dirroot . '/question/type/gapselect/questiontypebase.php');
  * @copyright  2009 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qtype_ddtoimage_base extends question_type {
+abstract class qtype_ddtoimage_base extends question_type {
     /**
      * Returns the choice group key.
      *
@@ -101,6 +101,22 @@ class qtype_ddtoimage_base extends question_type {
             $question->rightchoices[$dropdata->no] = $choiceindex;
         }
     }
+
+    /**
+     * Used by {@link initialise_question_instance()} to set up the choice-specific data.
+     * @param object $choicedata as loaded from the question_answers table.
+     * @return object an appropriate object for representing the choice.
+     */
+    protected abstract function make_choice($choicedata);
+
+    /**
+     * Used by {@link qtype_ddtoimage_question_base::apply_attempt_state()}
+     * to fill in a misssing choice that was deleted.
+     * @param int $number The number of the choice that was deleted.
+     * @param int $group the group the deleted choices was in.
+     * @return object an appropriate object for representing the choice.
+     */
+    public abstract function make_deleted_choice_placeholder($number, $group);
 
     public static function constrain_image_size_in_draft_area($draftitemid, $maxwidth, $maxheight) {
         global $USER;

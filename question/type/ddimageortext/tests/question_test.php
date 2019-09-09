@@ -267,18 +267,40 @@ class qtype_ddimageortext_question_test extends basic_testcase {
         ), $dd->classify_response(array('p1' => '', 'p2' => '1', 'p3' => '2', 'p4' => '2')));
     }
 
-    public function test_summarise_response_choice_deleted() {
-        /** @var qtype_ddtoimage_question_base $dd */
+    public function test_choice_deleted_after_attempt() {
+        /** @var qtype_ddimageortext_question $dd */
         $dd = test_question_maker::make_question('ddimageortext');
+        // Add an extra wrong choice.
+        $dd->choices[1][5] = new qtype_ddimageortext_drag_item('frog', 5, 1);
         $dd->shufflechoices = false;
-        $dd->start_attempt(new question_attempt_step(), 1);
-        // Simulation of an instructor deleting 1 choice after an attempt has been made.
-        unset($dd->choices[1][1]);
-        $delquestionstr = get_string('deletedchoice', 'qtype_ddimageortext');
-        $this->assertEquals("Drop zone 1 -> {{$delquestionstr}} ".
-            "Drop zone 2 -> {{$delquestionstr}} ".
-            'Drop zone 3 -> {3. lazy} '.
-            'Drop zone 4 -> {3. lazy}',
-            $dd->summarise_response(array('p1' => '1', 'p2' => '1', 'p3' => '1', 'p4' => '1')));
+
+        // Initialise the question once.
+        $firststep = new question_attempt_step();
+        $dd->start_attempt($firststep, 1);
+
+        // Now get a copy of the question without the extra choice,
+        // as if the question had been edited after being attempted.
+        /** @var qtype_ddimageortext_question $ddedited */
+        $ddedited = test_question_maker::make_question('ddimageortext');
+        $ddedited->shufflechoices = false;
+        $ddedited->apply_attempt_state($firststep);
+
+        $originalcorrectresponse = $dd->get_correct_response();
+        $originalpartialresponse = $originalcorrectresponse;
+        $originalpartialresponse['p1'] = 3;
+
+        $this->assertEquals('Drop zone 1 -> {1. quick} Drop zone 2 -> {2. fox} ' .
+                'Drop zone 3 -> {3. lazy} Drop zone 4 -> {4. dog}',
+                $ddedited->summarise_response($originalcorrectresponse));
+        $this->assertEquals('Drop zone 1 -> {1. [Deleted choice]} Drop zone 2 -> {2. fox} ' .
+                'Drop zone 3 -> {3. lazy} Drop zone 4 -> {4. dog}',
+                $ddedited->summarise_response($originalpartialresponse));
+        $this->assertEquals([
+                1 => new question_classified_response(1, '1. [Deleted choice]', 0),
+                2 => new question_classified_response(2, '2. fox', 1),
+                3 => new question_classified_response(3, '3. lazy', 1),
+                4 => new question_classified_response(4, '4. dog', 1),
+        ], $ddedited->classify_response($originalpartialresponse));
+        // Test rendering the question.
     }
 }

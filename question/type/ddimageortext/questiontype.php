@@ -45,6 +45,11 @@ class qtype_ddimageortext extends qtype_ddtoimage_base {
                                         $dragdata->draggroup, $dragdata->infinite, $dragdata->id);
     }
 
+    public function make_deleted_choice_placeholder($number, $group) {
+        return new qtype_ddimageortext_drag_item(get_string('deletedchoice', 'qtype_ddimageortext'),
+                $number, $group, false, -1);
+    }
+
     protected function make_place($dropzonedata) {
         return new qtype_ddimageortext_drop_zone($dropzonedata->label, $dropzonedata->no,
                                                     $dropzonedata->group,

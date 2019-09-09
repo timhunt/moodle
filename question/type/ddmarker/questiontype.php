@@ -234,8 +234,14 @@ class qtype_ddmarker extends qtype_ddtoimage_base {
     protected function make_hint($hint) {
         return question_hint_ddmarker::load_from_record($hint);
     }
+
     protected function make_choice($dragdata) {
         return new qtype_ddmarker_drag_item($dragdata->label, $dragdata->no, $dragdata->infinite, $dragdata->noofdrags);
+    }
+
+    public function make_deleted_choice_placeholder($number, $group) {
+        return new qtype_ddmarker_drag_item(get_string('deletedchoice', 'qtype_ddimageortext'),
+                $number, false, 1);
     }
 
     protected function make_place($dropdata) {

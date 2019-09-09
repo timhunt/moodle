@@ -60,6 +60,11 @@ class qtype_ddwtos extends qtype_gapselect_base {
                 $choicedata->answer, $options->draggroup, $options->infinite);
     }
 
+    public function make_deleted_choice_placeholder($number, $group) {
+        return new qtype_ddwtos_choice(get_string('deletedchoice', 'qtype_ddimageortext'),
+                $group, false);
+    }
+
     public function import_from_xml($data, $question, qformat_xml $format, $extra=null) {
         if (!isset($data['@']['type']) || $data['@']['type'] != 'ddwtos') {
             return false;

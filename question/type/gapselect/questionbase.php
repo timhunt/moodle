@@ -107,8 +107,12 @@ abstract class qtype_gapselect_question_base extends question_graded_automatical
      * @param array $choiceorder the choices, in order.
      */
     protected function set_choiceorder($group, $choiceorder) {
-        foreach ($choiceorder as $key => $value) {
-            $this->choiceorder[$group][$key + 1] = $value;
+        foreach ($choiceorder as $key => $choiceid) {
+            $this->choiceorder[$group][$key + 1] = $choiceid;
+            if (!isset($this->choices[$group][$choiceid])) {
+                $this->choices[$group][$choiceid] =
+                        $this->qtype->make_deleted_choice_placeholder($group, $choiceid);
+            }
         }
     }
 
