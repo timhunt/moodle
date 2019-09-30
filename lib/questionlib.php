@@ -1440,11 +1440,17 @@ function question_category_options($contexts, $top = false, $currentcat = 0,
             if ($category->contextid == $contextid) {
                 $cid = $category->id;
                 if ($currentcat != $cid || $currentcat == 0) {
-                    $countstring = !empty($category->questioncount) ?
-                            " ($category->questioncount)" : '';
+                    $idnumberstring = '';
+                    if ($category->idnumber !== null && $category->idnumber !== '') {
+                        $idnumberstring = " [{$category->idnumber}]";
+                    }
+                    $countstring = '';
+                    if (!empty($category->questioncount)) {
+                        $countstring = " ($category->questioncount)";
+                    }
                     $categoriesarray[$contextstring][$cid] =
                             format_string($category->indentedname, true,
-                                array('context' => $context)) . $countstring;
+                                array('context' => $context)) . $idnumberstring . $countstring;
                 }
             }
         }
