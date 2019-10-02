@@ -8,6 +8,15 @@ equivalent changes in your customised version. The old column question_name_colu
 has been replaced by question_name_idnumber_tags_column. The old question_name_column
 still exists, so it is safe to continue using it.
 
+Also, there is a new question bank column edit_menu_column which displays a drop-down
+menu containing all the other columns which implement the new interface
+action_can_go_in_menu. These columns are shown in the menu rather than appearing
+as separate columns in the view. So, if you have implemented custom subclasses of
+action_column_base, you probably want to implement the new interface, probably using
+the new helper class action_column_menuable. The easiest way to see what you need to
+do is probably to look at the changes to the core column classes in MDL-66816.
+
+
 === 3.7 ===
 
 The code for the is_valid_number function that was duplicated in the

@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Question bank columns for the preview action icon.
+ * Helper class for actions that want to be action_column_base and action_can_go_in_menu.
  *
  * @package   core_question
- * @copyright 2009 Tim Hunt
+ * @copyright 2019 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,42 +27,33 @@ defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * Question bank columns for the preview action icon.
+ * Helper class for actions that want to be action_column_base and action_can_go_in_menu.
  *
- * @copyright 2009 Tim Hunt
+ * @copyright 2019 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class preview_action_column extends action_column_base implements action_can_go_in_menu {
+abstract class action_column_menuable extends action_column_base implements action_can_go_in_menu {
+
     /**
-     * @var string store this lang string for performance.
+     * Work out the info required to display this action.
+     *
+     * @param object $question the row from the $question table, augmented with extra information.
+     * @return array [$url, $label, $icon].
      */
-    protected $strpreview;
-
-    public function init() {
-        parent::init();
-        $this->strpreview = get_string('preview');
-    }
-
-    public function get_name() {
-        return 'previewaction';
-    }
+    abstract protected function determine_url_label_and_icon($question);
 
     protected function display_content($question, $rowclasses) {
-        global $PAGE;
-        if (question_has_capability_on($question, 'use')) {
-            echo $PAGE->get_renderer('core_question')->question_preview_link(
-                    $question->id, $this->qbank->get_most_specific_context(), false);
+        [$url, $icon, $label] = $this->determine_url_label_and_icon($question);
+        if ($url) {
+            $this->print_icon($icon, $label, $url);
         }
     }
 
     public function get_action_menu_link($question) {
-        if (!question_has_capability_on($question, 'use')) {
+        [$url, $icon, $label] = $this->determine_url_label_and_icon($question);
+        if (!$url) {
             return null;
         }
-
-        $context = $this->qbank->get_most_specific_context();
-        $url = question_preview_url($question->id, null, null, null, null, $context);
-        return new \action_menu_link_secondary($url, new \pix_icon('t/preview', ''),
-                $this->strpreview, ['target' => 'questionpreview']);
+        return new \action_menu_link_secondary($url, new \pix_icon($icon, ''), $label);
     }
 }

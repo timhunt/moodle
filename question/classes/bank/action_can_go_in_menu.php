@@ -18,7 +18,7 @@
  * A base class for actions that are an icon that lets you manipulate the question in some way.
  *
  * @package   core_question
- * @copyright 2009 Tim Hunt
+ * @copyright 2019 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,32 +27,26 @@ defined('MOODLE_INTERNAL') || die();
 
 
 /**
- * A base class for actions that are an icon that lets you manipulate the question in some way.
+ * An interface for question bank 'columns' which would be better in the edit menu.
  *
- * @copyright 2009 Tim Hunt
+ * If a question bank column implements this interface, and if the {@link edit_menu_column}
+ * is present in the question bank view, then the 'column' will be shown as an entry in the
+ * edit menu instead of as a separate column.
+ *
+ * Probably most columns that want to implement this will be subclasses of
+ * {@link action_column_base}, and most such columns should probably implement
+ * this interface.
+ *
+ * @copyright 2019 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class action_column_base extends column_base {
+interface action_can_go_in_menu {
 
-    protected function get_title() {
-        return '&#160;';
-    }
-
-    public function get_extra_classes() {
-        return array('iconcol');
-    }
-
-    protected function print_icon($icon, $title, $url) {
-        global $OUTPUT;
-        echo '<a title="' . $title . '" href="' . $url . '">' . $OUTPUT->pix_icon($icon, $title) . '</a>';
-    }
-
-    public function get_extra_joins() {
-        return array('qc' => 'JOIN {question_categories} qc ON qc.id = q.category');
-    }
-
-    public function get_required_fields() {
-        // Createdby is required for permission checks.
-        return array('q.id', 'q.createdby', 'qc.contextid');
-    }
+    /**
+     * Return the appropriate action menu link, or null if it does not apply to this question.
+     *
+     * @param \stdClass $question data about the question being displayed in this row.
+     * @return \action_menu_link|null the action, if applicable here.
+     */
+    public function get_action_menu_link($question);
 }
