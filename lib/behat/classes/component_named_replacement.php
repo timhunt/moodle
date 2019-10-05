@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Moodle-specific Mink replacements.
+ * A class for recording deprecated Mink selectors and their replacements.
  *
  * @package    core
  * @category   test
@@ -23,8 +23,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 /**
- * Moodle-specific Mink replacements.
+ * A class for recording deprecated Mink selectors and their replacements.
+ *
+ * When an old named selector becomes deprecated, this class can be used
+ * to document what the new replacement is, so that we can give more
+ * helpful messages to developer about how to update their code.
  *
  * @package    core
  * @category   test
@@ -41,8 +46,10 @@ class behat_component_named_replacement {
     /**
      * Create the replacement.
      *
-     * @param string $from
-     * @param string $to
+     * @param string $from this is the old selector that should no longer be used.
+     *      For example 'group_message'.
+     * @param string $to this is the new equivalent that should be used instead.
+     *      For example 'core_message > Message'.
      */
     public function __construct(string $from, string $to) {
         $this->from = $from;
