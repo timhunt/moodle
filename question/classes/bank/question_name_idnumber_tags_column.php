@@ -44,8 +44,10 @@ class question_name_idnumber_tags_column extends question_name_column {
         $labelfor = $this->label_for($question);
         if ($labelfor) {
             echo '<label for="' . $labelfor . '" class="' . $layoutclasses . '">';
+            $closetag = '</label>';
         } else {
             echo '<span class="' . $layoutclasses . '">';
+            $closetag = '</span>';
         }
 
         // Question name.
@@ -64,11 +66,7 @@ class question_name_idnumber_tags_column extends question_name_column {
             echo $OUTPUT->tag_list($tags, null, 'd-inline flex-shrink-1 text-truncate ml-1', 0, null, true);
         }
 
-        if ($labelfor) {
-            echo '</label>';
-        } else {
-            echo '</label>';
-        }
+        echo $closetag; // Computed above to ensure it matches.
     }
 
     public function get_required_fields() {
