@@ -1440,17 +1440,25 @@ function question_category_options($contexts, $top = false, $currentcat = 0,
             if ($category->contextid == $contextid) {
                 $cid = $category->id;
                 if ($currentcat != $cid || $currentcat == 0) {
-                    $idnumberstring = '';
+                    $a = new stdClass;
+                    $a->name = format_string($category->indentedname, true,
+                            array('context' => $context));
                     if ($category->idnumber !== null && $category->idnumber !== '') {
-                        $idnumberstring = " [{$category->idnumber}]";
+                        $a->idnumber = s($category->idnumber);
                     }
-                    $countstring = '';
                     if (!empty($category->questioncount)) {
-                        $countstring = " ($category->questioncount)";
+                        $a->questioncount = $category->questioncount;
                     }
-                    $categoriesarray[$contextstring][$cid] =
-                            format_string($category->indentedname, true,
-                                array('context' => $context)) . $idnumberstring . $countstring;
+                    if (isset($a->idnumber) && isset($a->questioncount)) {
+                        $formattedname = get_string('categorynamewithidnumberandcount', 'question', $a);
+                    } else if (isset($a->idnumber)) {
+                        $formattedname = get_string('categorynamewithidnumber', 'question', $a);
+                    } else if (isset($a->questioncount)) {
+                        $formattedname = get_string('categorynamewithcount', 'question', $a);
+                    } else {
+                        $formattedname = $a->name;
+                    }
+                    $categoriesarray[$contextstring][$cid] = $formattedname;
                 }
             }
         }
