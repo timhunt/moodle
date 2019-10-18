@@ -30,16 +30,16 @@ defined('MOODLE_INTERNAL') || die();
  * A question bank column which gathers together all the actions into a menu.
  *
  * This question bank column, if added to the question bank, will
- * replace all of the other columns which are subclasses of
- * {@link action_column_base} and replace them with a single column
- * containing an Edit menu.
+ * replace all of the other columns which implement the
+ * {@link menuable_action} interface and replace them with a single
+ * column containing an Edit menu.
  *
  * @copyright 2019 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class edit_menu_column extends column_base {
     /**
-     * @var action_can_go_in_menu[]
+     * @var menuable_action[]
      */
     protected $actions;
 
@@ -56,7 +56,7 @@ class edit_menu_column extends column_base {
     public function claim_menuable_columns($allcolumns) {
         $remainingcolumns = [];
         foreach ($allcolumns as $key => $column) {
-            if ($column instanceof action_can_go_in_menu) {
+            if ($column instanceof menuable_action) {
                 $this->actions[$key] = $column;
             } else {
                 $remainingcolumns[$key] = $column;

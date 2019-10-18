@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2009 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class edit_action_column extends action_column_menuable {
+class edit_action_column extends menu_action_column_base {
     protected $stredit;
     protected $strview;
 
@@ -46,7 +46,7 @@ class edit_action_column extends action_column_menuable {
         return 'editaction';
     }
 
-    protected function determine_url_label_and_icon($question) {
+    protected function get_url_icon_and_label(\stdClass $question): array {
         if (question_has_capability_on($question, 'edit')) {
             return [$this->qbank->edit_question_moodle_url($question->id), 't/edit', $this->stredit];
         } else if (question_has_capability_on($question, 'view')) {

@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2009 Tim Hunt
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class preview_action_column extends action_column_base implements action_can_go_in_menu {
+class preview_action_column extends action_column_base implements menuable_action {
     /**
      * @var string store this lang string for performance.
      */
@@ -55,7 +55,7 @@ class preview_action_column extends action_column_base implements action_can_go_
         }
     }
 
-    public function get_action_menu_link($question) {
+    public function get_action_menu_link(\stdClass $question): ?\action_menu_link {
         if (!question_has_capability_on($question, 'use')) {
             return null;
         }

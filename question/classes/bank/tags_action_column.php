@@ -31,7 +31,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2018 Simey Lameze <simey@moodle.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class tags_action_column extends action_column_base implements action_can_go_in_menu {
+class tags_action_column extends action_column_base implements menuable_action {
     /**
      * @var string store this lang string for performance.
      */
@@ -63,8 +63,9 @@ class tags_action_column extends action_column_base implements action_can_go_in_
         if (\core_tag_tag::is_enabled('core_question', 'question') &&
                 question_has_capability_on($question, 'view')) {
 
-            [$url, $params] = $this->get_link_url_and_params($question);
-            echo \html_writer::link($url, $OUTPUT->pix_icon('t/tags', $this->managetags), $params);
+            [$url, $attributes] = $this->get_link_url_and_attributes($question);
+            echo \html_writer::link($url, $OUTPUT->pix_icon('t/tags',
+                    $this->managetags), $attributes);
         }
     }
 
@@ -72,31 +73,30 @@ class tags_action_column extends action_column_base implements action_can_go_in_
      * Helper used by display_content and get_action_menu_link.
      *
      * @param object $question the row from the $question table, augmented with extra information.
-     * @return array with two elements, \moodle_url and array link URL and params need for this action.
+     * @return array with two elements, \moodle_url and
+     *     an array or data $attributes needed to make the JavaScript work.
      */
-    protected function get_link_url_and_params($question) {
+    protected function get_link_url_and_attributes($question) {
         $url = new \moodle_url($this->qbank->edit_question_url($question->id));
 
-        $params = [
+        $attributes = [
                 'data-action' => 'edittags',
                 'data-cantag' => question_has_capability_on($question, 'tag'),
                 'data-contextid' => $this->qbank->get_most_specific_context()->id,
                 'data-questionid' => $question->id
         ];
 
-        return [$url, $params];
+        return [$url, $attributes];
     }
 
-    public function get_action_menu_link($question) {
-        global $OUTPUT;
-
+    public function get_action_menu_link(\stdClass $question): ?\action_menu_link {
         if (!\core_tag_tag::is_enabled('core_question', 'question') ||
                 !question_has_capability_on($question, 'view')) {
             return null;
         }
 
-        [$url, $params] = $this->get_link_url_and_params($question);
+        [$url, $attributes] = $this->get_link_url_and_attributes($question);
         return new \action_menu_link_secondary($url, new \pix_icon('t/tags', ''),
-                $this->managetags, $params);
+                $this->managetags, $attributes);
     }
 }

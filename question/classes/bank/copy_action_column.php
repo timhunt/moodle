@@ -32,7 +32,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright 2013 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class copy_action_column extends action_column_menuable {
+class copy_action_column extends menu_action_column_base {
     /** @var string avoids repeated calls to get_string('duplicate'). */
     protected $strcopy;
 
@@ -45,7 +45,7 @@ class copy_action_column extends action_column_menuable {
         return 'copyaction';
     }
 
-    protected function determine_url_label_and_icon($question) {
+    protected function get_url_icon_and_label(\stdClass $question): array {
         // To copy a question, you need permission to add a question in the same
         // category as the existing question, and ability to access the details of
         // the question being copied.
