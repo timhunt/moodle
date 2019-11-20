@@ -44,7 +44,7 @@ use Behat\Behat\Tester\Exception\PendingException as PendingException;
  *
  * The types of entities that can be generated are described by the array returned
  * by the {@link get_generateable_entities()} method. The list in
- * {@link behat_core_data_generator} is a good (if complex) example.
+ * {@link behat_core_generator} is a good (if complex) example.
  *
  * How things work is best explained with a few examples. All this is implemented
  * in the {@link generate_items()} method below, if you want to see every detail of
@@ -73,7 +73,7 @@ use Behat\Behat\Tester\Exception\PendingException as PendingException;
  * We then do one of 4 things:
  *
  * 6a. If there is a method 'process_user' we call it. (It doesn't for user,
- *     but there are other examples like process_enrol_user() in behat_core_data_generator.)
+ *     but there are other examples like process_enrol_user() in behat_core_generator.)
  *
  * 6b. (Not used in this example.)
  *
@@ -112,12 +112,12 @@ use Behat\Behat\Tester\Exception\PendingException as PendingException;
  *     and this is what gets called.
  *
  * This second example shows why the get_..._id methods for core entities are in this base
- * class, not in behat_core_data_generator. Plugins may need to look up the ids of
+ * class, not in behat_core_generator. Plugins may need to look up the ids of
  * core entities.
  *
  * behat_core_generator is defined in lib/behat/classes/behat_core_generator.php
  * and for components, behat_..._generator is defined in tests/generator/behat_..._generator.php
- * inside the plugin. For example behat_mod_quiz_data_generator is defined in
+ * inside the plugin. For example behat_mod_quiz_generator is defined in
  * mod/quiz/tests/generator/behat_mod_quiz_generator.php.
  *
  * @package   core
@@ -158,7 +158,7 @@ abstract class behat_generator_base {
      *
      * This function must be overridden in subclasses. See class comment
      * above for a description of the data structure.
-     * See {@link behat_core_data_generator} for an example.
+     * See {@link behat_core_generator} for an example.
      *
      * @return array entity name => information about how to generate.
      */

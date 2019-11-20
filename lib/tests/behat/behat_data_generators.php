@@ -44,9 +44,9 @@ use Behat\Behat\Tester\Exception\PendingException as PendingException;
  * Generally, you only need to specify properties relevant to your test,
  * and everything else gets set to sensible defaults.
  *
- * The actual generation of entities is done by {@link behat_data_generator_base}.
- * There is one subclass for each component, e.g. {@link behat_core_data_generator}
- * or {@link behat_mod_form_data_generator}. To see the types of entity
+ * The actual generation of entities is done by {@link behat_generator_base}.
+ * There is one subclass for each component, e.g. {@link behat_core_generator}
+ * or {@link behat_mod_quiz_generator}. To see the types of entity
  * that can be created for each component, look at the arrays returned
  * by the get_creatable_entities() method in each class.
  *
@@ -113,9 +113,9 @@ class behat_data_generators extends behat_base {
             return [$component, $type];
         } else {
             throw new coding_exception('The entity type must be in the form ' .
-                    '"{page-name}" for core pages, or "{component} > {page-name}" ' .
-                    'for pages belonging to other components. ' .
-                    'For example "users" or "mod_forum > subscription".');
+                    '"{entity-type}" for core entities, or "{component} > {entity-type}" ' .
+                    'for entities belonging to other components. ' .
+                    'For example "users" or "mod_forum > subscriptions".');
         }
     }
 
