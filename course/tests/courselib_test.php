@@ -1591,38 +1591,21 @@ class core_course_courselib_testcase extends advanced_testcase {
     }
 
     /**
-     * Data provider for course_delete module
+     * Create an activity with an associated blog entry.
      *
-     * @return array An array of arrays contain test data
+     * @param string $type E.g. 'assign' or 'quiz'.
+     * @return array [$module, $modcontext, $assocblog] the generated module and blog post.
      */
-    public function provider_course_delete_module() {
-        $data = array();
-
-        $data['assign'] = array('assign', array('duedate' => time()));
-        $data['quiz'] = array('quiz', array('duedate' => time()));
-
-        return $data;
-    }
-
-    /**
-     * Tests the function that deletes a course module
-     *
-     * @param string $type The type of module for the test
-     * @param array $options The options for the module creation
-     * @dataProvider provider_course_delete_module
-     */
-    public function test_course_delete_module($type, $options) {
-        global $DB;
-
+    protected function create_activity_with_linked_blog($type) {
         $this->resetAfterTest(true);
         $this->setAdminUser();
 
         // Create course and modules.
         $course = $this->getDataGenerator()->create_course(array('numsections' => 5));
-        $options['course'] = $course->id;
 
         // Generate an assignment with due date (will generate a course event).
-        $module = $this->getDataGenerator()->create_module($type, $options);
+        $module = $this->getDataGenerator()->create_module($type,
+                ['course' => $course->id, 'duedate' => time()]);
 
         // Get the module context.
         $modcontext = context_module::instance($module->cmid);
@@ -1632,39 +1615,17 @@ class core_course_courselib_testcase extends advanced_testcase {
         // Verify context exists.
         $this->assertInstanceOf('context_module', $modcontext);
 
-        // Make module specific messes.
-        switch ($type) {
-            case 'assign':
-                // Add some tags to this assignment.
-                core_tag_tag::set_item_tags('mod_assign', 'assign', $module->id, $modcontext, array('Tag 1', 'Tag 2', 'Tag 3'));
-                core_tag_tag::set_item_tags('core', 'course_modules', $module->cmid, $modcontext, array('Tag 3', 'Tag 4', 'Tag 5'));
+        return [$module, $modcontext, $assocblog];
+    }
 
-                // Confirm the tag instances were added.
-                $criteria = array('component' => 'mod_assign', 'itemtype' => 'assign', 'contextid' => $modcontext->id);
-                $this->assertEquals(3, $DB->count_records('tag_instance', $criteria));
-                $criteria = array('component' => 'core', 'itemtype' => 'course_modules', 'contextid' => $modcontext->id);
-                $this->assertEquals(3, $DB->count_records('tag_instance', $criteria));
-
-                // Verify event assignment event has been generated.
-                $eventcount = $DB->count_records('event', array('instance' => $module->id, 'modulename' => $type));
-                $this->assertEquals(1, $eventcount);
-
-                break;
-            case 'quiz':
-                $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
-                $qcat = $qgen->create_question_category(array('contextid' => $modcontext->id));
-                $questions = array(
-                    $qgen->create_question('shortanswer', null, array('category' => $qcat->id)),
-                    $qgen->create_question('shortanswer', null, array('category' => $qcat->id)),
-                );
-                $this->expectOutputRegex('/'.get_string('unusedcategorydeleted', 'question').'/');
-                break;
-            default:
-                break;
-        }
-
-        // Run delete..
-        course_delete_module($module->cmid);
+    /**
+     * Asserts that a module and related thigns have been cleaned up.
+     * @param stdClass $module as created by create_activity_with_linked_blog.
+     * @param context_module $modcontext as created by create_activity_with_linked_blog.
+     * @param stdClass $assocblog as created by create_activity_with_linked_blog.
+     */
+    protected function assert_module_deleted($module, $modcontext, $assocblog) {
+        global $DB;
 
         // Verify the context has been removed.
         $this->assertFalse(context_module::instance($module->cmid, IGNORE_MISSING));
@@ -1684,33 +1645,80 @@ class core_course_courselib_testcase extends advanced_testcase {
         // Verify the tag instance record has been deleted.
         $this->assertCount(0, $DB->get_records('tag_instance',
                 array('itemid' => $assocblog->id)));
+    }
 
-        // Test clean up of module specific messes.
-        switch ($type) {
-            case 'assign':
-                // Verify event assignment events have been removed.
-                $eventcount = $DB->count_records('event', array('instance' => $module->id, 'modulename' => $type));
-                $this->assertEmpty($eventcount);
+    /**
+     * Tests the function that deletes a course module on an assignment.
+     */
+    public function test_course_delete_module_assign() {
+        global $DB;
 
-                // Verify the tag instances were deleted.
-                $criteria = array('component' => 'mod_assign', 'contextid' => $modcontext->id);
-                $this->assertEquals(0, $DB->count_records('tag_instance', $criteria));
+        list($module, $modcontext, $assocblog) =
+                $this->create_activity_with_linked_blog('assign');
 
-                $criteria = array('component' => 'core', 'itemtype' => 'course_modules', 'contextid' => $modcontext->id);
-                $this->assertEquals(0, $DB->count_records('tag_instance', $criteria));
-                break;
-            case 'quiz':
-                // Verify category deleted.
-                $criteria = array('contextid' => $modcontext->id);
-                $this->assertEquals(0, $DB->count_records('question_categories', $criteria));
+        // Add some tags to this assignment.
+        core_tag_tag::set_item_tags('mod_assign', 'assign', $module->id, $modcontext, array('Tag 1', 'Tag 2', 'Tag 3'));
+        core_tag_tag::set_item_tags('core', 'course_modules', $module->cmid, $modcontext, array('Tag 3', 'Tag 4', 'Tag 5'));
 
-                // Verify questions deleted.
-                $criteria = array('category' => $qcat->id);
-                $this->assertEquals(0, $DB->count_records('question', $criteria));
-                break;
-            default:
-                break;
-        }
+        // Confirm the tag instances were added.
+        $criteria = array('component' => 'mod_assign', 'itemtype' => 'assign', 'contextid' => $modcontext->id);
+        $this->assertEquals(3, $DB->count_records('tag_instance', $criteria));
+        $criteria = array('component' => 'core', 'itemtype' => 'course_modules', 'contextid' => $modcontext->id);
+        $this->assertEquals(3, $DB->count_records('tag_instance', $criteria));
+
+        // Verify event assignment event has been generated.
+        $eventcount = $DB->count_records('event', array('instance' => $module->id, 'modulename' => 'assign'));
+        $this->assertEquals(1, $eventcount);
+
+        // Run delete.
+        course_delete_module($module->cmid);
+
+        // Check the generic bits of the deletion.
+        $this->assert_module_deleted($module, $modcontext, $assocblog);
+
+        // Verify event assignment events have been removed.
+        $eventcount = $DB->count_records('event', array('instance' => $module->id, 'modulename' => 'assign'));
+        $this->assertEmpty($eventcount);
+
+        // Verify the tag instances were deleted.
+        $criteria = array('component' => 'mod_assign', 'contextid' => $modcontext->id);
+        $this->assertEquals(0, $DB->count_records('tag_instance', $criteria));
+
+        $criteria = array('component' => 'core', 'itemtype' => 'course_modules', 'contextid' => $modcontext->id);
+        $this->assertEquals(0, $DB->count_records('tag_instance', $criteria));
+    }
+
+    /**
+     * Tests the function that deletes a course module on a quiz.
+     */
+    public function test_course_delete_module_quiz() {
+        global $DB;
+
+        list($module, $modcontext, $assocblog) =
+                $this->create_activity_with_linked_blog('quiz');
+
+        // Create quiz-specific related data.
+        $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $qcat = $qgen->create_question_category(array('contextid' => $modcontext->id));
+        $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
+        $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
+
+        // We expect some output during the delete process.
+        $this->expectOutputRegex('/'.get_string('unusedcategorydeleted', 'question').'/');
+
+        // Run delete.
+        course_delete_module($module->cmid);
+
+        // Check the generic bits of the deletion.
+        $this->assert_module_deleted($module, $modcontext, $assocblog);
+
+        // Verify category deleted.
+        $criteria = array('contextid' => $modcontext->id);
+        $this->assertEquals(0, $DB->count_records('question_categories', $criteria));
+
+        // Verify questions deleted.
+        $criteria = array('category' => $qcat->id);
+        $this->assertEquals(0, $DB->count_records('question', $criteria));
     }
 
     /**
