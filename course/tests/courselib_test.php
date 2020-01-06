@@ -585,20 +585,6 @@ class core_course_courselib_testcase extends advanced_testcase {
    }
 
     /**
-     * Data provider for course_delete module
-     *
-     * @return array An array of arrays contain test data
-     */
-    public function provider_course_delete_module() {
-        $data = array();
-
-        $data['assign'] = array('assign', array('duedate' => time()));
-        $data['quiz'] = array('quiz', array('duedate' => time()));
-
-        return $data;
-    }
-
-    /**
      * Test the create_course function
      */
     public function test_create_course() {
@@ -1602,6 +1588,20 @@ class core_course_courselib_testcase extends advanced_testcase {
         $modinfo = get_fast_modinfo($course);
         $pagecm = $modinfo->cms[$page->cmid];
         $this->assertEquals($pagecm->visible, 0);
+    }
+
+    /**
+     * Data provider for course_delete module
+     *
+     * @return array An array of arrays contain test data
+     */
+    public function provider_course_delete_module() {
+        $data = array();
+
+        $data['assign'] = array('assign', array('duedate' => time()));
+        $data['quiz'] = array('quiz', array('duedate' => time()));
+
+        return $data;
     }
 
     /**
