@@ -1722,6 +1722,45 @@ class core_course_courselib_testcase extends advanced_testcase {
     }
 
     /**
+     * Tests the function that deletes a course module on an assignment.
+     */
+    public function test_course_delete_module_quiz_ajax_case() {
+        global $DB;
+
+        list($module, $modcontext, $assocblog) =
+                $this->create_activity_with_linked_blog('quiz');
+
+        // Create quiz-specific related data.
+        $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $qcat = $qgen->create_question_category(array('contextid' => $modcontext->id));
+        $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
+        $qgen->create_question('shortanswer', null, array('category' => $qcat->id));
+
+        // Hacky way to tell the code under test to do the AJAX case.
+        global $PHPUNIT_TEST_AJAX_SCRIPT;
+        $PHPUNIT_TEST_AJAX_SCRIPT = true;
+
+        // We expect some output during the delete process.
+        $this->expectOutputString('');
+
+        // Run delete.
+        course_delete_module($module->cmid);
+
+        unset($PHPUNIT_TEST_AJAX_SCRIPT);
+
+        // Check the generic bits of the deletion.
+        $this->assert_module_deleted($module, $modcontext, $assocblog);
+
+        // Verify category deleted.
+        $criteria = array('contextid' => $modcontext->id);
+        $this->assertEquals(0, $DB->count_records('question_categories', $criteria));
+
+        // Verify questions deleted.
+        $criteria = array('category' => $qcat->id);
+        $this->assertEquals(0, $DB->count_records('question', $criteria));
+    }
+
+    /**
      * Test that triggering a course_created event works as expected.
      */
     public function test_course_created_event() {
