@@ -543,7 +543,20 @@ if (!$cache and moodle_needs_upgrading()) {
         $pluginman = core_plugin_manager::instance();
         $output = $PAGE->get_renderer('core', 'admin');
 
-        if (!$confirmplugins) {
+        if (empty($confirmrelease)){
+            require_once($CFG->libdir.'/environmentlib.php');
+            list($envstatus, $environment_results) = check_moodle_environment($release, ENV_SELECT_RELEASE);
+            $strtitle = get_string('plugincheckattention', 'plugin');
+
+            $PAGE->navbar->add($strtitle);
+            $PAGE->set_title($strtitle);
+            $PAGE->set_heading($strtitle);
+            $PAGE->set_cacheable(false);
+
+            echo $output->upgrade_environment_page($release, $envstatus, $environment_results);
+            die();
+
+        } else if (!$confirmplugins) {
             $strplugincheck = get_string('plugincheck');
 
             $PAGE->navbar->add($strplugincheck);
