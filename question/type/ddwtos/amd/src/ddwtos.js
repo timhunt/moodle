@@ -461,8 +461,11 @@ define(['jquery', 'core/dragdrop', 'core/key_codes'], function($, dragDrop, keys
     DragDropToTextQuestion.prototype.animateTo = function(drag, target) {
         var currentPos = drag.offset(),
             targetPos = target.offset(),
-            thisQ = this;
+            thisQ = this,
+            jsPendingUnique = {};
 
+
+        M.util.js_pending(jsPendingUnique);
         // Animate works in terms of CSS position, whereas locating an object
         // on the page works best with jQuery offset() function. So, to get
         // the right target position, we work out the required change in
@@ -476,6 +479,7 @@ define(['jquery', 'core/dragdrop', 'core/key_codes'], function($, dragDrop, keys
                 duration: 'fast',
                 done: function() {
                     $('body').trigger('dragmoved', [drag, target, thisQ]);
+                    M.util.js_complete(jsPendingUnique);
                 }
             }
         );

@@ -83,7 +83,7 @@ class behat_qtype_ddwtos extends behat_base {
             $node->keyDown($key);
             $node->keyPress($key);
             $node->keyUp($key);
-            sleep(1);
+            $this->wait_for_pending_js();
         }
     }
 }
