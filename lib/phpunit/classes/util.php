@@ -262,7 +262,7 @@ class phpunit_util extends testing_util {
         }
 
         // purge dataroot directory
-        self::reset_dataroot();
+        //self::reset_dataroot();
 
         // restore original config once more in case resetting of caches changed CFG
         $CFG = self::get_global_backup('CFG');
