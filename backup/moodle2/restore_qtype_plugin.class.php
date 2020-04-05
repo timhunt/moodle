@@ -175,28 +175,23 @@ abstract class restore_qtype_plugin extends restore_plugin {
                 }
             }
 
-            $rules = restore_course_task::define_decode_rules();
-
-            $decoder = $this->task->get_decoder();
-            foreach ($rules as $rule) {
-                $decoder->add_rule($rule);
-            }
-
-            $contentdecoded = $decoder->decode_content($data->answertext);
+            $contentdecoded = $this->get_task()->get_decoder()->decode_content($data->answertext);
             if ($contentdecoded) {
-                $data->answertext = $contentdecoded;
+                $answertexttomatch = $contentdecoded;
+            } else {
+                $answertexttomatch = $data->answertext;
             }
 
-            if (!isset($this->questionanswercache[$data->answertext])) {
+            if (!isset($this->questionanswercache[$answertexttomatch])) {
                 // If we haven't found the matching answer, something has gone really wrong, the question in the DB
                 // is missing answers, throw an exception.
                 $info = new stdClass();
                 $info->filequestionid = $oldquestionid;
                 $info->dbquestionid   = $newquestionid;
-                $info->answer         = s($data->answertext);
+                $info->answer         = s($answertexttomatch);
                 throw new restore_step_exception('error_question_answers_missing_in_db', $info);
             }
-            $newitemid = $this->questionanswercache[$data->answertext];
+            $newitemid = $this->questionanswercache[$answertexttomatch];
         }
         // Create mapping (we'll use this intensively when restoring question_states. And also answerfeedback files)
         $this->set_mapping('question_answer', $oldid, $newitemid);
