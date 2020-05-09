@@ -222,10 +222,17 @@ abstract class testing_module_generator extends component_generator_base {
      *     cmid (corresponding id in course_modules table)
      */
     public function create_instance($record = null, array $options = null) {
-        global $CFG, $DB;
+        global $CFG, $DB, $PAGE;
         require_once($CFG->dirroot.'/course/modlib.php');
 
         $this->instancecount++;
+
+        // Creating an activity is a back end operation, which should not cause
+        // any output to happen. Well, that should be obvious, but a strange
+        // PHPunit failure was eventually tracked down to creating a Quiz starting
+        // output. Rather than leaving this as a hard-to-debug situation, we
+        // now make it fail with a clear error.
+        $outputstartedbefore = $PAGE->get_where_theme_was_initialised();
 
         // Merge options into record and add default values.
         $record = $this->prepare_moduleinfo_record($record, $options);
@@ -269,6 +276,19 @@ abstract class testing_module_generator extends component_generator_base {
         // Prepare object to return with additional field cmid.
         $instance = $DB->get_record($this->get_modulename(), array('id' => $moduleinfo->instance), '*', MUST_EXIST);
         $instance->cmid = $moduleinfo->coursemodule;
+
+        // Second half of
+        $outputstartedafter = $PAGE->get_where_theme_was_initialised();
+        if ($outputstartedbefore === null && $outputstartedafter !== null) {
+            throw new coding_exception('Creating a ' . $this->get_modulename() .
+                    ' activity caused output functions to called. This should not happen. ' .
+                    'Creating an activity should be a purely back-end operation. ' .
+                    'Unnecessarily initialising the output mechanism at the wrong ' .
+                    'time can cause subtle bugs and is a significant performance hit.' .
+                    "The call that caused it is:\n\n",
+                    format_backtrace($outputstartedafter, true));
+        }
+
         return $instance;
     }
 
