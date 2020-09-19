@@ -7986,7 +7986,7 @@ function component_callback_exists($component, $function) {
 
     $dir = core_component::get_component_directory($component);
     if (empty($dir)) {
-        throw new coding_exception('Invalid component used in plugin/component_callback():' . $component);
+        return false;
     }
 
     // Load library and look for function.
