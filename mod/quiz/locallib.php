@@ -996,8 +996,13 @@ function quiz_override_summary(stdClass $quiz, stdClass $cm, int $currentgroup =
                    AND gm.groupid = ?
                     ", [$quiz->id, $currentgroup]);
         return ['group' => $groupcount, 'user' => $usercount, 'mode' => 'onegroup'];
+    }
 
-    } else if (has_capability('moodle/site:accessallgroups', context_module::instance($cm->id))) {
+    $quizgroupmode = groups_get_activity_groupmode($cm);
+    $accessallgroups = ($quizgroupmode == NOGROUPS) ||
+            has_capability('moodle/site:accessallgroups', context_module::instance($cm->id));
+
+    if ($accessallgroups) {
         // User can see all groups.
         $groupcount = $DB->count_records_select('quiz_overrides',
                 'quiz = ? AND groupid IS NOT NULL', [$quiz->id]);

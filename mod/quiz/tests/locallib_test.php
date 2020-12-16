@@ -841,7 +841,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
     }
 
     public function test_quiz_override_summary() {
-        global $PAGE;
+        global $DB, $PAGE;
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
         /** @var mod_quiz_generator $quizgenerator */
@@ -851,7 +851,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
 
         // Course with quiz and a group - plus some others, to verify they don't get counted.
         $course = $generator->create_course();
-        $quiz = $quizgenerator->create_instance(['course' => $course->id]);
+        $quiz = $quizgenerator->create_instance(['course' => $course->id, 'groupmode' => SEPARATEGROUPS]);
         $cm = get_coursemodule_from_id('quiz', $quiz->cmid, $course->id);
         $group = $generator->create_group(['courseid' => $course->id]);
         $othergroup = $generator->create_group(['courseid' => $course->id]);
@@ -913,7 +913,7 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
         $this->assertEquals(['group' => 2, 'user' => 2, 'mode' => 'allgroups'],
                 quiz_override_summary($quiz, $cm));
         $this->assertEquals('Settings overrides exist (Groups: 2, Users: 2)',
-                // Links checked by Behat, so strip them for these test.
+                // Links checked by Behat, so strip them for these tests.
                 html_to_text($renderer->quiz_override_summary_links($quiz, $cm), 0, false));
         $this->assertEquals(['group' => 1, 'user' => 1, 'mode' => 'onegroup'],
                 quiz_override_summary($quiz, $cm, $group->id));
@@ -930,5 +930,15 @@ class mod_quiz_locallib_testcase extends advanced_testcase {
                 quiz_override_summary($quiz, $cm, $group->id));
         $this->assertEquals('Settings overrides exist (Groups: 1, Users: 1) for this group',
                 html_to_text($renderer->quiz_override_summary_links($quiz, $cm, $group->id), 0, false));
+
+        // Now set the quiz to be group mode: no groups, and re-test as tutor.
+        // In this case, the tutor should see all groups.
+        $DB->set_field('course_modules', 'groupmode', NOGROUPS, ['id' => $cm->id]);
+        $cm = get_coursemodule_from_id('quiz', $quiz->cmid, $course->id);
+
+        $this->assertEquals(['group' => 2, 'user' => 2, 'mode' => 'allgroups'],
+                quiz_override_summary($quiz, $cm));
+        $this->assertEquals('Settings overrides exist (Groups: 2, Users: 2)',
+                html_to_text($renderer->quiz_override_summary_links($quiz, $cm), 0, false));
     }
 }
