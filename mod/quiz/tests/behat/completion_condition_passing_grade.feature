@@ -32,8 +32,7 @@ Feature: Set a quiz to be marked complete when the student passes
       | First question | 1    |
 
   Scenario: student1 passes on the first try
-    When I log in as "student1"
-    And I am on "Course 1" course homepage
+    When I am on the "C1" "Course" page logged in as "student1"
     And the "Test quiz name" "quiz" activity with "auto" completion should be marked as not complete
     And user "student1" has attempted "Test quiz name" with responses:
       | slot | response |
@@ -45,3 +44,21 @@ Feature: Set a quiz to be marked complete when the student passes
     And I am on "Course 1" course homepage
     And I navigate to "Reports > Activity completion" in current page administration
     And "Completed" "icon" should exist in the "Student 1" "table_row"
+
+  @javascript
+  Scenario: Require passing grade form validation test
+    When I am on the "C1" "Course" page logged in as "teacher1"
+    And I turn editing mode on
+    And I add a "Quiz" to section "0" and I fill the form with:
+      | Name                                                   | Validation test                                   |
+      | Completion tracking                                    | Show activity as complete when conditions are met |
+      | id_completionusegrade                                  | 1                                                 |
+      | id_completionpass                                      | 1                                                 |
+    Then I should see "This quiz does not yet have a grade to pass set."
+    And I set the field "Grade to pass" to "frog"
+    And I press "Save and display"
+    And I should see "This quiz does not yet have a grade to pass set."
+    And I set the field "Grade to pass" to "0"
+    And I press "Save and display"
+    # Form should save now. (0 is a valid passing grade, but often mis-handled.)
+    And I should see "Grading method: Highest grade"

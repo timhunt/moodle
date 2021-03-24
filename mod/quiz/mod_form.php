@@ -531,7 +531,8 @@ class mod_quiz_mod_form extends moodleform_mod {
             $completionpass = isset($data['completionpass']) ? $data['completionpass'] : $this->current->completionpass;
 
             // Show an error if require passing grade was selected and the grade to pass was set to 0.
-            if ($completionpass && (empty($data['gradepass']) || grade_floatval($data['gradepass']) == 0)) {
+            $gradepass = isset($data['gradepass']) ? unformat_float($data['gradepass'], true) : false;
+            if ($completionpass && ($gradepass === false || $gradepass == null)) {
                 if (isset($data['completionpass'])) {
                     $errors['completionpassgroup'] = get_string('gradetopassnotset', 'quiz');
                 } else {
@@ -542,38 +543,47 @@ class mod_quiz_mod_form extends moodleform_mod {
 
         if (!empty($data['completionminattempts'])) {
             if ($data['attempts'] > 0 && $data['completionminattempts'] > $data['attempts']) {
-                $errors['completionminattemptsgroup'] = get_string('completionminattemptserror', 'quiz');
+                $errors['completionminattemptsgroup'] = get_string('completionminattemptserror, ', 'quiz');
             }
         }
 
         // Check the boundary value is a number or a percentage, and in range.
         $i = 0;
+        $lastboundary = $data['grade'] + 1;
         while (!empty($data['feedbackboundaries'][$i] )) {
             $boundary = trim($data['feedbackboundaries'][$i]);
-            if (strlen($boundary) > 0) {
-                if ($boundary[strlen($boundary) - 1] == '%') {
-                    $boundary = trim(substr($boundary, 0, -1));
-                    if (is_numeric($boundary)) {
-                        $boundary = $boundary * $data['grade'] / 100.0;
-                    } else {
-                        $errors["feedbackboundaries[$i]"] =
-                                get_string('feedbackerrorboundaryformat', 'quiz', $i + 1);
-                    }
-                } else if (!is_numeric($boundary)) {
-                    $errors["feedbackboundaries[$i]"] =
-                            get_string('feedbackerrorboundaryformat', 'quiz', $i + 1);
-                }
+
+            // Detect if this is a percentage, and if so, strip symbol.
+            $ispercent = false;
+            if (strlen($boundary) > 0 && $boundary[strlen($boundary) - 1] == '%') {
+                $boundary = trim(substr($boundary, 0, -1));
+                $ispercent = true;
             }
-            if (is_numeric($boundary) && $boundary <= 0 || $boundary >= $data['grade'] ) {
+
+            // Check the number format.
+            $boundary = unformat_float($boundary, true);
+            if ($boundary === false) {
+                $errors["feedbackboundaries[$i]"] =
+                        get_string('feedbackerrorboundaryformat', 'quiz', $i + 1);
+                continue;
+            }
+
+            // Convert percentage to grade.
+            if ($ispercent) {
+                $boundary = $boundary * $data['grade'] / 100.0;
+            }
+
+            // Verify the grade is in range, and the boundaries are in order.
+            if ($boundary <= 0 || $boundary >= $data['grade'] ) {
                 $errors["feedbackboundaries[$i]"] =
                         get_string('feedbackerrorboundaryoutofrange', 'quiz', $i + 1);
-            }
-            if (is_numeric($boundary) && $i > 0 &&
-                    $boundary >= $data['feedbackboundaries'][$i - 1]) {
+
+            } else if ($boundary >= $lastboundary) {
                 $errors["feedbackboundaries[$i]"] =
                         get_string('feedbackerrororder', 'quiz', $i + 1);
             }
-            $data['feedbackboundaries'][$i] = $boundary;
+
+            $lastboundary = $boundary;
             $i += 1;
         }
         $numboundaries = $i;
@@ -597,7 +607,7 @@ class mod_quiz_mod_form extends moodleform_mod {
         }
 
         // If CBM is involved, don't show the warning for grade to pass being larger than the maximum grade.
-        if (($data['preferredbehaviour'] == 'deferredcbm') OR ($data['preferredbehaviour'] == 'immediatecbm')) {
+        if (($data['preferredbehaviour'] == 'deferredcbm') || ($data['preferredbehaviour'] == 'immediatecbm')) {
             unset($errors['gradepass']);
         }
         // Any other rule plugins.
