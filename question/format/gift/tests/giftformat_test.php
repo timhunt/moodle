@@ -1345,6 +1345,8 @@ FALSE#42 is the Ultimate Answer.#You gave the right answer.}";
             'split over line' => ['', [], "// Ceci n\'est pas une [tag:\n\\ frog]."],
             'escape ] idnumber' => ['i]d', [], '// [id:i\]d].'],
             'escape ] tag' => ['', ['t]ag'], '// [tag:t\]ag].'],
+            'Non-ascii idnumber' => ['', ['équipe'], '// [tag:équipe].'],
+            'Non-ascii tag' => ['équipe', [], '// [id:équipe].'],
         ];
     }
 
