@@ -475,7 +475,7 @@ class core_question_renderer extends plugin_renderer_base {
             $user->id = $step->get_user_id();
             $row = array(
                 $stepno,
-                userdate($step->get_timecreated(), get_string('strftimedatetimeshort')),
+                userdate($step->get_timecreated(), get_string('strftimedatetimeshortaccurate', 'core_langconfig')),
                 s($qa->summarise_action($step)),
                 $restrictedqa->get_state_string($options->correctness),
             );
