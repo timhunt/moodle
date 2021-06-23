@@ -929,6 +929,7 @@ $string['general'] = 'General';
 $string['geolocation'] = 'latitude - longitude';
 $string['gettheselogs'] = 'Get these logs';
 $string['go'] = 'Go';
+$string['goback'] = 'Go back';
 $string['gpl'] = 'Copyright (C) 1999 onwards Martin Dougiamas (https://moodle.com)
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
@@ -1787,6 +1788,7 @@ $string['restoreusersprecheckerror'] = 'Some problems were detected when checkin
 $string['restricted'] = 'Restricted';
 $string['retry'] = 'Retry';
 $string['returningtosite'] = 'Returning to this web site?';
+$string['returntocourse'] = 'Return to course';
 $string['returntooriginaluser'] = 'Return to {$a}';
 $string['revert'] = 'Revert';
 $string['role'] = 'Role';

@@ -49,7 +49,6 @@ $string['asyncrestoreerror'] = 'The restore process has failed';
 $string['asyncrestoreerrordetail'] = 'The restore process has failed. Please contact your system administrator.';
 $string['asyncrestorepending'] = 'The restore process is pending';
 $string['asyncrestoreprocessing'] = 'The restore is in progress';
-$string['asyncreturn'] = 'Return to course';
 $string['asyncrestoreinprogress'] = 'Restores in progress';
 $string['asyncrestoreinprogress_help'] = 'Asynchronous course restores that are in progress are shown here.';
 $string['autoactivedisabled'] = 'Disabled';
@@ -413,3 +412,6 @@ $string['userinfo'] = 'Userinfo';
 $string['module'] = 'Module';
 $string['morecoursesearchresults'] = 'More than {$a} courses found, showing first {$a} results';
 $string['recyclebin_desc'] = 'Note that these settings will be also be used for the recycle bin.';
+
+// Deprecated in 4.0 (use returntocourse from lang/en/moodle.php).
+$string['asyncreturn'] = 'Return to course';

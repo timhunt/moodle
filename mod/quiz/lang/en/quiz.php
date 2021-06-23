@@ -119,7 +119,6 @@ $string['attempttitlepaged'] = '{$a->name} (page {$a->currentpage} of {$a->total
 $string['autosaveperiod'] = 'Auto-save delay';
 $string['autosaveperiod_desc'] = 'Responses can be saved automatically during quiz attempts. The responses are saved whenever one is changed, and then after this delay. There is a trade-off: a shorter delay increases the server load, but reduces the chance that students lose their work. If you are going to make this delay much shorter, you should change the value gradually and monitor the server load. If the load gets too high, make the delay longer again. Setting the delay to 0 turns off auto-saving.';
 $string['back'] = 'Back to preview question';
-$string['backtocourse'] = 'Back to the course';
 $string['backtoquestionlist'] = 'Back to question list';
 $string['backtoquiz'] = 'Back to quiz editing';
 $string['basicideasofquiz'] = 'The basic ideas of quiz-making';
@@ -1026,3 +1025,6 @@ $string['settingsoverrides'] = 'Settings overrides';
 
 // Deprecated since Moodle 3.11.
 $string['completionattemptsexhausteddesc'] = 'Complete if all available attempts are exhausted';
+
+// Deprecated in 4.0 (use returntocourse from lang/en/moodle.php).
+$string['backtocourse'] = 'Back to the course';

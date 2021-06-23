@@ -150,8 +150,9 @@ if (empty($pageid)) {
                             'center leftduring');
 
                 } else {
-                    $courselink = new single_button(new moodle_url('/course/view.php',
-                            array('id' => $PAGE->course->id)), get_string('returntocourse', 'lesson'), 'get');
+                    $courselink = new single_button(
+                        new moodle_url('/course/view.php', ['id' => $PAGE->course->id]),
+                        get_string('returntocourse'), 'get');
 
                     echo html_writer::div($lessonoutput->message(get_string('leftduringtimednoretake', 'lesson'), $courselink),
                             'center leftduring');
@@ -167,7 +168,9 @@ if (empty($pageid)) {
     if ($attemptflag) {
         if (!$lesson->retake) {
             echo $lessonoutput->header($lesson, $cm, 'view', '', null, get_string("noretake", "lesson"));
-            $courselink = new single_button(new moodle_url('/course/view.php', array('id'=>$PAGE->course->id)), get_string('returntocourse', 'lesson'), 'get');
+            $courselink = new single_button(
+                new moodle_url('/course/view.php', ['id' => $PAGE->course->id]),
+                get_string('returntocourse'), 'get');
             echo $lessonoutput->message(get_string("noretake", "lesson"), $courselink);
             echo $lessonoutput->footer();
             exit();

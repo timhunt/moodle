@@ -28,5 +28,7 @@ $string['criteriagroup'] = 'Criteria group';
 $string['firstofsecond'] = '{$a->first} of {$a->second}';
 $string['pluginname'] = 'Course completion status';
 $string['requirement'] = 'Requirement';
-$string['returntocourse'] = 'Return to course';
 $string['privacy:metadata'] = 'The Course completion status block only shows information about course completion and does not store any data of its own.';
+
+// Deprecated in 4.0 (moved to lang/en/moodle.php).
+$string['returntocourse'] = 'Return to course';

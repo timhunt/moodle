@@ -97,7 +97,8 @@ if (is_null($mode) and !is_enrolled($context, $USER, '', true)) {   // Guests an
     if (isguestuser()) {
         echo $OUTPUT->header();
         echo $OUTPUT->confirm(get_string('subscribeenrolledonly', 'forum').'<br /><br />'.get_string('liketologin'),
-                     get_login_url(), new moodle_url('/mod/forum/view.php', array('f'=>$id)));
+            new single_button(new moodle_url(get_login_url()), get_string('login'), 'get', true),
+            new single_button(new moodle_url('/mod/forum/view.php', ['f' => $id]), get_string('goback'), 'get'));
         echo $OUTPUT->footer();
         exit;
     } else {

@@ -67,7 +67,9 @@ if (isguestuser()) {   // Guests can't change forum
     $PAGE->set_title($course->shortname);
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
-    echo $OUTPUT->confirm(get_string('noguesttracking', 'forum').'<br /><br />'.get_string('liketologin'), get_login_url(), $returnto);
+    echo $OUTPUT->confirm(get_string('noguesttracking', 'forum').'<br /><br />'.get_string('liketologin'),
+        new single_button(new moodle_url(get_login_url()), get_string('login'), 'get', true),
+        new single_button($returnto, get_string('goback'), 'get'));
     echo $OUTPUT->footer();
     exit;
 }

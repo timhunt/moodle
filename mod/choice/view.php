@@ -218,7 +218,9 @@ if (!$choiceformshown) {
     if (isguestuser()) {
         // Guest account
         echo $OUTPUT->confirm(get_string('noguestchoose', 'choice').'<br /><br />'.get_string('liketologin'),
-                     get_login_url(), new moodle_url('/course/view.php', array('id'=>$course->id)));
+            new single_button(new moodle_url(get_login_url()), get_string('login'), 'get', true),
+            new single_button(new moodle_url('/course/view.php', ['id' => $course->id]),
+                    get_string('returntocourse'), 'get'));
     } else if (!is_enrolled($context)) {
         // Only people enrolled can make a choice
         $SESSION->wantsurl = qualified_me();

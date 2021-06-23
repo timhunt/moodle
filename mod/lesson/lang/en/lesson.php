@@ -517,7 +517,6 @@ $string['response'] = 'Response';
 $string['retakesallowed'] = 'Re-takes allowed';
 $string['retakesallowed_help'] = 'If enabled, students can attempt the lesson more than once.';
 $string['returnto'] = 'Return to {$a}';
-$string['returntocourse'] = 'Return to the course';
 $string['reverttodefaults'] = 'Revert to lesson defaults';
 $string['review'] = 'Review';
 $string['reviewlesson'] = 'Review lesson';
@@ -609,3 +608,6 @@ $string['additionalattemptsremaining'] = 'Completed, You can re-attempt this les
 $string['lessoncloseson'] = 'Lesson closes on {$a}';
 $string['lessonname'] = 'Lesson: {$a}';
 $string['xattempts'] = '{$a} attempts';
+
+// Deprecated in 4.0 (moved to lang/en/moodle.php).
+$string['returntocourse'] = 'Return to course';

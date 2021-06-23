@@ -47,7 +47,7 @@
     {{^headingident}}<h3 id="{{backupid}}_status">{{# str }} asyncrestorepending, backup {{/ str }}</h3>{{/headingident}}
     {{> core/async_backup_progress }}
     <p id="{{backupid}}_detail">{{# str }} asyncnowait, backup {{/ str }}<br/>{{# str }} asynccheckprogress, backup, {{restoreurl}} {{/ str }}</p>
-    <a id="{{backupid}}_button" href="{{courseurl}}" class="btn btn-primary">{{# str }} asyncreturn, backup {{/ str }}</a>
+    <a id="{{backupid}}_button" href="{{courseurl}}" class="btn btn-primary">{{# str }} returntocourse {{/ str }}</a>
 </div>
 
 {{#js}}

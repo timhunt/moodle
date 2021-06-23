@@ -258,6 +258,6 @@ if (empty($completions)) {
 }
 $courseurl = new moodle_url("/course/view.php", array('id' => $course->id));
 echo html_writer::start_tag('div', array('class' => 'buttons'));
-echo $OUTPUT->single_button($courseurl, get_string('returntocourse', 'block_completionstatus'), 'get');
+echo $OUTPUT->single_button($courseurl, get_string('returntocourse'), 'get');
 echo html_writer::end_tag('div');
 echo $OUTPUT->footer();

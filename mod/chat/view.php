@@ -57,13 +57,15 @@ require_course_login($course, true, $cm);
 
 $context = context_module::instance($cm->id);
 $PAGE->set_context($context);
+$PAGE->set_url('/mod/chat/view.php', ['id' => $cm->id]);
 
 // Show some info for guests.
 if (isguestuser()) {
     $PAGE->set_title($chat->name);
     echo $OUTPUT->header();
     echo $OUTPUT->confirm('<p>'.get_string('noguests', 'chat').'</p>'.get_string('liketologin'),
-            get_login_url(), $CFG->wwwroot.'/course/view.php?id='.$course->id);
+        new single_button(new moodle_url(get_login_url()), get_string('login'), 'get', true),
+        new single_button(new moodle_url('/course/view.php', ['id' => $course->id]), get_string('returntocourse'), 'get'));
 
     echo $OUTPUT->footer();
     exit;
@@ -80,7 +82,6 @@ $courseshortname = format_string($course->shortname, true, array('context' => co
 $title = $courseshortname . ': ' . format_string($chat->name);
 
 // Initialize $PAGE.
-$PAGE->set_url('/mod/chat/view.php', array('id' => $cm->id));
 $PAGE->set_title($title);
 $PAGE->set_heading($course->fullname);
 

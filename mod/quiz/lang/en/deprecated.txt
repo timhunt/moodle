@@ -1,3 +1,5 @@
+backtocourse,mod_quiz
+completionattemptsexhausteddesc,mod_quiz
 numattemptsmade,mod_quiz
 reviewofattempt,mod_quiz
 reviewofpreview,mod_quiz

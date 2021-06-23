@@ -1,4 +1,5 @@
 additionalattemptsremaining,mod_lesson
 lessoncloseson,mod_lesson
 lessonname,mod_lesson
+returntocourse,mod_lesson
 xattempts,mod_lesson
