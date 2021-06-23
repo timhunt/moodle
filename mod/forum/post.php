@@ -102,10 +102,11 @@ if (!isloggedin() or isguestuser()) {
     $PAGE->set_context($modcontext);
     $PAGE->set_title($course->shortname);
     $PAGE->set_heading($course->fullname);
-    $referer = get_local_referer(false);
 
     echo $OUTPUT->header();
-    echo $OUTPUT->confirm(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'), get_login_url(), $referer);
+    echo $OUTPUT->confirm(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'),
+        new single_button(new moodle_url(get_login_url()), get_string('continue'), 'get', true),
+        new moodle_url(get_local_referer(false)));
     echo $OUTPUT->footer();
     exit;
 }
