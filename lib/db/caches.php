@@ -284,6 +284,7 @@ $definitions = array(
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => true,
+        'canuselocalstore' => true,
         'staticacceleration' => true,
         'staticaccelerationsize' => 5
     ),
