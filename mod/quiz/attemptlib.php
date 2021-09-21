@@ -1734,6 +1734,18 @@ class quiz_attempt {
             ];
         }
 
+        // Give plugins a chance to override this.
+        foreach (['quizaccess', 'quiz', 'local'] as $plugintype) {
+            foreach (core_component::get_plugin_list_with_class($plugintype,
+                    'mod_quiz\attempt_review_callback') as $callbackclass) {
+                $callback = new $callbackclass();
+                if ($callback instanceof \mod_quiz\attempt_review_callback) {
+                    $summarydata = $callback->update_review_summary($summarydata,
+                            $this, $options, $page, $showall);
+                }
+            }
+        }
+
         return $summarydata;
     }
 
