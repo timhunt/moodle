@@ -1588,6 +1588,156 @@ class quiz_attempt {
     }
 
     /**
+     * Prepare the summary information which is shown at the top of the review page.
+     *
+     * The return array has the rows of the summary table in order.
+     * The key for each element of the array should be a short, meaningful, string.
+     * The value is an array with two elements:
+     * ['title' => $cell1, 'content' => $cell2]
+     * each of those may be either a {@link renderable} or
+     * (something that is effectively) a string
+     * This is rendered by {@link mod_quiz_renderer::review_summary_table()}.
+     *
+     * @param mod_quiz_display_options $options display options in force for this review.
+     * @param int $page which page is being shown.
+     * @param bool $showall whether the review is showing all questions.
+     * @return array[] structured as above.
+     */
+    public function get_review_page_summary_info(mod_quiz_display_options $options,
+            int $page, bool $showall): array {
+        global $DB, $USER;
+
+        // Work out some time-related things.
+        $overtime = 0;
+
+        if ($this->attempt->state == quiz_attempt::FINISHED) {
+            if ($timetaken = ($this->attempt->timefinish - $this->attempt->timestart)) {
+                if ($this->get_quiz()->timelimit && $timetaken > ($this->get_quiz()->timelimit + 60)) {
+                    $overtime = $timetaken - $this->get_quiz()->timelimit;
+                    $overtime = format_time($overtime);
+                }
+                $timetaken = format_time($timetaken);
+            } else {
+                $timetaken = "-";
+            }
+        } else {
+            $timetaken = get_string('unfinished', 'quiz');
+        }
+
+        // Prepare summary informat about the whole attempt.
+        $summarydata = [];
+        if (!$this->get_quiz()->showuserpicture && $this->get_userid() != $USER->id) {
+            // If showuserpicture is true, the picture is shown elsewhere, so don't repeat it.
+            $student = $DB->get_record('user', ['id' => $this->get_userid()]);
+            $userpicture = new user_picture($student);
+            $userpicture->courseid = $this->get_courseid();
+            $summarydata['user'] = [
+                    'title'   => $userpicture,
+                    'content' => new action_link(new moodle_url('/user/view.php', [
+                            'id' => $student->id, 'course' => $this->get_courseid()]),
+                            fullname($student, true)),
+            ];
+        }
+
+        if ($this->has_capability('mod/quiz:viewreports')) {
+            $attemptlist = $this->links_to_other_attempts($this->review_url(null, $page,
+                    $showall));
+            if ($attemptlist) {
+                $summarydata['attemptlist'] = [
+                        'title'   => get_string('attempts', 'quiz'),
+                        'content' => $attemptlist,
+                ];
+            }
+        }
+
+        // Timing information.
+        $summarydata['startedon'] = [
+                'title'   => get_string('startedon', 'quiz'),
+                'content' => userdate($this->attempt->timestart),
+        ];
+
+        $summarydata['state'] = [
+                'title'   => get_string('attemptstate', 'quiz'),
+                'content' => quiz_attempt::state_name($this->attempt->state),
+        ];
+
+        if ($this->attempt->state == quiz_attempt::FINISHED) {
+            $summarydata['completedon'] = [
+                    'title'   => get_string('completedon', 'quiz'),
+                    'content' => userdate($this->attempt->timefinish),
+            ];
+            $summarydata['timetaken'] = [
+                    'title'   => get_string('timetaken', 'quiz'),
+                    'content' => $timetaken,
+            ];
+        }
+
+        if (!empty($overtime)) {
+            $summarydata['overdue'] = [
+                    'title'   => get_string('overdue', 'quiz'),
+                    'content' => $overtime,
+            ];
+        }
+
+        // Show marks (if the user is allowed to see marks at the moment).
+        $grade = quiz_rescale_grade($this->attempt->sumgrades, $this->get_quiz(), false);
+        if ($options->marks >= question_display_options::MARK_AND_MAX && quiz_has_grades($this->get_quiz())) {
+
+            if ($this->attempt->state != quiz_attempt::FINISHED) {
+                // Cannot display grade.
+
+            } else if (is_null($grade)) {
+                $summarydata['grade'] = [
+                        'title'   => get_string('grade', 'quiz'),
+                        'content' => quiz_format_grade($this->get_quiz(), $grade),
+                ];
+
+            } else {
+                // Show raw marks only if they are different from the grade (like on the view page).
+                if ($this->get_quiz()->grade != $this->get_quiz()->sumgrades) {
+                    $a = new stdClass();
+                    $a->grade = quiz_format_grade($this->get_quiz(), $this->attempt->sumgrades);
+                    $a->maxgrade = quiz_format_grade($this->get_quiz(), $this->get_quiz()->sumgrades);
+                    $summarydata['marks'] = [
+                            'title'   => get_string('marks', 'quiz'),
+                            'content' => get_string('outofshort', 'quiz', $a),
+                    ];
+                }
+
+                // Now the scaled grade.
+                $a = new stdClass();
+                $a->grade = html_writer::tag('b', quiz_format_grade($this->get_quiz(), $grade));
+                $a->maxgrade = quiz_format_grade($this->get_quiz(), $this->get_quiz()->grade);
+                if ($this->get_quiz()->grade != 100) {
+                    $a->percent = html_writer::tag('b', format_float(
+                            $this->attempt->sumgrades * 100 / $this->get_quiz()->sumgrades, 0));
+                    $formattedgrade = get_string('outofpercent', 'quiz', $a);
+                } else {
+                    $formattedgrade = get_string('outof', 'quiz', $a);
+                }
+                $summarydata['grade'] = [
+                        'title'   => get_string('grade', 'quiz'),
+                        'content' => $formattedgrade,
+                ];
+            }
+        }
+
+        // Any additional summary data from the behaviour.
+        $summarydata = array_merge($summarydata, $this->get_additional_summary_data($options));
+
+        // Feedback if there is any, and the user is allowed to see it now.
+        $feedback = $this->get_overall_feedback($grade);
+        if ($options->overallfeedback && $feedback) {
+            $summarydata['feedback'] = [
+                    'title'   => get_string('feedback', 'quiz'),
+                    'content' => $feedback,
+            ];
+        }
+
+        return $summarydata;
+    }
+
+    /**
      * @return moodle_url the URL of this quiz's summary page.
      */
     public function processattempt_url() {
