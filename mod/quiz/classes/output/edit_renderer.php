@@ -57,10 +57,10 @@ class edit_renderer extends \plugin_renderer_base {
         \core_question\local\bank\question_edit_contexts $contexts, \moodle_url $pageurl, array $pagevars) {
         $output = '';
 
+        $this->edit_page_tertiary_nav($quizobj);
+
         // Page title.
-        $output .= $this->heading_with_help(get_string('editingquizx', 'quiz',
-                format_string($quizobj->get_quiz_name())), 'editingquiz', 'quiz', '',
-                get_string('basicideasofquiz', 'quiz'), 2);
+        $output .= $this->heading(get_string('editingquiz', 'quiz'), 4);
 
         // Information at the top.
         $output .= $this->quiz_state_warnings($structure);
@@ -128,6 +128,32 @@ class edit_renderer extends \plugin_renderer_base {
             // Include the question chooser.
             $output .= $this->question_chooser();
         }
+
+        return $output;
+    }
+
+    /**
+     * Generate the tertiary nav for the Edit quiz page.
+     *
+     * @param \quiz $quizobj object containing all the quiz settings information.
+     * @return string HTML to output.
+     */
+    public function edit_page_tertiary_nav(\quiz $quizobj): string {
+        $output = '';
+
+        $output .= html_writer::start_div('container-fluid mb-3');
+        $output .= html_writer::start_div('row');
+
+        $output .= html_writer::link($quizobj->view_url(), get_string('back'),
+                ['class' => 'btn btn-secondary']);
+
+        if ($quizobj->can_preview_now()) {
+            $output .= html_writer::link($quizobj->start_attempt_url(), get_string('previewquiz', 'mod_quiz'),
+                    ['class' => 'btn btn-secondary']);
+        }
+
+        $output .= html_writer::end_div();
+        $output .= html_writer::end_div();
 
         return $output;
     }
