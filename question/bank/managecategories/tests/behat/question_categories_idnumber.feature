@@ -32,7 +32,7 @@ Feature: A teacher can put questions with idnumbers in categories with idnumbers
       | Category info   | Created as a test |
       | ID number       | c1used            |
     # Press the Add category button in category page.
-    And I click on "Add category" "button" in the "[id='fitem_id_submitbutton']" "css_element"
+    And I click on "Add category" "button"
     # Standard warning.
     Then I should see "This ID number is already in use"
     # Correction to a unique idnumber for the context.
