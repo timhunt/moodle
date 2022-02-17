@@ -24,7 +24,7 @@ Feature: A teacher can put questions with idnumbers in categories with idnumbers
       | Course       | C1        | Top              | top            |          |
       | Course       | C1        | top              | Used category  | c1used   |
     And I navigate to "Question bank" in current page administration
-    And I select "Categories" from the "questionbankactionselect" singleselect
+    And I select "Categories" from the "Question bank tertiary navigation" singleselect
     And I follow "Add category"
     And I set the following fields to these values:
       | Name            | Sub used category |
@@ -51,7 +51,7 @@ Feature: A teacher can put questions with idnumbers in categories with idnumbers
       | Course       | C1        | Top              | top            |          |
       | Course       | C1        | top              | Used category  | c1used   |
     And I navigate to "Question bank" in current page administration
-    And I select "Categories" from the "questionbankactionselect" singleselect
+    And I select "Categories" from the "Question bank tertiary navigation" singleselect
     And I click on "Edit this category" "link" in the "Used category" "list_item"
     And I press "Save changes"
     Then I should not see "This ID number is already in use"
