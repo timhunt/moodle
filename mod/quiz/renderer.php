@@ -838,7 +838,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
     public function view_page_tertiary_nav(mod_quiz_view_object $viewobj): string {
         $content = '';
 
-        if ($viewobj->startbuttonintertiarynav) {
+        if ($viewobj->startbuttonintertiarynav && $viewobj->buttontext) {
             $attemptbtn = $this->start_attempt_button($viewobj->buttontext,
                     $viewobj->startattempturl, $viewobj->preflightcheckform,
                     $viewobj->popuprequired, $viewobj->popupoptions);

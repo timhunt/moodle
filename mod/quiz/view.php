@@ -210,8 +210,10 @@ if (!$viewobj->quizhasquestions) {
     if ($unfinished) {
         if ($canattempt) {
             $viewobj->buttontext = get_string('continueattemptquiz', 'quiz');
+            $viewobj->startbuttonintertiarynav = true;
         } else if ($canpreview) {
             $viewobj->buttontext = get_string('continuepreview', 'quiz');
+            $viewobj->startbuttonintertiarynav = true;
         }
 
     } else {
@@ -225,6 +227,7 @@ if (!$viewobj->quizhasquestions) {
                 $viewobj->startbuttonintertiarynav = true;
             } else {
                 $viewobj->buttontext = get_string('reattemptquiz', 'quiz');
+                $viewobj->startbuttonintertiarynav = true;
             }
 
         } else if ($canpreview) {

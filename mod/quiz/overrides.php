@@ -330,7 +330,7 @@ if ($canedit) {
         if (empty($users)) {
             // There are no students.
             $warningmessage = $nousermessage;
-            $addenabled = false;
+            $addenabled = true;
         }
     }
 }
@@ -362,14 +362,8 @@ if ($hasinactive) {
     echo $OUTPUT->notification(get_string('inactiveoverridehelp', 'quiz'), 'info', false);
 }
 
-if ($canedit) {
-    echo html_writer::start_div('buttons');
-    if ($warningmessage) {
-        echo $OUTPUT->notification(get_string('groupsnone', 'quiz'), 'error');
-    } else {
-        $OUTPUT->render($tertiarynav->create_add_button($renderer));
-    }
-    echo html_writer::end_tag('div');
+if ($warningmessage) {
+    echo $OUTPUT->notification($warningmessage, 'error');
 }
 
 echo html_writer::end_tag('div');
