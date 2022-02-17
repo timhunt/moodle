@@ -79,7 +79,7 @@ class qbank_action_menu implements templatable, renderable {
         }
 
         $urlselect = new url_select($menu, $this->currenturl->out(false), null, 'questionbankaction');
-        $urlselect->set_label('questionbankactionselect', ['class' => 'accesshide']);
+        $urlselect->set_label(get_string('questionbanknavigation', 'question'), ['class' => 'accesshide']);
 
         return [
             'questionbankselect' => $urlselect->export_for_template($output),
