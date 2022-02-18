@@ -330,7 +330,7 @@ if ($canedit) {
         if (empty($users)) {
             // There are no students.
             $warningmessage = $nousermessage;
-            $addenabled = true;
+            $addenabled = false;
         }
     }
 }
