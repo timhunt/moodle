@@ -838,7 +838,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
     public function view_page_tertiary_nav(mod_quiz_view_object $viewobj): string {
         $content = '';
 
-        if ($viewobj->startbuttonintertiarynav && $viewobj->buttontext) {
+        if ($viewobj->buttontext) {
             $attemptbtn = $this->start_attempt_button($viewobj->buttontext,
                     $viewobj->startattempturl, $viewobj->preflightcheckform,
                     $viewobj->popuprequired, $viewobj->popupoptions);
@@ -873,12 +873,6 @@ class mod_quiz_renderer extends plugin_renderer_base {
                     'text-left mb-3');
         }
         $output .= $this->access_messages($viewobj->preventmessages);
-
-        if (!$viewobj->startbuttonintertiarynav && $viewobj->buttontext) {
-            $output .= $this->start_attempt_button($viewobj->buttontext,
-                    $viewobj->startattempturl, $viewobj->preflightcheckform,
-                    $viewobj->popuprequired, $viewobj->popupoptions);
-        }
 
         if ($viewobj->showbacktocourse) {
             $output .= $this->single_button($viewobj->backtocourseurl,
@@ -1466,8 +1460,6 @@ class mod_quiz_view_object {
     /** @var string $buttontext caption for the start attempt button. If this is null, show no
      *      button, or if it is '' show a back to the course button. */
     public $buttontext;
-    /** @var bool whether the start button should be shown in the tertiary nav, rather than at the bottom of the page. */
-    public $startbuttonintertiarynav = false;
     /** @var moodle_url $startattempturl URL to start an attempt. */
     public $startattempturl;
     /** @var mod_quiz_preflight_check_form|null $preflightcheckform confirmation form that must be

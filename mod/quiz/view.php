@@ -210,10 +210,8 @@ if (!$viewobj->quizhasquestions) {
     if ($unfinished) {
         if ($canattempt) {
             $viewobj->buttontext = get_string('continueattemptquiz', 'quiz');
-            $viewobj->startbuttonintertiarynav = true;
         } else if ($canpreview) {
             $viewobj->buttontext = get_string('continuepreview', 'quiz');
-            $viewobj->startbuttonintertiarynav = true;
         }
 
     } else {
@@ -224,15 +222,12 @@ if (!$viewobj->quizhasquestions) {
                 $viewobj->buttontext = '';
             } else if ($viewobj->numattempts == 0) {
                 $viewobj->buttontext = get_string('attemptquiz', 'quiz');
-                $viewobj->startbuttonintertiarynav = true;
             } else {
                 $viewobj->buttontext = get_string('reattemptquiz', 'quiz');
-                $viewobj->startbuttonintertiarynav = true;
             }
 
         } else if ($canpreview) {
             $viewobj->buttontext = get_string('previewquizstart', 'quiz');
-            $viewobj->startbuttonintertiarynav = true;
         }
     }
 
