@@ -861,14 +861,18 @@ class edit_renderer extends \plugin_renderer_base {
      * Render the preview icon.
      *
      * @param \stdClass $quiz the quiz settings from the database.
-     * @param \stdClass $slot data from the question and quiz_slots tables.
+     * @param \stdClass $questiondata which question to preview.
+     *      If ->questionid is set, that is used instead of ->id.
      * @param bool $label if true, show the preview question label after the icon
      * @param int $variant which question variant to preview (optional).
      * @return string HTML to output.
      */
-    public function question_preview_icon($quiz, $slot, $label = null, $variant = null) {
-        $question = clone($slot);
-        $question->id = $question->questionid;
+    public function question_preview_icon($quiz, $questiondata, $label = null, $variant = null) {
+        $question = clone($questiondata);
+        if (isset($question->questionid)) {
+
+            $question->id = $question->questionid;
+        }
 
         $url = quiz_question_preview_url($quiz, $question, $variant);
 
