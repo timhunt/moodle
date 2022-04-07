@@ -72,10 +72,10 @@ class qbank_helper {
                               FROM {question_versions} givenversion
                              WHERE givenversion.questionid = ?
                        )
-                   AND allversions.status = ?
+                   AND allversions.status <> ?
 
               ORDER BY allversions.version DESC
-              ", [$questionid, question_version_status::QUESTION_STATUS_READY]);
+              ", [$questionid, question_version_status::QUESTION_STATUS_DRAFT]);
     }
 
     /**
@@ -159,7 +159,7 @@ class qbank_helper {
                                         AND qv.version = COALESCE(qr.version, (
                                              SELECT MAX(version)
                                                FROM {question_versions}
-                                              WHERE questionbankentryid = qbe.id AND status = :ready
+                                              WHERE questionbankentryid = qbe.id AND status <> :draft
                                         ))
              LEFT JOIN {question_categories} qc ON qc.id = qbe.questioncategoryid
              LEFT JOIN {question} q ON q.id = qv.questionid
@@ -170,7 +170,7 @@ class qbank_helper {
 
                  WHERE slot.quizid = :quizid
               ORDER BY slot.slot
-              ", ['ready' => question_version_status::QUESTION_STATUS_READY,
+              ", ['draft' => question_version_status::QUESTION_STATUS_DRAFT,
                     'quizcontextid' => $quizcontext->id, 'quizcontextid2' => $quizcontext->id,
                     'quizid' => $quizid]);
 
