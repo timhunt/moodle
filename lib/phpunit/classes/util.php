@@ -467,6 +467,8 @@ class phpunit_util extends testing_util {
 
         install_cli_database($options, false);
 
+        self::create_additional_data_after_install();
+
         // Set the admin email address.
         $DB->set_field('user', 'email', 'admin@example.com', array('username' => 'admin'));
 

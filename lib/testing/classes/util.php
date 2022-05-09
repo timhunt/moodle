@@ -215,6 +215,48 @@ abstract class testing_util {
         return true;
     }
 
+    const MAX_ENTITIES_TO_GENERATE = 5;
+
+    /**
+     * This is part of Behat and PHPunit install, to pre-fill the database with some random data.
+     *
+     * The purpose of this is similar to starting all the database ids with different random
+     * values, to stop test-writers making unwarranted assumptions.
+     */
+    public static function create_additional_data_after_install(): void {
+        $generator = self::get_data_generator();
+
+        for ($i = mt_rand(0, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $generator->create_category();
+        }
+
+        for ($i = mt_rand(0, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $generator->create_course(['shortname' => 'initial-course-' . random_string(5) . '-' . $i]);
+        }
+
+        for ($i = mt_rand(0, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $generator->create_user();
+        }
+
+        /** @var core_question_generator $questiongenerator */
+        $questiongenerator = $generator->get_plugin_generator('core_question');
+        for ($i = mt_rand(1, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $qcategory = $questiongenerator->create_question_category();
+        }
+
+        for ($i = mt_rand(0, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $questiongenerator->create_question('truefalse', null, ['category' => $qcategory->id]);
+        }
+
+        for ($i = mt_rand(1, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $fcategory = $generator->create_custom_field_category([]);
+        }
+
+        for ($i = mt_rand(0, self::MAX_ENTITIES_TO_GENERATE); $i > 0; $i--) {
+            $generator->create_custom_field(['categoryid' => $fcategory->id]);
+        }
+    }
+
     /**
      * Stores the status of the database
      *
