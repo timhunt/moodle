@@ -1,6 +1,6 @@
 This files describes API changes for question type plugins.
 
-=== 4.0.2 ===
+=== 4.0.2, 4.1 ===
 
 * There was one issue caused by the changes in Moodle 4.0 which requires changes in question types,
   and that is regrading. There are two new methods which some question types will need to implement,
