@@ -33,7 +33,7 @@ Feature: Quiz regrade when not possible
       |   1  | B        |
 
   Scenario: Try a regrade after the question has been edited to have a different number of choices
-    # Edit the question so that V2 ahs the fourth choice removed.
+    # Edit the question so that V2 has the fourth choice removed.
     Given I am on the "MC" "core_question > edit" page logged in as teacher
     And I set the following fields to these values:
       | Choice 4      |  |
