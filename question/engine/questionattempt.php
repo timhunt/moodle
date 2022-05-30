@@ -1423,7 +1423,7 @@ class question_attempt {
                 // First step of the attempt.
                 $first = false;
                 $this->start($oldqa->behaviour, $oldqa->get_variant(),
-                        $this->get_attempt_state_data($step, $oldqa->get_question()),
+                        $this->get_attempt_state_data_to_regrade_with_version($step, $oldqa->get_question()),
                         $step->get_timecreated(), $step->get_user_id(), $step->get_id());
 
             } else if ($step->has_behaviour_var('finish') && count($step->get_submitted_data()) > 1) {
@@ -1458,16 +1458,16 @@ class question_attempt {
     }
 
     /**
-     * Helper used be regrading.
+     * Helper used by regrading.
      *
-     * Get the data from the first step of the old step, and if necessary, update it to
-     * be suitable for use with the new version of the questions.
+     * Get the data from the first step of the old attempt and, if necessary,
+     * update it to be suitable for use with the other version of the question.
      *
      * @param question_attempt_step $oldstep First step at an attempt at $otherversion of this question.
-     * @param question_definition $otherversion
+     * @param question_definition $otherversion Another version of the quetsion being attempted.
      * @return array updated data required to restart an attempt with the current version of this question.
      */
-    protected function get_attempt_state_data(question_attempt_step $oldstep,
+    protected function get_attempt_state_data_to_regrade_with_version(question_attempt_step $oldstep,
             question_definition $otherversion): array {
         if ($this->get_question(false) === $otherversion) {
             return $oldstep->get_all_data();
