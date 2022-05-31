@@ -1464,7 +1464,7 @@ class question_attempt {
      * update it to be suitable for use with the other version of the question.
      *
      * @param question_attempt_step $oldstep First step at an attempt at $otherversion of this question.
-     * @param question_definition $otherversion Another version of the quetsion being attempted.
+     * @param question_definition $otherversion Another version of the question being attempted.
      * @return array updated data required to restart an attempt with the current version of this question.
      */
     protected function get_attempt_state_data_to_regrade_with_version(question_attempt_step $oldstep,
