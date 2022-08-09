@@ -7096,7 +7096,7 @@ function current_language() {
         // specific language (see force_current_language()).
         $return = $SESSION->forcelang;
 
-    } else if (!empty($PAGE->cm)  && !empty($PAGE->cm->lang)) {
+    } else if (!empty($PAGE->cm->lang)) {
         // Activity language, if set.
         $return = $PAGE->cm->lang;
 
@@ -7155,7 +7155,7 @@ function force_current_language($language) {
     global $SESSION;
     $sessionforcelang = isset($SESSION->forcelang) ? $SESSION->forcelang : '';
     if ($language !== $sessionforcelang) {
-        // Seting forcelang to null or an empty string disables it's effect.
+        // Setting forcelang to null or an empty string disables its effect.
         if (empty($language) || get_string_manager()->translation_exists($language, false)) {
             $SESSION->forcelang = $language;
             moodle_setlocale();
