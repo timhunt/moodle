@@ -18,13 +18,25 @@
  * Unit tests for current_language() in moodlelib.php.
  *
  * @package   core
- * @category  phpunit
+ * @category  test
  * @copyright 2022 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace core;
+
+use moodle_page;
 
 defined('MOODLE_INTERNAL') || die();
 
-class moodlelib_current_language_test extends advanced_testcase {
+/**
+ * Unit tests for current_language() in moodlelib.php.
+ *
+ * @copyright 2022 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers    ::current_language
+ */
+class moodlelib_current_language_test extends \advanced_testcase {
 
     public function test_current_language_site_default(): void {
         $this->resetAfterTest();
@@ -140,10 +152,13 @@ class moodlelib_current_language_test extends advanced_testcase {
 
 /**
  * Test helper class for test which need Moodle to think there are other languages installed.
+ *
+ * @copyright 2022 The Open University
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class testable_string_manager_for_current_language_tests extends core_string_manager_standard {
+class testable_string_manager_for_current_language_tests extends \core_string_manager_standard {
 
-    /** @var array list of languages which we want to pretend are installed. */
+    /** @var array $installedlanguages list of languages which we want to pretend are installed. */
     protected $installedlanguages;
 
     /**
