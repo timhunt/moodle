@@ -340,7 +340,7 @@ class logmanager {
         }
 
         if (self::is_current_output_buffer()) {
-            fwrite(self::$fh, $log);
+            fwrite(self::$fh, date('c') . ': ' . $log);
         }
 
         if (self::$outputloggedcontent) {
