@@ -2907,17 +2907,20 @@ class accesslib_test extends advanced_testcase {
         $group1users   = get_enrolled_users($coursecontext, '', $group1->id);
         $this->assertCount(1, $group1users);
         $this->assertArrayHasKey($user1->id, $group1users);
+        $this->assertEquals(1, count_enrolled_users($coursecontext, '', $group1->id));
 
         // Get user from group 2.
         $group2users   = get_enrolled_users($coursecontext, '', $group2->id);
         $this->assertCount(1, $group2users);
         $this->assertArrayHasKey($user2->id, $group2users);
+        $this->assertEquals(1, count_enrolled_users($coursecontext, '', $group2->id));
 
         // Get users from multiple groups.
         $groupusers   = get_enrolled_users($coursecontext, '', [$group1->id, $group2->id]);
         $this->assertCount(2, $groupusers);
         $this->assertArrayHasKey($user1->id, $groupusers);
         $this->assertArrayHasKey($user2->id, $groupusers);
+        $this->assertEquals(2, count_enrolled_users($coursecontext, '', [$group1->id, $group2->id]));
     }
 
     /**

@@ -1665,15 +1665,15 @@ function get_enrolled_users(context $context, $withcapability = '', $groupids = 
  *
  * @param context $context
  * @param string $withcapability
- * @param int $groupid 0 means ignore groups, any other value limits the result by group id
+ * @param int|array $groupids The groupids, 0 or [] means all groups and USERSWITHOUTGROUP no group
  * @param bool $onlyactive consider only active enrolments in enabled plugins and time restrictions
  * @return int number of users enrolled into course
  */
-function count_enrolled_users(context $context, $withcapability = '', $groupid = 0, $onlyactive = false) {
+function count_enrolled_users(context $context, $withcapability = '', $groupids = 0, $onlyactive = false) {
     global $DB;
 
     $capjoin = get_enrolled_with_capabilities_join(
-            $context, '', $withcapability, $groupid, $onlyactive);
+            $context, '', $withcapability, $groupids, $onlyactive);
 
     $sql = "SELECT COUNT(DISTINCT u.id)
               FROM {user} u
