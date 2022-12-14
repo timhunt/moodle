@@ -1879,7 +1879,7 @@ class mod_quiz_external extends external_api {
 
         list($quiz, $course, $cm, $context) = self::validate_quiz($params['quizid']);
 
-        $attempttocheck = 0;
+        $attempttocheck = null;
         if (!empty($params['attemptid'])) {
             $attemptobj = quiz_attempt::create($params['attemptid']);
             if ($attemptobj->get_userid() != $USER->id) {
@@ -1909,7 +1909,7 @@ class mod_quiz_external extends external_api {
         $numattempts = count($attempts);
 
         if (!$attempttocheck) {
-            $attempttocheck = $unfinishedattempt ? $unfinishedattempt : $lastfinishedattempt;
+            $attempttocheck = $unfinishedattempt ?: $lastfinishedattempt;
         }
 
         $result = array();

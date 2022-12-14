@@ -621,7 +621,7 @@ class mod_quiz_renderer extends plugin_renderer_base {
      * @param string $message message to display before closing the window. (optional)
      * @return string HTML to output.
      */
-    public function close_attempt_popup($url, $message = '') {
+    public function close_attempt_popup($url, $message = ''): string {
         $output = '';
         $output .= $this->header();
         $output .= $this->box_start();
