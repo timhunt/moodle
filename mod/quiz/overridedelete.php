@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_quiz\form\edit_override_form;
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot.'/mod/quiz/lib.php');
@@ -103,7 +104,7 @@ if ($override->groupid) {
     profile_load_custom_fields($user);
 
     $confirmstr = get_string('overridedeleteusersure', 'quiz',
-            quiz_override_form::display_user_name($user,
+            edit_override_form::display_user_name($user,
                     \core_user\fields::get_identity_fields($context)));
 }
 
