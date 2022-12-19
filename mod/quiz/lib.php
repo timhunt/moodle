@@ -29,6 +29,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use mod_quiz\access_manager;
+use mod_quiz\form\add_random_form;
 use mod_quiz\question\bank\custom_view;
 use mod_quiz\question\display_options;
 use mod_quiz\question\qubaids_for_quiz;
@@ -2474,7 +2475,7 @@ function mod_quiz_output_fragment_add_random_question_form($args) {
         'cmid' => $args['cmid']
     ];
 
-    $form = new quiz_add_random_form(
+    $form = new add_random_form(
         new \moodle_url('/mod/quiz/addrandom.php'),
         $formoptions,
         'post',
