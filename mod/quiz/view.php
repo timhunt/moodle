@@ -25,6 +25,7 @@
 
 use mod_quiz\access_manager;
 use mod_quiz\output\renderer;
+use mod_quiz\output\view_page;
 use mod_quiz\quiz_attempt;
 use mod_quiz\quiz_settings;
 
