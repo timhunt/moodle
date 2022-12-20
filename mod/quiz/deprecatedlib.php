@@ -151,7 +151,7 @@ class mod_quiz_overdue_attempt_updater {
     public function update_overdue_attempts($timenow, $processto) {
         debugging('mod_quiz_overdue_attempt_updater has been deprecated. The code wsa moved to ' .
                 'mod_quiz\task\update_overdue_attempts.');
-        return (new update_overdue_attempts())->update_all_overdue_attempts($timenow, $processto);
+        return (new update_overdue_attempts())->update_all_overdue_attempts((int) $timenow, (int) $processto);
     }
 
     /**
@@ -160,7 +160,7 @@ class mod_quiz_overdue_attempt_updater {
     public function get_list_of_overdue_attempts($processto) {
         debugging('mod_quiz_overdue_attempt_updater has been deprecated. The code wsa moved to ' .
                 'mod_quiz\task\update_overdue_attempts.');
-        return (new update_overdue_attempts())->get_list_of_overdue_attempts($processto);
+        return (new update_overdue_attempts())->get_list_of_overdue_attempts((int) $processto);
     }
 }
 
