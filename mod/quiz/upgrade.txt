@@ -39,7 +39,7 @@ This files describes API changes in the quiz code.
   - mod_quiz_attempts_report_form => mod_quiz\local\reports\attempts_report_options_form
   - mod_quiz_attempts_report_options => mod_quiz\local\reports\attempts_report_options
   - quiz_attempts_report_table => mod_quiz\local\reports\attempts_report_table
-  - quiz_attempts_report_table => mod_quiz\local\reports\attempts_report_table
+  - quiz_access_manager => mod_quiz\access_manager
   - mod_quiz_preflight_check_form => mod_quiz\form\preflight_check_form
   - quiz_override_form => mod_quiz\form\edit_override_form
   - quiz_access_rule_base => mod_quiz\local\access_rule_base
