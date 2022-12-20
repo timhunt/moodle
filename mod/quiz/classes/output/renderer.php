@@ -58,8 +58,7 @@ class renderer extends plugin_renderer_base {
      * @return string HTML to display.
      */
     public function review_page(quiz_attempt $attemptobj, $slots, $page, $showall,
-            $lastpage, display_options $displayoptions,
-            $summarydata) {
+            $lastpage, display_options $displayoptions, $summarydata) {
 
         $output = '';
         $output .= $this->header();
