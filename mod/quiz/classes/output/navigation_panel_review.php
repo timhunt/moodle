@@ -16,6 +16,8 @@
 
 namespace mod_quiz\output;
 
+use html_writer;
+
 /**
  * Specialisation of {@see navigation_panel_base} for the review quiz page.
  *
