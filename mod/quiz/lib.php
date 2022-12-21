@@ -2457,7 +2457,6 @@ function mod_quiz_output_fragment_quiz_question_bank($args) {
  */
 function mod_quiz_output_fragment_add_random_question_form($args) {
     global $CFG;
-    require_once($CFG->dirroot . '/mod/quiz/addrandomform.php');
 
     $contexts = new \core_question\local\bank\question_edit_contexts($args['context']);
     $formoptions = [
