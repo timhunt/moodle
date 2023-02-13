@@ -46,9 +46,9 @@ class statistics_bulk_loader {
         $places = self::get_all_places_where_questions_were_attempted($questionids);
 
         // Set up blank two-dimensional arrays to store the running totals. Indexed by questionid and field name.
-        $emptyvaluesforonequestion = array_combine($requiredstatistics, array_fill(0, count($requiredstatistics), 0));
-        $counts = array_combine($questionids, array_fill(0, count($questionids), $emptyvaluesforonequestion));
-        $sums = array_combine($questionids, array_fill(0, count($questionids), $emptyvaluesforonequestion));
+        $zerovaluesforonequestion = array_combine($requiredstatistics, array_fill(0, count($requiredstatistics), 0));
+        $counts = array_combine($questionids, array_fill(0, count($questionids), $zerovaluesforonequestion));
+        $sums = array_combine($questionids, array_fill(0, count($questionids), $zerovaluesforonequestion));
 
         // Load the data for each place, and add to the running totals.
         foreach ($places as $place) {
@@ -74,7 +74,7 @@ class statistics_bulk_loader {
         // Compute the averages from the final totals.
         $aggregates = [];
         foreach ($questionids as $questionid) {
-            $averages[$questionid] = [];
+            $aggregates[$questionid] = [];
             foreach ($requiredstatistics as $item) {
                 if ($counts[$questionid][$item] > 0) {
                     $aggregates[$questionid][$item] = $sums[$questionid][$item] / $counts[$questionid][$item];

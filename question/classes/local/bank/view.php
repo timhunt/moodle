@@ -144,8 +144,8 @@ class view {
      * @var ?array Stores all the average statistics that this question bank view needs.
      *
      * This field gets initialised in {@see display_question_list()}. It is a two dimensional
-     * $this->loadedstatistics [$questionid][$fieldname] = $average value of that statistics for this question.
-     * Column can access these values using $qbank->
+     * $this->loadedstatistics[$questionid][$fieldname] = $average value of that statistics for that question.
+     * Column classes in qbank plugins can access these values using {@see get_aggregate_statistic()}.
      */
     protected $loadedstatistics = null;
 
@@ -1056,8 +1056,8 @@ class view {
      *
      * @param int $questionid the id of a question
      * @param string $fieldname the name of a statistics field, e.g. 'facility'.
-     * @return float the average (across all users) of this statistic for this question. Null if the
-     *      value is not available right now.
+     * @return float|null the average (across all users) of this statistic for this question.
+     *      Null if the value is not available right now.
      */
     public function get_aggregate_statistic(int $questionid, string $fieldname): ?float {
         if (!array_key_exists($questionid, $this->loadedstatistics)) {
