@@ -88,6 +88,11 @@ This files describes API changes in the quiz code.
   - The file mod/quiz/report/statistics/statistics_graph.php - deprecated since 3.2
   - quiz_print_overview - deprecated since 3.3
 
+* The methods quiz_statistics_report::calculate_questions_stats_for_question_bank and get_all_stats_and_analysis
+  (which are really private to the quiz, and not part of any API you should be using) now have a new
+  optional argument $calculateifrequired.
+
+
 === 4.1 ===
 
 * quiz_has_question_use is now deprecated. Use mod_quiz\structure::has_use_capability istead.
