@@ -58,6 +58,10 @@ This files describes API changes in the quiz code.
   - quizaccess_seb\quiz_settings => quizaccess_seb\seb_quiz_settings
   - quizaccess_seb\access_manager => quizaccess_seb\seb_access_manager
 
+* The \mod_quiz\structure class, which might be considered private to the quiz, has had
+  string type hints added throughout. So, if you are using it in your code, and calling
+  it with arguments of the wrong type, you will have to clean up your code.
+
 * The following classes have been deprecated:
   - mod_quiz_overdue_attempt_updater - merged into mod_quiz\task\update_overdue_attempts
   - moodle_quiz_exception - just use normal moodle_exception
