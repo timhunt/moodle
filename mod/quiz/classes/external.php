@@ -926,7 +926,7 @@ class mod_quiz_external extends external_api {
                 'hasautosavedstep' => new external_value(PARAM_BOOL, 'whether this question attempt has autosaved data',
                                                             VALUE_OPTIONAL),
                 'flagged' => new external_value(PARAM_BOOL, 'whether the question is flagged or not'),
-                'number' => new external_value(PARAM_INT, 'question ordering number in the quiz', VALUE_OPTIONAL),
+                'number' => new external_value(PARAM_RAW, 'question ordering number in the quiz', VALUE_OPTIONAL),
                 'state' => new external_value(PARAM_ALPHA, 'the state where the question is in.
                     It will not be returned if the user cannot see it due to the quiz display correctness settings.',
                     VALUE_OPTIONAL),
@@ -955,7 +955,6 @@ class mod_quiz_external extends external_api {
         global $PAGE;
 
         $questions = [];
-        $contextid = $attemptobj->get_quizobj()->get_context()->id;
         $displayoptions = $attemptobj->get_display_options($review);
         $renderer = $PAGE->get_renderer('mod_quiz');
         $contextid = $attemptobj->get_quizobj()->get_context()->id;
@@ -1067,7 +1066,7 @@ class mod_quiz_external extends external_api {
         ];
         $params = self::validate_parameters(self::get_attempt_data_parameters(), $params);
 
-        list($attemptobj, $messages) = self::validate_attempt($params);
+        [$attemptobj, $messages] = self::validate_attempt($params);
 
         if ($attemptobj->is_last_page($params['page'])) {
             $nextpage = -1;
