@@ -1204,10 +1204,11 @@ class lib_test extends \advanced_testcase {
      */
     public function mod_quiz_inplace_editable_provider(): array {
         return [
-            'slot 1 customised to A1, displayednumber is A1'  => [1, 'A1'],
-            'slot 2 customised to "A2", displayednumber is A2'  => [2, 'A2'],
-            'slot 3 is not customised, displayednumber is 3'  => [3, '3'],
-            'slot 4 customised to "", displayednumber is 4'  => [4, '']
+            'set to A1'  => [1, 'A1'],
+            'set with HTML characters'  => [2, 'A & &amp; <-:'],
+            'set to integer'  => [3, '3'],
+            'set to blank'  => [4, ''],
+            'set with Unicode characters'  => [1, 'L\'Aina Lluís^'],
         ];
     }
 
@@ -1265,7 +1266,7 @@ class lib_test extends \advanced_testcase {
             $this->assertEquals($slotnumber, $res['value']);
         } else {
             // Process customised numbering.
-            $this->assertEquals($newvalue, $res['displayvalue']);
+            $this->assertEquals(s($newvalue), $res['displayvalue']);
             $this->assertEquals($newvalue, $res['value']);
         }
     }
