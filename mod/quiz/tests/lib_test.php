@@ -1204,11 +1204,13 @@ class lib_test extends \advanced_testcase {
      */
     public function mod_quiz_inplace_editable_provider(): array {
         return [
-            'set to A1'  => [1, 'A1'],
-            'set with HTML characters'  => [2, 'A & &amp; <-:'],
-            'set to integer'  => [3, '3'],
-            'set to blank'  => [4, ''],
-            'set with Unicode characters'  => [1, 'L\'Aina Lluís^'],
+            'set to A1' => [1, 'A1'],
+            'set with HTML characters' => [2, 'A & &amp; <-:'],
+            'set to integer' => [3, '3'],
+            'set to blank' => [4, ''],
+            'set with Unicode characters' => [1, 'L\'Aina Lluís^'],
+            'set with Unicode at the truncation point' => [1, '123456789012345碁'],
+            'set with HTML Char at the truncation point' => [1, '123456789012345>'],
         ];
     }
 
@@ -1255,19 +1257,19 @@ class lib_test extends \advanced_testcase {
 
         $slotid = $structure->get_slot_id_for_slot($slotnumber);
         $inplaceeditable = mod_quiz_inplace_editable('slotdisplaynumber', $slotid, $newvalue);
-        $res = \core_external::update_inplace_editable('mod_quiz', 'slotdisplaynumber', $slotid, $newvalue);
-        $res = external_api::clean_returnvalue(\core_external::update_inplace_editable_returns(), $res);
+        $result = \core_external::update_inplace_editable('mod_quiz', 'slotdisplaynumber', $slotid, $newvalue);
+        $result = external_api::clean_returnvalue(\core_external::update_inplace_editable_returns(), $result);
 
-        $this->assertEquals(count((array) $inplaceeditable), count($res));
-        $this->assertEquals($slotid, $res['itemid']);
+        $this->assertEquals(count((array) $inplaceeditable), count($result));
+        $this->assertEquals($slotid, $result['itemid']);
         if ($newvalue === '' || is_null($newvalue)) {
-            // Process automated numbering.
-            $this->assertEquals($slotnumber, $res['displayvalue']);
-            $this->assertEquals($slotnumber, $res['value']);
+            // Check against default.
+            $this->assertEquals($slotnumber, $result['displayvalue']);
+            $this->assertEquals($slotnumber, $result['value']);
         } else {
-            // Process customised numbering.
-            $this->assertEquals(s($newvalue), $res['displayvalue']);
-            $this->assertEquals($newvalue, $res['value']);
+            // Check against the custom number.
+            $this->assertEquals(s($newvalue), $result['displayvalue']);
+            $this->assertEquals($newvalue, $result['value']);
         }
     }
 }

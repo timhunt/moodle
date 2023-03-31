@@ -1187,7 +1187,7 @@ function mod_quiz_inplace_editable(string $itemtype, int $itemid, string $newval
 
         // Update the value - truncating the size of the DB column.
         $structure = $quizobj->get_structure();
-        $structure->update_slot_display_number($itemid, substr($newvalue, 0, 16));
+        $structure->update_slot_display_number($itemid, core_text::substr($newvalue, 0, 16));
 
         // Prepare the element for the output.
         return $structure->make_slot_display_number_in_place_editable($itemid, $context);
