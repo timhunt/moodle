@@ -1077,7 +1077,8 @@ class external_test extends externallib_advanced_testcase {
         $this->assertCount(0, $result['messages']);
         $this->assertCount(1, $result['questions']);
         $this->assertEquals(1, $result['questions'][0]['slot']);
-        $this->assertEquals('1.a', $result['questions'][0]['number']);
+        $this->assertArrayNotHasKey('number', $result['questions'][0]);
+        $this->assertEquals('1.a', $result['questions'][0]['questionnumber']);
         $this->assertEquals('numerical', $result['questions'][0]['type']);
         $this->assertArrayNotHasKey('state', $result['questions'][0]);  // We don't receive the state yet.
         $this->assertEquals(get_string('notyetanswered', 'question'), $result['questions'][0]['status']);
@@ -1098,6 +1099,7 @@ class external_test extends externallib_advanced_testcase {
         $this->assertCount(0, $result['messages']);
         $this->assertCount(1, $result['questions']);
         $this->assertEquals(2, $result['questions'][0]['slot']);
+        $this->assertEquals(2, $result['questions'][0]['questionnumber']);
         $this->assertEquals(2, $result['questions'][0]['number']);
         $this->assertEquals('numerical', $result['questions'][0]['type']);
         $this->assertArrayNotHasKey('state', $result['questions'][0]);  // We don't receive the state yet.

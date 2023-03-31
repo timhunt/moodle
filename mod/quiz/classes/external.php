@@ -911,6 +911,10 @@ class mod_quiz_external extends external_api {
                 'slot' => new external_value(PARAM_INT, 'slot number'),
                 'type' => new external_value(PARAM_ALPHANUMEXT, 'question type, i.e: multichoice'),
                 'page' => new external_value(PARAM_INT, 'page of the quiz this question appears on'),
+                'questionnumber' => new external_value(PARAM_RAW,
+                        'The question number to display for this question, e.g. "7", "i" or "Custom-B)".'),
+                'number' => new external_value(PARAM_INT,
+                        'DO NOT USE. Use questionnumber. Only retained for backwards compatibility.', VALUE_OPTIONAL),
                 'html' => new external_value(PARAM_RAW, 'the question rendered'),
                 'responsefileareas' => new external_multiple_structure(
                     new external_single_structure(
@@ -926,7 +930,6 @@ class mod_quiz_external extends external_api {
                 'hasautosavedstep' => new external_value(PARAM_BOOL, 'whether this question attempt has autosaved data',
                                                             VALUE_OPTIONAL),
                 'flagged' => new external_value(PARAM_BOOL, 'whether the question is flagged or not'),
-                'number' => new external_value(PARAM_RAW, 'question ordering number in the quiz', VALUE_OPTIONAL),
                 'state' => new external_value(PARAM_ALPHA, 'the state where the question is in.
                     It will not be returned if the user cannot see it due to the quiz display correctness settings.',
                     VALUE_OPTIONAL),
@@ -991,6 +994,7 @@ class mod_quiz_external extends external_api {
                 'slot' => $slot,
                 'type' => $qtype,
                 'page' => $attemptobj->get_question_page($slot),
+                'questionnumber' => $attemptobj->get_question_number($slot),
                 'flagged' => $attemptobj->is_question_flagged($slot),
                 'html' => $attemptobj->render_question($slot, $review, $renderer) . $PAGE->requires->get_end_code(),
                 'responsefileareas' => $responsefileareas,
@@ -1000,8 +1004,11 @@ class mod_quiz_external extends external_api {
                 'settings' => !empty($settings) ? json_encode($settings) : null,
             ];
 
+            if ($question['questionnumber'] === (string) (int) $question['questionnumber']) {
+                $question['number'] = $question['questionnumber'];
+            }
+
             if ($attemptobj->is_real_question($slot)) {
-                $question['number'] = $attemptobj->get_question_number($slot);
                 $showcorrectness = $displayoptions->correctness && $qattempt->has_marks();
                 if ($showcorrectness) {
                     $question['state'] = (string) $attemptobj->get_question_state($slot);
