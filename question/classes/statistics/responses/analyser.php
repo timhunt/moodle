@@ -43,8 +43,8 @@ class analyser {
 
     /**
      * @var int previously, the time after which statistics are automatically recomputed.
-     * @deprecated since Moodle 4.2. Use of pre-computed stats is no longer time-limited.
-     * @todo MDL-76612 Final deprecation in Moodle 4.6
+     * @deprecated since Moodle 4.3. Use of pre-computed stats is no longer time-limited.
+     * @todo MDL-78090 Final deprecation in Moodle 4.7
      */
     const TIME_TO_CACHE = 900; // 15 minutes.
 

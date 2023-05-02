@@ -1,5 +1,17 @@
 This files describes API changes for code that uses the question API.
 
+=== 4.3 ===
+
+1) question_stats_cleanup_task has been removed. It is no longer required. Instead,
+   older statistics are deleted whenever a new set are calculated for a particular quiz.
+
+2) In the past, the methods get_last_calculated_time() and get_cached() of \core_question\statistics\responses\analyser
+   and \core_question\statistics\questions\all_calculated_for_qubaid_condition
+   only returned the pre-computed statistics if they were computed less than 15 minutes ago. Now, they will
+   always return any computed statistics that exist. Therefore, the constants TIME_TO_CACHE in those classes
+   have been deprecated.
+
+
 === 4.2 ===
 
 1) The question/qengine.js has been deprecated. We create core_question/question_engine
@@ -26,15 +38,6 @@ This files describes API changes for code that uses the question API.
 
 3) display_move_form() in qbank_managecategories\question_category_object class is deprecated and moved the logic to
    the question/bank/managecategories/category.php.
-
-4) question_stats_cleanup_task has been removed. It is no longer required. Instead,
-   older statistics are deleted whenever a new set are calculated for a particular quiz.
-
-5) In the past, the methods get_last_calculated_time() and get_cached() of \core_question\statistics\responses\analyser
-   and \core_question\statistics\questions\all_calculated_for_qubaid_condition
-   only returned the pre-computed statistics if they were computed less than 15 minutes ago. Now, they will
-   always return any computed statistics that exist. Therefore, the constants TIME_TO_CACHE in those classes
-   have been deprecated.
 
 
 === 4.1 ===
