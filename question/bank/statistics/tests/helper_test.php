@@ -35,8 +35,8 @@ class helper_test extends \advanced_testcase {
      * Test quizzes that contain a specified question.
      *
      * @covers ::get_all_places_where_questions_were_attempted
-     * @throws \coding_exception
-     * @throws \dml_exception
+     * @deprecated since Moodle 4.3 please use the method from statistics_bulk_loader.
+     * @todo MDL-78090 Final deprecation in Moodle 4.7
      */
     public function test_get_all_places_where_questions_were_attempted(): void {
         $this->resetAfterTest();
@@ -301,6 +301,8 @@ class helper_test extends \advanced_testcase {
      * @param array $quiz2attempts quiz 2 attempts
      * @param array $expectedquiz2facilities  expected quiz 2 facilities
      * @param array $expectedaveragefacilities expected average facilities
+     * @deprecated since Moodle 4.3 please use the method from statistics_bulk_loader.
+     * @todo MDL-78090 Final deprecation in Moodle 4.7
      */
     public function test_load_question_facility(
         array $quiz1attempts,
@@ -396,6 +398,8 @@ class helper_test extends \advanced_testcase {
      * @param array $quiz2attempts quiz 2 attempts
      * @param array $expectedquiz2discriminativeefficiency expected quiz 2 discriminative efficiency
      * @param array $expectedaveragediscriminativeefficiency expected average discriminative efficiency
+     * @deprecated since Moodle 4.3 please use the method from statistics_bulk_loader.
+     * @todo MDL-78090 Final deprecation in Moodle 4.7
      */
     public function test_load_question_discriminative_efficiency(
         array $quiz1attempts,
@@ -515,6 +519,8 @@ class helper_test extends \advanced_testcase {
      * @param array $quiz2attempts quiz 2 attempts
      * @param array $expectedquiz2discriminationindex expected quiz 2 discrimination index
      * @param array $expectedaveragediscriminationindex expected average discrimination index
+     * @deprecated since Moodle 4.3 please use the method from statistics_bulk_loader.
+     * @todo MDL-78090 Final deprecation in Moodle 4.7
      */
     public function test_load_question_discrimination_index(
         array $quiz1attempts,

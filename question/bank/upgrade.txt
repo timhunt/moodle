@@ -1,7 +1,7 @@
 This file describes core qbank plugin changes in /question/bank/*,
 information provided here is intended especially for developers.
 
-=== 4.2 ===
+=== 4.3 ===
 
 * The helper class in qbank_statistics has had several of its methods deprecated.
   If you want to display statistics in the question bank, you should now override
