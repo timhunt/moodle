@@ -118,7 +118,7 @@ class datalib_test extends \advanced_testcase {
         $this->assertFalse(array_key_exists($user2->id, $results));
 
         // Exact match only.
-        [$sql, $params] = users_search_sql('Last Name User Test 1', '', USER_SEARCH_EXACT_MATCH, [], null, null, true);
+        [$sql, $params] = users_search_sql('Last Name User Test 1', '', USER_SEARCH_EXACT_MATCH, []);
         $results = $DB->get_records_sql("SELECT id FROM {user} WHERE $sql ORDER BY username", $params);
         $this->assertTrue(array_key_exists($user1->id, $results));
         $this->assertFalse(array_key_exists($user2->id, $results));
@@ -152,6 +152,67 @@ class datalib_test extends \advanced_testcase {
         foreach ($results as $record) {
             $this->assertSame('snake', $record->value);
         }
+    }
+
+    /**
+     * Do a test of the user search SQL with custom profile fields.
+     * @covers ::users_search_sql
+     */
+    public function test_user_search_sql_with_custom_fields(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        // Set up test users.
+        $user1 = [
+            'username' => 'usernametest1',
+            'idnumber' => 'idnumbertest1',
+            'firstname' => 'First Name User Test 1',
+            'lastname' => 'Last Name User Test 1',
+            'email' => 'usertest1@example.com',
+        ];
+        $user1 = self::getDataGenerator()->create_user($user1);
+        $user2 = [
+            'username' => 'usernametest2',
+            'idnumber' => 'idnumbertest2',
+            'firstname' => 'First Name User Test 2',
+            'lastname' => 'Last Name User Test 2',
+            'email' => 'usertest2@example.com',
+        ];
+        $user2 = self::getDataGenerator()->create_user($user2);
+        self::getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'specialid1',
+            'name' => 'Special user id',
+        ]);
+        self::getDataGenerator()->create_custom_profile_field([
+            'datatype' => 'text',
+            'shortname' => 'specialid2',
+            'name' => 'Special user id',
+        ]);
+        // Set up the show user identity option.
+        set_config('showuseridentity', 'profile_field_specialid1,profile_field_specialid2');
+        profile_save_data((object)['id' => $user1->id, 'profile_field_specialid1' => 'user1sid1']);
+        profile_save_data((object)['id' => $user2->id, 'profile_field_specialid2' => 'userid2sid2']);
+        $userfieldsapi = \core_user\fields::for_identity(\context_system::instance(), true);
+        $userfieldssql = $userfieldsapi->get_sql('u', true);
+        $cfdmapping = $userfieldssql->mappings;
+        $cfjoins = $userfieldssql->joins;
+        $cfparams = $userfieldssql->params;
+
+        // Get user 1 base on cf 1.
+        [$sql, $params] = users_search_sql('user1', 'u', USER_SEARCH_CONTAINS, array_values($cfdmapping),
+            null, null, $userfieldssql);
+        $params = array_merge($cfparams, $params);
+        $results = $DB->get_records_sql("SELECT u.id FROM {user} u $cfjoins WHERE $sql", $params);
+        $this->assertTrue(array_key_exists($user1->id, $results));
+        $this->assertCount(1, $results);
+        // Get user 2 base on cf 2.
+        [$sql, $params] = users_search_sql('userid2sid2', 'u', USER_SEARCH_STARTS_WITH , array_values($cfdmapping),
+            null, null, $userfieldssql);
+        $params = array_merge($cfparams, $params);
+        $results = $DB->get_records_sql("SELECT u.id FROM {user} u $cfjoins WHERE $sql", $params);
+        $this->assertTrue(array_key_exists($user2->id, $results));
+        $this->assertCount(1, $results);
     }
 
     public function test_users_order_by_sql_simple() {

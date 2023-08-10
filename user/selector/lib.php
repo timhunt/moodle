@@ -95,6 +95,8 @@ abstract class user_selector_base {
     protected $userfieldsparams = [];
     /** @var array User fields mappings for custom fields. */
     protected $userfieldsmappings = [];
+    /** @var stdClass|null Object with necessary SQL components (include select, join, params, mappings for custom fields) */
+    protected $userfieldssql = null;
 
     /**
      * Constructor. Each subclass must have a constructor with this signature.
@@ -136,12 +138,13 @@ abstract class user_selector_base {
         if ($this->includecustomfields) {
             $userfieldsapi = \core_user\fields::for_identity($this->accesscontext)->with_name();
             $this->extrafields = $userfieldsapi->get_required_fields([\core_user\fields::PURPOSE_IDENTITY]);
+            $this->userfieldssql = $userfieldsapi->get_sql('u', true, '', '', false);
             [
                 'selects' => $this->userfieldsselects,
                 'joins' => $this->userfieldsjoin,
                 'params' => $this->userfieldsparams,
                 'mappings' => $this->userfieldsmappings
-            ] = (array) $userfieldsapi->get_sql('u', true, '', '', false);
+            ] = (array) $this->userfieldssql;
         } else {
             $this->extrafields = \core_user\fields::get_identity_fields($this->accesscontext, false);
         }
@@ -497,7 +500,7 @@ abstract class user_selector_base {
             ? array_values($this->userfieldsmappings)
             : $this->extrafields;
         return users_search_sql($search, $u, $this->searchtype, $extrafields,
-                $this->exclude, $this->validatinguserids);
+                $this->exclude, $this->validatinguserids, $this->userfieldssql);
     }
 
     /**

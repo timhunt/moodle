@@ -229,16 +229,23 @@ function search_users($courseid, $groupid, $searchtext, $sort='', array $excepti
  * @param array $exclude Array of user ids to exclude (empty = don't exclude)
  * @param array $includeonly If specified, only returns users that have ids
  *     incldued in this array (empty = don't restrict)
- * @return array an array with two elements, a fragment of SQL to go in the
- *     where clause the query, and an associative array containing any required
- *     parameters (using named placeholders).
+ * @param \stdClass $userfieldssql Object with necessary SQL components for custom profile fields
+ *     included  $userfieldssql->joins, $userfieldssql->mappings, $userfieldssql->params, $userfieldssql->selects
+ * @return array an array with four elements,
+ *     a fragment of SQL to go in the where clause the query
+ *     an associative array containing any required parameters (using named placeholders).
+ *     a fragment of SQL to go in the join clause of the query
+ *     (will be empty string if we don't have custom profile fields in showuseridentity config).
+ *     an associative array containing any required parameters (using named placeholders)
+ *     (will be empty array if we don't have custom profile fields in showuseridentity config).
  */
 function users_search_sql(string $search, string $u = 'u', int $searchtype = USER_SEARCH_STARTS_WITH, array $extrafields = [],
-        array $exclude = null, array $includeonly = null): array {
+        array $exclude = null, array $includeonly = null, stdClass $userfieldssql = null): array {
     global $DB, $CFG;
     $params = array();
     $tests = array();
-
+    $cpfjoinsql = '';
+    $cpfjoinparams = [];
     if ($u) {
         $u .= '.';
     }
@@ -265,6 +272,70 @@ function users_search_sql(string $search, string $u = 'u', int $searchtype = USE
                 // Match exact the $search string.
                 $searchparam = $search;
                 break;
+        }
+        if ($userfieldssql) {
+            $cpfields = [];
+            $userfields = [];
+            // The $userfieldssql->mappings is an associative array from each field
+            // name to an SQL expression for the value of that field, e.g.:
+            // 'profile_field_frog' => 'uf1d_3.data'
+            // 'city' => 'u.city'
+            // So we separate user fields and custom profile fields in two different array.
+            foreach ($userfieldssql->mappings as $fieldname => $selecfield) {
+                if (preg_match(\core_user\fields::PROFILE_FIELD_REGEX, $fieldname, $matches)) {
+                    $shortname = $matches[1];
+                    $cpfields[$shortname] = $selecfield;
+                } else {
+                    $userfields[] = $selecfield;
+                }
+            }
+            // Build a join sql to get list of user with custom profile fields in advance.
+            // If we have include custom profile in the selected fields.
+            if ($cpfields) {
+                $ufconditions = [];
+                $ufparams = [];
+                $i = 0;
+
+                // Create sql and params for normal user field.
+                foreach ($conditions as $key => $condition) {
+                    if (!in_array($condition, $cpfields)) {
+                        $ufconditions[$key] = $DB->sql_like($condition, ":wherecon{$i}00", false, false);
+                        $ufparams["wherecon{$i}00"] = $searchparam;
+                        $i++;
+                    }
+                }
+                // Add some additional sensible conditions for user fields.
+                $ufwhere = '(' . implode(' OR ', $ufconditions) . ')';
+                $ufwhere .= " AND {$u}id <> :ufguestid AND {$u}deleted = 0 AND {$u}confirmed = 1 ";
+                $ufparams['ufguestid'] = $CFG->siteguest;
+
+                // Create sql and params for user custom profile field..
+                $i = 0;
+                $cpfconditions = [];
+                $cpfconditionparams = [];
+                foreach ($cpfields as $shortname => $field) {
+                    $cpfconditions[$i] = $DB->sql_like('uid.data', ":uidcondition{$i}", false, false);
+                    $cpfconditionparams["uidcondition{$i}"] = $searchparam;
+                    $i++;
+                }
+                $cpfwhere = '(' . implode(' OR ', $cpfconditions) . ')';
+                [$cpfinsql, $cpfinparams] = $DB->get_in_or_equal(array_keys($cpfields), SQL_PARAMS_NAMED);
+
+                $cpfjoinparams = array_merge($ufparams, $cpfinparams, $cpfconditionparams);
+
+                // Combine two sql into a single JOIN sql.
+                // where we can get a list user in advanced to improve performance.
+                $cpfjoinsql = "JOIN (SELECT u.id as userid
+                                       FROM {user} u
+                                      WHERE $ufwhere
+                                      UNION
+                                     SELECT uid.userid
+                                       FROM {user_info_field} uif
+                                       JOIN {user_info_data} uid ON uid.fieldid = uif.id
+                                      WHERE uif.shortname $cpfinsql
+                                            AND $cpfwhere
+                                    ) finduserids ON finduserids.userid = {$u}id ";
+            }
         }
         $i = 0;
         foreach ($conditions as $key => $condition) {
@@ -303,9 +374,8 @@ function users_search_sql(string $search, string $u = 'u', int $searchtype = USE
     if (empty($tests)) {
         $tests[] = '1 = 1';
     }
-
     // Combing the conditions and return.
-    return array(implode(' AND ', $tests), $params);
+    return [implode(' AND ', $tests), $params, $cpfjoinsql, $cpfjoinparams];
 }
 
 

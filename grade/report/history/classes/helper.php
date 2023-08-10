@@ -138,10 +138,13 @@ class helper {
         }
         $params = array();
         if (!empty($search)) {
-            list($filtersql, $params) = users_search_sql($search, 'u', USER_SEARCH_CONTAINS, $extrafields);
+            [$filtersql, $params, $cfjoinsql, $cfparams] = users_search_sql($search,
+                'u', USER_SEARCH_CONTAINS, $extrafields, null, null, $userfieldssql);
             $filtersql .= ' AND ';
+            $params = array_merge($params , $cfparams);
         } else {
             $filtersql = '';
+            $cfjoinsql = '';
         }
 
         $userfieldjoinssql = $userfieldssql->joins;
@@ -175,6 +178,7 @@ class helper {
                  JOIN {grade_grades_history} ggh ON u.id = ggh.userid
                  JOIN {grade_items} gi ON gi.id = ggh.itemid
                  $userfieldjoinssql
+                 $cfjoinsql
                  $groupjoinsql
                 WHERE $filtersql gi.courseid = :courseid $groupwheresql";
         $sql .= $orderby;

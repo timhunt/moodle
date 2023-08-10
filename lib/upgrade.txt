@@ -145,6 +145,13 @@ information provided here is intended especially for developers.
 * There is a new method called enrol_plugin::get_welcome_message_contact() that returns the contact details for the course welcome message.
 * There is a new method called enrol_plugin::send_course_welcome_message_to_user() that sends the course welcome message to a user.
 * The list of standard, and deleted, plugins is now located as JSON at lib/plugins.json.
+* The users_search_sql function has been improved to add 1 new optional parameters so that we can improve the search query performance for custom profile fields.
+  object $userfieldssql Object with necessary SQL components for custom profile fields
+  included $userfieldssql->joins, $userfieldssql->mappings, $userfieldssql->params, $userfieldssql->selects
+  users_search_sql function will return two additional elements which is contain
+  a fragment of SQL to go  in the join clause of the query - Which will be empty if we don't use custom profile field showuseridentity config.
+  an associative array containing any required parameters (using named placeholders) - Which will be empty if we don't use custom profile field showuseridentity config.
+  See MDL-77742 for further information
 
 === 4.3 ===
 
