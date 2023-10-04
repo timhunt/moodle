@@ -219,6 +219,7 @@ class all_calculated_for_qubaid_condition {
                         debugging('Statistics found for slot ' . $fromdb->slot .
                             ' in stats ' . json_encode($qubaids->from_where_params()) .
                             ' which is not an analysable question.', DEBUG_DEVELOPER);
+                        continue;
                     }
                     $this->questionstats[$fromdb->slot]->populate_from_record($fromdb);
                 } else {
