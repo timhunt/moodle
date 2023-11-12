@@ -196,9 +196,13 @@ class question_attempt_step {
     /**
      * Return the full user object.
      *
-     * @return stdClass Get full user object.
+     * @return null|stdClass Get full user object.
      */
-    public function get_user(): stdClass {
+    public function get_user(): ?stdClass {
+        if ($this->userid !== null && $this->user === null) {
+            debugging('Attempt to access the step user before it was initialised. ' .
+                'Did you forget to call question_usage_by_activity::preload_all_step_users() or similar?', DEBUG_DEVELOPER);
+        }
         return $this->user;
     }
 
@@ -208,7 +212,7 @@ class question_attempt_step {
      * @return string full name of user.
      */
     public function get_user_fullname(): string {
-        return fullname($this->user);
+        return fullname($this->get_user());
     }
 
     /** @return int the timestamp when this step was created. */

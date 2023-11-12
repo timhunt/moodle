@@ -914,6 +914,7 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
      * $this->currentoutput so that it can be verified.
      */
     protected function render() {
+        $this->quba->preload_all_step_users();
         $this->currentoutput = $this->quba->render_question($this->slot, $this->displayoptions);
     }
 
@@ -1005,9 +1006,9 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
      * @param $condition one or more Expectations. (users varargs).
      */
     protected function check_current_output() {
-        $html = $this->quba->render_question($this->slot, $this->displayoptions);
+        $this->render();
         foreach (func_get_args() as $condition) {
-            $this->assert($condition, $html);
+            $this->assert($condition, $this->currentoutput);
         }
     }
 
@@ -1019,9 +1020,9 @@ abstract class qbehaviour_walkthrough_test_base extends question_testcase {
      * @param question_contains_select_expectation $expectations One or more expectations.
      */
     protected function check_output_contains_selectoptions(...$expectations) {
-        $html = $this->quba->render_question($this->slot, $this->displayoptions);
+        $this->render();
         foreach ($expectations as $expectation) {
-            $this->assert_select_options($expectation, $html);
+            $this->assert_select_options($expectation, $this->currentoutput);
         }
     }
 
