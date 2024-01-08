@@ -457,6 +457,9 @@ define('FEATURE_RATE', 'rate');
 /** True if module supports backup/restore of moodle2 format */
 define('FEATURE_BACKUP_MOODLE2', 'backup_moodle2');
 
+/** True if module shares questions with other modules. These mod types are NOT rendered to the course page */
+define('FEATURE_PUBLISHES_QUESTIONS', 'publishesquestions');
+
 /** True if module can show description on course main page */
 define('FEATURE_SHOW_DESCRIPTION', 'showdescription');
 

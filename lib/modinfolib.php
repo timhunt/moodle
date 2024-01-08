@@ -2585,6 +2585,13 @@ class cm_info implements IteratorAggregate {
             return null;
         }
 
+        // These module types are managed via question bank administration and are not to be rendered to the course page.
+        if (plugin_supports('mod', $this->modname, FEATURE_PUBLISHES_QUESTIONS)) {
+            $this->uservisible = false;
+            $this->uservisibleoncoursepage = false;
+            return null;
+        }
+
         // If the user cannot access the activity set the uservisible flag to false.
         // Additional checks are required to determine whether the activity is entirely hidden or just greyed out.
         if ((!$this->visible && !has_capability('moodle/course:viewhiddenactivities', $this->get_context(), $userid)) ||
