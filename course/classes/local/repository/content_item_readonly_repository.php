@@ -167,7 +167,6 @@ class content_item_readonly_repository implements content_item_readonly_reposito
                 $return[] = $contentitem;
             }
         }
-        return $return;
     }
 
     /**
@@ -240,7 +239,5 @@ class content_item_readonly_repository implements content_item_readonly_reposito
                 $return[] = $contentitem;
             }
         }
-
-        return $return;
     }
 }
