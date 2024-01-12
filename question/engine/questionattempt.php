@@ -905,7 +905,7 @@ class question_attempt {
             $page = $PAGE;
         }
         if (is_null($options->versioninfo)) {
-            $options->versioninfo = (new question_edit_contexts($page->context))->have_one_edit_tab_cap('questions');
+            $options->versioninfo = (new question_edit_contexts($page->context))->have_one_edit_tab_cap(['questions']);
         }
         $qoutput = $page->get_renderer('core', 'question');
         $qtoutput = $this->question->get_renderer($page);

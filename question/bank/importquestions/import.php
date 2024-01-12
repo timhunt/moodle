@@ -59,7 +59,7 @@ if ($contexts === null) { // Need to get the course from the chosen category.
         list($module, $cm) = get_module_from_cmid($thiscontext->instanceid);
         require_login($cm->course, false, $cm);
     }
-    $contexts->require_one_edit_tab_cap($edittab);
+    $contexts->require_one_edit_tab_cap([$edittab]);
 }
 
 $PAGE->set_url($thispageurl);

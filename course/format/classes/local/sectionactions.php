@@ -321,6 +321,7 @@ class sectionactions extends baseactions {
         $sectionzero = $DB->get_record('course_sections', ['course' => $this->course->id, 'section' => '0']);
         $modules = $DB->get_records('course_modules', ['section' => $sectioninfo->id], '');
         foreach ($modules as $mod) {
+            $mod->modname = $DB->get_field('modules', 'name', ['id' => $mod->module], MUST_EXIST);
             moveto_module($mod, $sectionzero);
         }
 

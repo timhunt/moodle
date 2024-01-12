@@ -109,6 +109,19 @@ class content_item_readonly_repository implements content_item_readonly_reposito
     }
 
     /**
+     * Modules with flag FEATURE_CAN_DISPLAY set to false are not to be rendered to the course page.
+     *
+     * @param $contentitems
+     * @return array
+     */
+    private static function filter_out_items_not_to_be_displayed($contentitems): array {
+        return array_filter($contentitems, static function($module) {
+            [$type, $name] = core_component::normalize_component($module->get_component_name());
+            return plugin_supports($type, $name, FEATURE_CAN_DISPLAY, true);
+        });
+    }
+
+    /**
      * Find all the available content items, not restricted to course or user.
      *
      * @return array the array of content items.
@@ -167,8 +180,8 @@ class content_item_readonly_repository implements content_item_readonly_reposito
                 $return[] = $contentitem;
             }
         }
-        // These module types are managed via question bank administration and are not to be rendered to the course page.
-        return \qbank_sharing\helper::filter_plugins($return);
+        // These module types are not to be rendered to the course page.
+        return self::filter_out_items_not_to_be_displayed($return);
     }
 
     /**
@@ -241,7 +254,7 @@ class content_item_readonly_repository implements content_item_readonly_reposito
                 $return[] = $contentitem;
             }
         }
-        // These module types are managed via question bank administration and are not to be rendered to the course page.
-        return \qbank_sharing\helper::filter_plugins($return);
+        // These module types are not to be rendered to the course page.
+        return self::filter_out_items_not_to_be_displayed($return);
     }
 }

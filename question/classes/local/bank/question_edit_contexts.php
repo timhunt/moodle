@@ -177,13 +177,18 @@ class question_edit_contexts {
     }
 
     /**
-     * Has at least one parent context got one of the caps for actions on $tabname
+     * Has at least one parent context got one of the caps for actions in $tabnames
      *
-     * @param string $tabname edit tab name
+     * @param array $tabnames edit tab names
      * @return boolean
      */
-    public function have_one_edit_tab_cap($tabname) {
-        return $this->have_one_cap(self::$caps[$tabname]);
+    public function have_one_edit_tab_cap(array $tabnames) {
+        foreach ($tabnames as $tabname) {
+            if ($this->have_one_cap(self::$caps[$tabname])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -212,11 +217,14 @@ class question_edit_contexts {
     /**
      * Throw error if at least one parent context hasn't got one of the caps $caps
      *
-     * @param string $tabname edit tab name
+     * @param array $tabnames edit tab names
      */
-    public function require_one_edit_tab_cap($tabname) {
-        if (!$this->have_one_edit_tab_cap($tabname)) {
-            throw new \moodle_exception('nopermissions', '', '', 'access question edit tab '.$tabname);
+    public function require_one_edit_tab_cap(array $tabnames) {
+        foreach ($tabnames as $tabname) {
+            if ($this->have_one_edit_tab_cap([$tabname])) {
+                return true;
+            }
         }
+        throw new \moodle_exception('nopermissions', '', '', 'access question edit tabs '. implode(', ', $tabnames));
     }
 }

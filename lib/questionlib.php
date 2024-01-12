@@ -1548,6 +1548,7 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
     global $PAGE;
 
     if ($context->contextlevel == CONTEXT_COURSE) {
+        $baseurl = '/question/banks.php';
         $params = ['courseid' => $context->instanceid];
     } else if ($context->contextlevel == CONTEXT_MODULE) {
         $params = ['cmid' => $context->instanceid];
@@ -1622,7 +1623,7 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
 
     $contexts = new core_question\local\bank\question_edit_contexts($context);
     foreach ($corenavigations as $key => $corenavigation) {
-        if ($contexts->have_one_edit_tab_cap($key)) {
+        if ($contexts->have_one_edit_tab_cap([$key])) {
             $questionnode->add($corenavigation['title'], new moodle_url(
                     $corenavigation['url'], $params), navigation_node::TYPE_SETTING, null, $key);
         }
@@ -1767,7 +1768,7 @@ function question_pluginfile($course, $context, $component, $filearea, $args, $f
         require_once($CFG->dirroot . '/question/editlib.php');
         $contexts = new core_question\local\bank\question_edit_contexts($context);
         // Check export capability.
-        $contexts->require_one_edit_tab_cap('export');
+        $contexts->require_one_edit_tab_cap(['export']);
         $categoryid = (int)array_shift($args);
         $format      = array_shift($args);
         $cattofile   = array_shift($args);

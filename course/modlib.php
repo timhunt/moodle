@@ -183,7 +183,13 @@ function add_moduleinfo($moduleinfo, $course, $mform = null) {
 
     // Course_modules and course_sections each contain a reference to each other.
     // So we have to update one of them twice.
-    $sectionid = course_add_cm_to_section($course, $moduleinfo->coursemodule, $moduleinfo->section, $moduleinfo->beforemod);
+    $sectionid = course_add_cm_to_section(
+            $course,
+            $moduleinfo->coursemodule,
+            $moduleinfo->section,
+            $moduleinfo->beforemod,
+            $moduleinfo->modulename
+    );
 
     // Trigger event based on the action we did.
     // Api create_from_cm expects modname and id property, and we don't want to modify $moduleinfo since we are returning it.
@@ -490,6 +496,11 @@ function set_moduleinfo_defaults($moduleinfo) {
 
     if (!isset($moduleinfo->downloadcontent)) {
         $moduleinfo->downloadcontent = DOWNLOAD_COURSE_CONTENT_ENABLED;
+    }
+
+    // Module types with this flag set to false must always be in section number 0.
+    if (!plugin_supports('mod', $moduleinfo->modulename, FEATURE_CAN_DISPLAY, true)) {
+        $moduleinfo->section = 0;
     }
 
     return $moduleinfo;
@@ -874,6 +885,11 @@ function get_moduleinfo_data($cm, $course) {
  */
 function prepare_new_moduleinfo_data($course, $modulename, $section, string $suffix = '') {
     global $CFG;
+
+    // Module types with this flag set to false must always be in section number 0.
+    if (!plugin_supports('mod', $modulename, FEATURE_CAN_DISPLAY, true)) {
+        $section = 0;
+    }
 
     list($module, $context, $cw) = can_add_moduleinfo($course, $modulename, $section);
 

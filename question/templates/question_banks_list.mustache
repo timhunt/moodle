@@ -1,0 +1,56 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core_question/question_banks_list
+
+    Example context (json):
+    {
+        [
+            {
+                    'purpose': "content",
+                    'iconurl': \moodle_url|string,
+                    'modname': "qbank",
+                    'managequestions': action_link,
+                    'managebank': action_menu,
+                    'description': "Description of this module instance",
+            }
+        ]
+    }
+}}
+
+<div class="question-banks-list">
+    <ul class="list-unstyled">
+        <li class="media mb-2 mr-2">
+            <div class="{{purpose}} activityiconcontainer icon-size-6 modicon_{{modname}}">
+                <a href="{{managebank.url}}">
+                    <img class="icon activityicon" aria-hidden="true" src={{iconurl}} alt="modicon_{{modname}}"/>
+                </a>
+            </div>
+            <div class="media-body align-self-center ml-3">
+                {{#managequestions}}
+                    {{> core/action_link}}
+                {{/managequestions}}
+                <div class="manage-bank-actions d-inline-block">
+                    {{#managebank}}
+                        {{> core/action_menu}}
+                    {{/managebank}}
+                </div>
+                {{{description}}}
+            </div>
+        </li>
+    </ul>
+</div>

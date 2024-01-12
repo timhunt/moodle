@@ -13,32 +13,19 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Helper class for qbank sharing.
+ * This page should show the bank itself, but we can't move that code here as other modules rely on /question/edit.php.
  *
- * @package    qbank_sharing
- * @copyright  2023 onwards Catalyst IT EU {@link https://catalyst-eu.net}
+ * @package    mod_qbank
+ * @copyright  2024 onwards Catalyst IT EU {@link https://catalyst-eu.net}
  * @author     Simon Adams <simon.adams@catalyst-eu.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-namespace qbank_sharing;
 
-use core_component;
-use core_course\local\entity\content_item;
+require_once __DIR__ . '/../../config.php';
+global $CFG;
 
-class helper {
-
-    /**
-     * Filter out any plugins that support FEATURE_PUBLISHES_QUESTIONS.
-     * For example, when rendering to the course page we don't want to show these types.
-     *
-     * @param content_item[] $modules
-     * @return content_item[]
-     */
-    public static function filter_plugins(array $modules): array {
-        return array_filter($modules, static function($module) {
-            [$type, $name] = core_component::normalize_component($module->get_component_name());
-            return !plugin_supports($type, $name, FEATURE_PUBLISHES_QUESTIONS);
-        });
-    }
-}
+// Only expect cmid when redirecting from this page.
+$url = new moodle_url('/question/edit.php', ['cmid' => optional_param('id', null, PARAM_INT)]);
+redirect($url);

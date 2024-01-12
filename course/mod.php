@@ -137,7 +137,11 @@ if (!empty($add)) {
     $modcontext = context_module::instance($cm->id);
     require_capability('moodle/course:manageactivities', $modcontext);
 
-    $return = course_get_url($course, $cm->sectionnum, $urloptions);
+    if (plugin_supports('mod', $cm->modname, FEATURE_PUBLISHES_QUESTIONS)) {
+        $return = new moodle_url('/question/banks.php', ['courseid' => $course->id]);
+    } else {
+        $return = course_get_url($course, $cm->sectionnum, $urloptions);
+    }
 
     if (!$confirm or !confirm_sesskey()) {
         $fullmodulename = get_string('modulename', $cm->modname);

@@ -18,35 +18,23 @@
  * Capability definitions for the question bank module.
  *
  * @package    mod_qbank
- * @copyright  2021 Catalyst IT Australia Pty Ltd
- * @author     2021 Matt Porritt <mattp@catalyst-au.net>
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2024 onwards Catalyst IT EU {@link https://catalyst-eu.net}
+ * @author     Simon Adams <simon.adams@catalyst-eu.net>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
-
-    // Ability to see that the question bank exists, and the basic information about it.
-    'mod/qbank:view' => [
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => [
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ]
-    ],
     // Ability to add a new question bank to the course.
     'mod/qbank:addinstance' => [
-        'riskbitmask' => RISK_XSS,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_COURSE,
-        'archetypes' => [
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ],
-        'clonepermissionsfrom' => 'moodle/course:manageactivities'
+            'riskbitmask' => RISK_XSS,
+            'captype' => 'write',
+            'contextlevel' => CONTEXT_COURSE,
+            'archetypes' => [
+                    'editingteacher' => CAP_ALLOW,
+                    'manager' => CAP_ALLOW,
+            ],
+            'clonepermissionsfrom' => 'moodle/course:manageactivities',
     ],
 ];
-

@@ -2520,6 +2520,16 @@ class cm_info implements IteratorAggregate {
     }
 
     /**
+     * Use this method if you want to check if the plugin overrides any visibility checks to block rendering to the display.
+     *
+     * @return bool
+     * @throws coding_exception
+     */
+    public function can_display(): bool {
+        return plugin_supports('mod', $this->modname, FEATURE_CAN_DISPLAY, true);
+    }
+
+    /**
      * Whether this module is available but hidden from course page
      *
      * "Stealth" modules are the ones that are not shown on course page but available by following url.
@@ -2582,13 +2592,6 @@ class cm_info implements IteratorAggregate {
         // If the module is being deleted, set the uservisible state to false and return.
         if ($this->deletioninprogress) {
             $this->uservisible = false;
-            return null;
-        }
-
-        // These module types are managed via question bank administration and are not to be rendered to the course page.
-        if (plugin_supports('mod', $this->modname, FEATURE_PUBLISHES_QUESTIONS)) {
-            $this->uservisible = false;
-            $this->uservisibleoncoursepage = false;
             return null;
         }
 
