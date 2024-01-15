@@ -661,9 +661,8 @@ table.quizreviewsummary td.cell {
 }
 
 #page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer {
-    background: white;
-    padding: 0.5em 0 0.5em 0.1em;
-    margin: 2px;
+    padding: 0;
+    margin: 0;
 }
 
 #page-mod-quiz-edit ul.slots li.section li.activity .instancemaxmarkcontainer .editicon {
@@ -1080,7 +1079,7 @@ table.quizreviewsummary td.cell {
     background: #fdfdfe;
     display: inline-block;
     margin: 2px;
-    padding: 0.5em 0 0.5em 0.1em;
+    padding: 0.5em 0 0.5em;
 }
 #page-mod-quiz-edit .inplaceeditable.inplaceeditingon input {
     width: 64px;

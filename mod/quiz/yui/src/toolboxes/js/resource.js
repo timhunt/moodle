@@ -26,17 +26,6 @@ var RESOURCETOOLBOX = function() {
 
 Y.extend(RESOURCETOOLBOX, TOOLBOX, {
     /**
-     * An Array of events added when editing a max mark field.
-     * These should all be detached when editing is complete.
-     *
-     * @property editmaxmarkevents
-     * @protected
-     * @type Array
-     * @protected
-     */
-    editmaxmarkevents: [],
-
-    /**
      *
      */
     NODE_PAGE: 1,
@@ -119,10 +108,6 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
 
         // Switch based upon the action and do the desired thing.
         switch (action) {
-            case 'editmaxmark':
-                // The user wishes to edit the maxmark of the resource.
-                this.edit_maxmark(ev, node, activity, action);
-                break;
             case 'delete':
                 // The user is deleting the activity.
                 this.delete_with_confirmation(ev, node, activity, action);
@@ -320,164 +305,6 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
                 // User cancelled.
             });
         }.bind(this));
-    },
-
-    /**
-     * Edit the maxmark for the resource
-     *
-     * @protected
-     * @method edit_maxmark
-     * @param {EventFacade} ev The event that was fired.
-     * @param {Node} button The button that triggered this action.
-     * @param {Node} activity The activity node that this action will be performed on.
-     * @param {String} action The action that has been requested.
-     * @return Boolean
-     */
-    edit_maxmark: function(ev, button, activity) {
-        // Get the element we're working on
-        var instancemaxmark = activity.one(SELECTOR.INSTANCEMAXMARK),
-            instance = activity.one(SELECTOR.ACTIVITYINSTANCE),
-            currentmaxmark = instancemaxmark.get('firstChild'),
-            oldmaxmark = currentmaxmark.get('data'),
-            maxmarktext = oldmaxmark,
-            thisevent,
-            anchor = instancemaxmark, // Grab the anchor so that we can swap it with the edit form.
-            data = {
-                'class': 'resource',
-                'field': 'getmaxmark',
-                'id': Y.Moodle.mod_quiz.util.slot.getId(activity)
-            };
-
-        // Prevent the default actions.
-        ev.preventDefault();
-
-        this.send_request(data, null, function(response) {
-            if (M.core.actionmenu && M.core.actionmenu.instance) {
-                M.core.actionmenu.instance.hideMenu(ev);
-            }
-
-            // Try to retrieve the existing string from the server.
-            if (response.instancemaxmark) {
-                maxmarktext = response.instancemaxmark;
-            }
-
-            // Create the editor and submit button.
-            var editform = Y.Node.create('<form action="#" />');
-            var editinstructions = Y.Node.create('<span class="' + CSS.EDITINSTRUCTIONS + '" id="id_editinstructions" />')
-                .set('innerHTML', M.util.get_string('edittitleinstructions', 'moodle'));
-            var editor = Y.Node.create('<input name="maxmark" type="text" class="' + CSS.TITLEEDITOR + '" />').setAttrs({
-                'value': maxmarktext,
-                'autocomplete': 'off',
-                'aria-describedby': 'id_editinstructions',
-                'maxLength': '12',
-                'size': parseInt(this.get('config').questiondecimalpoints, 10) + 2
-            });
-
-            // Clear the existing content and put the editor in.
-            editform.appendChild(editor);
-            editform.setData('anchor', anchor);
-            instance.insert(editinstructions, 'before');
-            anchor.replace(editform);
-
-            // We hide various components whilst editing:
-            activity.addClass(CSS.EDITINGMAXMARK);
-
-            // Focus and select the editor text.
-            editor.focus().select();
-
-            // Cancel the edit if we lose focus or the escape key is pressed.
-            thisevent = editor.on('blur', this.edit_maxmark_cancel, this, activity, false);
-            this.editmaxmarkevents.push(thisevent);
-            thisevent = editor.on('key', this.edit_maxmark_cancel, 'esc', this, activity, true);
-            this.editmaxmarkevents.push(thisevent);
-
-            // Handle form submission.
-            thisevent = editform.on('submit', this.edit_maxmark_submit, this, activity, oldmaxmark);
-            this.editmaxmarkevents.push(thisevent);
-        });
-    },
-
-    /**
-     * Handles the submit event when editing the activity or resources maxmark.
-     *
-     * @protected
-     * @method edit_maxmark_submit
-     * @param {EventFacade} ev The event that triggered this.
-     * @param {Node} activity The activity whose maxmark we are altering.
-     * @param {String} originalmaxmark The original maxmark the activity or resource had.
-     */
-    edit_maxmark_submit: function(ev, activity, originalmaxmark) {
-        // We don't actually want to submit anything.
-        ev.preventDefault();
-        var newmaxmark = Y.Lang.trim(activity.one(SELECTOR.ACTIVITYFORM + ' ' + SELECTOR.ACTIVITYMAXMARK).get('value'));
-        var spinner = this.add_spinner(activity);
-        this.edit_maxmark_clear(activity);
-        activity.one(SELECTOR.INSTANCEMAXMARK).setContent(newmaxmark);
-        if (newmaxmark !== null && newmaxmark !== "" && newmaxmark !== originalmaxmark) {
-            var data = {
-                'class': 'resource',
-                'field': 'updatemaxmark',
-                'maxmark': newmaxmark,
-                'id': Y.Moodle.mod_quiz.util.slot.getId(activity)
-            };
-            this.send_request(data, spinner, function(response) {
-                if (response.instancemaxmark) {
-                    activity.one(SELECTOR.INSTANCEMAXMARK).setContent(response.instancemaxmark);
-                }
-            });
-        }
-    },
-
-    /**
-     * Handles the cancel event when editing the activity or resources maxmark.
-     *
-     * @protected
-     * @method edit_maxmark_cancel
-     * @param {EventFacade} ev The event that triggered this.
-     * @param {Node} activity The activity whose maxmark we are altering.
-     * @param {Boolean} preventdefault If true we should prevent the default action from occuring.
-     */
-    edit_maxmark_cancel: function(ev, activity, preventdefault) {
-        if (preventdefault) {
-            ev.preventDefault();
-        }
-        this.edit_maxmark_clear(activity);
-    },
-
-    /**
-     * Handles clearing the editing UI and returning things to the original state they were in.
-     *
-     * @protected
-     * @method edit_maxmark_clear
-     * @param {Node} activity  The activity whose maxmark we were altering.
-     */
-    edit_maxmark_clear: function(activity) {
-        // Detach all listen events to prevent duplicate triggers
-        new Y.EventHandle(this.editmaxmarkevents).detach();
-
-        var editform = activity.one(SELECTOR.ACTIVITYFORM),
-            instructions = activity.one('#id_editinstructions');
-        if (editform) {
-            editform.replace(editform.getData('anchor'));
-        }
-        if (instructions) {
-            instructions.remove();
-        }
-
-        // Remove the editing class again to revert the display.
-        activity.removeClass(CSS.EDITINGMAXMARK);
-
-        // Refocus the link which was clicked originally so the user can continue using keyboard nav.
-        Y.later(100, this, function() {
-            activity.one(SELECTOR.EDITMAXMARK).focus();
-        });
-
-        // TODO MDL-50768 This hack is to keep Behat happy until they release a version of
-        // MinkSelenium2Driver that fixes
-        // https://github.com/Behat/MinkSelenium2Driver/issues/80.
-        if (!Y.one('input[name=maxmark')) {
-            Y.one('body').append('<input type="text" name="maxmark" style="display: none">');
-        }
     },
 
     /**

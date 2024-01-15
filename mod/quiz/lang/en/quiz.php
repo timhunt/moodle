@@ -298,7 +298,8 @@ $string['editingquiz_help'] = 'When creating a quiz, the main concepts are:
 * Random questions -  A student gets different questions each time they attempt the quiz and different students can get different questions';
 $string['editingquiz_link'] = 'mod/quiz/edit';
 $string['editingquizx'] = 'Editing quiz: {$a}';
-$string['editmaxmark'] = 'Edit maximum mark';
+$string['editmaxmark'] = 'New value for {$a}';
+$string['editmaxmarkhint'] = 'Edit maximum mark';
 $string['editoverride'] = 'Edit override';
 $string['editqcats'] = 'Edit questions categories';
 $string['editquestion'] = 'Edit question';

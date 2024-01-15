@@ -263,7 +263,6 @@ Y.extend(SECTIONTOOLBOX, TOOLBOX, {
      * Handles the cancel event when editing the activity or resources maxmark.
      *
      * @protected
-     * @method edit_maxmark_cancel
      * @param {EventFacade} ev The event that triggered this.
      * @param {Node} activity The activity whose maxmark we are altering.
      * @param {Boolean} preventdefault If true we should prevent the default action from occuring.
