@@ -266,16 +266,22 @@ function question_category_delete_safe($category): void {
             }
         }
         if (!empty($questionids)) {
-            $parentcontextid = SYSCONTEXTID;
-            $name = get_string('unknown', 'question');
-            if ($context !== false) {
-                $name = $context->get_context_name();
-                $parentcontext = $context->get_parent_context();
-                if ($parentcontext) {
-                    $parentcontextid = $parentcontext->id;
-                }
+            // The default place to attach categories is on a mod_qbank instance in the site course.
+            $modinfo = get_fast_modinfo(get_site());
+            if (!$qbanks = $modinfo->get_instances_of('qbank')) {
+                $mod = \core_question\sharing\helper::create_default_open_instance(
+                        $modinfo->get_course(),
+                        'System shared question bank'
+                );
+                $cmid = $mod->coursemodule;
+            } else {
+                usort($qbanks, static fn($a, $b) => $a->id <=> $b->id);
+                $qbank = reset($qbanks);
+                $cmid = $qbank->id;
             }
-            question_save_from_deletion(array_keys($questionids), $parentcontextid, $name, $rescue);
+            $modcontext = context_module::instance($cmid)->id;
+            $name = $context !== false ? $context->get_context_name() : get_string('unknown', 'question');
+            question_save_from_deletion(array_keys($questionids), $modcontext, $name, $rescue);
         }
     }
 

@@ -152,16 +152,15 @@ class helper {
     }
 
     /**
-     * Create a default module instance, that is, the instance takes the name of the course.
-     *
      * @param \stdClass $course
-     * @return void
+     * @param string $bankname
+     * @return object|\stdClass
      */
-    public static function create_default_open_instance(\stdClass $course): void {
+    public static function create_default_open_instance(\stdClass $course, string $bankname) {
         [$module, $context, $cw, $cm, $data] = prepare_new_moduleinfo_data($course, 'qbank', 0);
         unset($data->completion);
         $data->visibleoncoursepage = 0;
-        $data->name = "{$course->fullname} course question bank";
-        add_moduleinfo($data, $course);
+        $data->name = "{$bankname} course question bank";
+        return add_moduleinfo($data, $course);
     }
 }
