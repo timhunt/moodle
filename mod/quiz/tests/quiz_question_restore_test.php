@@ -218,7 +218,8 @@ class quiz_question_restore_test extends \advanced_testcase {
         // Make the backup.
         $backupid = $this->backup_quiz($quiz, $this->user);
 
-        // Delete the current course to make sure there is no data.
+        // Delete the current course to make sure there is no data, make sure we are admin user for this.
+        self::setAdminUser();
         delete_course($this->course, false);
 
         // Restore the backup.

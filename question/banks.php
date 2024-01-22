@@ -37,10 +37,6 @@ $createdefault = optional_param('createdefault', false, PARAM_BOOL);
 $course = get_course($courseid);
 $coursecontext = context_course::instance($course->id);
 
-if ($course->id === get_site()->id) {
-    throw new moodle_exception('invalidcourse');
-}
-
 require_login($course, false);
 require_capability('moodle/course:manageactivities', \context_course::instance($course->id));
 
@@ -53,7 +49,7 @@ $PAGE->set_url($pageurl);
 
 if ($createdefault) {
     require_sesskey();
-    helper::create_default_open_instance($course);
+    helper::create_default_open_instance($course, $course->fullname);
     \core\notification::add(get_string('defaultcreated', 'question'), \core\notification::SUCCESS);
     redirect($pageurl);
 }

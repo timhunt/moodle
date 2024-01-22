@@ -166,7 +166,7 @@ class question_bank_helper_test extends \advanced_testcase {
         $course = self::getDataGenerator()->create_course();
 
         // Create the instance and assert default values.
-        helper::create_default_open_instance($course);
+        question_bank_helper::create_default_open_instance($course, $course->fullname);
         $modinfo = get_fast_modinfo($course);
         $cminfos = $modinfo->get_instances();
         $cminfo = reset($cminfos['qbank']);
