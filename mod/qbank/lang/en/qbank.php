@@ -42,3 +42,5 @@ $string['saveanddisplay'] = 'Save and display';
 $string['saveandreturn'] = 'Save and return to question bank list';
 $string['showdescription'] = 'Display description on manage question banks page';
 $string['showdescription_help'] = 'If enabled, the description above will be displayed on the question bank manage page just below the link to the bank.';
+$string['systembankdescription'] = "This type of question bank is created automatically. It will be used for things such as backup restores that could not find a target context, and for when deleting a category and it's contents could not be deleted safely";
+$string['unknownbanktype'] = 'Unknown question bank type {$a}';

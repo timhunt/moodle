@@ -286,12 +286,12 @@ class install_test extends advanced_testcase {
         $this->assertCount(5, $questionids);
     }
 
-    public function test_xmldb_qbank_install() {
-        global $CFG, $DB;
-        require_once $CFG->dirroot . '/mod/qbank/db/install.php';
+    public function test_qbank_install() {
+        global $DB;
         $this->resetAfterTest();
 
-        xmldb_qbank_install();
+        $task = new \mod_qbank\task\install();
+        $task->execute();
 
         // Site context checks:
 

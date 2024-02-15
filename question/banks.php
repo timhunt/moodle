@@ -49,7 +49,7 @@ $PAGE->set_url($pageurl);
 
 if ($createdefault) {
     require_sesskey();
-    helper::create_default_open_instance($course, $course->fullname);
+    helper::create_default_open_instance($course, $course->fullname . ' course question bank');
     \core\notification::add(get_string('defaultcreated', 'question'), \core\notification::SUCCESS);
     redirect($pageurl);
 }
@@ -68,7 +68,9 @@ echo $output->header();
 echo $output->heading(get_string('banksincourse', 'question'));
 echo $output->render_from_template('core_question/view_banks',
         [
+                'hasopenbanks' => !empty($openbanks),
                 'openbanks' => $openbanksrenderable->export_for_template($output),
+                'hasclosedbanks' => !empty($closedbanks),
                 'closedbanks' => $closedbanksrenderable->export_for_template($output),
                 'addbanks' => $addbankrenderable->export_for_template($output),
                 'createdefault' => has_capability('moodle/course:manageactivities', context_course::instance($course->id)) ?

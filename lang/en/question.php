@@ -293,7 +293,7 @@ $string['permissionto'] = 'You have permission to :';
 $string['published'] = 'shared';
 $string['qtypeveryshort'] = 'T';
 $string['questionaffected'] = '<a href="{$a->qurl}">Question "{$a->name}" ({$a->qtype})</a> is in this question category but is also being used in <a href="{$a->qurl}">quiz "{$a->quizname}"</a> in another course "{$a->coursename}".';
-$string['questionbank'] = 'Question bank';
+$string['questionbank'] = 'Question banks';
 $string['questionbanknavigation'] = 'Question bank tertiary navigation';
 $string['questioncategories'] = 'Question categories';
 $string['questioncategory'] = 'Question category';

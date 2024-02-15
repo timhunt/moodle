@@ -49,9 +49,14 @@ class helper_test extends \advanced_testcase {
 
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
         $closedmodgen = self::getDataGenerator()->get_plugin_generator('mod_quiz');
+        $qgen = self::getDataGenerator()->get_plugin_generator('core_question');
         $course = self::getDataGenerator()->create_course();
         $openmodgen->create_instance(['course' => $course]);
-        $closedmodgen->create_instance(['course' => $course]);
+        $quiz = $closedmodgen->create_instance(['course' => $course]);
+        $quizcontext = \context_module::instance($quiz->cmid);
+        $quizqcat = $qgen->create_question_category(['contextid' => $quizcontext->id]);
+        $quizquestion = $qgen->create_question('shortanswer', null, ['category' => $quizqcat->id, 'idnumber' => 'quizq1']);
+        quiz_add_quiz_question($quizquestion->id, $quiz);
 
         // Expect 1 plugin that has open instances in this course.
         $openinstances = helper::get_course_open_instances($course->id);
@@ -139,6 +144,8 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_create_default_open_instance(): void {
+        global $DB;
+
         $this->resetAfterTest();
         self::setAdminUser();
 
@@ -147,13 +154,53 @@ class helper_test extends \advanced_testcase {
         // Create the instance and assert default values.
         helper::create_default_open_instance($course, $course->fullname);
         $modinfo = get_fast_modinfo($course);
-        $cminfos = $modinfo->get_instances();
-        $cminfo = reset($cminfos['qbank']);
-
-        $this->assertCount(1, $cminfos['qbank']);
-        $this->assertEquals("{$course->fullname} course question bank", $cminfo->get_name());
+        $cminfos = $modinfo->get_instances_of('qbank');
+        $this->assertCount(1, $cminfos);
+        $cminfo = reset($cminfos);
+        $this->assertEquals($course->fullname, $cminfo->get_name());
         $this->assertEquals(0, $cminfo->sectionnum);
+        $modrecord = $DB->get_record('qbank', ['id' => $cminfo->instance]);
+        $this->assertEquals(helper::STANDARD, $modrecord->type);
         $this->assertEmpty($cminfo->idnumber);
         $this->assertEmpty($cminfo->content);
+
+        // Create a system type bank.
+        helper::create_default_open_instance($course, 'System bank 1', helper::SYSTEM);
+
+        // Try and create another system type bank.
+        helper::create_default_open_instance($course, 'System bank 2', helper::SYSTEM);
+
+        $modinfo = get_fast_modinfo($course);
+        $cminfos = $modinfo->get_instances_of('qbank');
+        $cminfos = array_filter($cminfos, static function($cminfo) {
+            global $DB;
+            return $DB->record_exists('qbank', ['id' => $cminfo->instance, 'type' => helper::SYSTEM]);
+        });
+
+        // Can only be 1 system 'type' bank per course.
+        $this->assertCount(1, $cminfos);
+        $cminfo = reset($cminfos);
+        $this->assertEquals('System bank 1', $cminfo->get_name());
+        $moddata = $DB->get_record('qbank', ['id' => $cminfo->instance]);
+        $this->assertEquals(get_string('systembankdescription', 'mod_qbank'), $moddata->intro);
+        $this->assertEquals(1, $cminfo->showdescription);
+    }
+
+    public function test_get_default_open_instance_system_type() {
+        global $DB;
+
+        $this->resetAfterTest();
+        self::setAdminUser();
+
+        $course = self::getDataGenerator()->create_course();
+        $modinfo = get_fast_modinfo($course);
+        $qbanks = $modinfo->get_instances_of('qbank');
+        $this->assertCount(0, $qbanks);
+        $qbank = helper::get_default_open_instance_system_type($course);
+        $this->assertFalse($qbank);
+        $qbank = helper::get_default_open_instance_system_type($course, true);
+        $this->assertEquals("{$course->fullname} system bank", $qbank->get_name());
+        $modrecord = $DB->get_record('qbank', ['id' => $qbank->instance]);
+        $this->assertEquals(helper::SYSTEM, $modrecord->type);
     }
 }

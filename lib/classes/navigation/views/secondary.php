@@ -702,7 +702,7 @@ class secondary extends view {
         $nodes = $this->get_default_module_mapping();
 
         if ($mainnode) {
-            if (!empty($this->page->cm) && plugin_supports('mod', $this->page->cm->modname, FEATURE_PUBLISHES_QUESTIONS)) {
+            if ($this->page->cm !== null && $this->page->cm->modname === 'qbank') {
                 $url = new \moodle_url('/question/edit.php', ['cmid' => $settingsnav->get_page()->cm->id]);
             } else {
                 $url = new \moodle_url('/mod/' . $settingsnav->get_page()->activityname . '/view.php',

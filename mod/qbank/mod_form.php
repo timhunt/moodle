@@ -32,13 +32,14 @@ class mod_qbank_mod_form extends moodleform_mod {
         global $CFG;
 
         $mform = $this->_form;
+        $striptags = !empty($CFG->formatstringstriptags);
         $this->standard_hidden_coursemodule_elements();
 
         $mform->addElement('header', 'generalhdr', get_string('general'));
 
         // Add element for name.
         $mform->addElement('text', 'name', get_string('qbankname', 'mod_qbank'), ['size' => '64']);
-        if (!empty($CFG->formatstringstriptags)) {
+        if ($striptags) {
             $mform->setType('name', PARAM_TEXT);
         } else {
             $mform->setType('name', PARAM_CLEANHTML);
@@ -58,20 +59,20 @@ class mod_qbank_mod_form extends moodleform_mod {
             $mform->addRule('introeditor', get_string('required'), 'required', null, 'client');
         }
 
-        // If the 'show description' feature is enabled, this checkbox appears below the intro.
-        if ($this->_features->showdescription) {
-            $mform->addElement('advcheckbox', 'showdescription', get_string('showdescription', 'mod_qbank'));
-            $mform->addHelpButton('showdescription', 'showdescription', 'mod_qbank');
-        }
+        // Add show description checkbox.
+        $mform->addElement('advcheckbox', 'showdescription', get_string('showdescription', 'mod_qbank'));
+        $mform->addHelpButton('showdescription', 'showdescription', 'mod_qbank');
 
         $mform->addElement('header', 'modstandardelshdr', get_string('modstandardels', 'form'));
 
         // Add idnumber element.
-        if ($this->_features->idnumber) {
-            $mform->addElement('text', 'cmidnumber', get_string('idnumbermod'));
-            $mform->setType('cmidnumber', PARAM_RAW);
-            $mform->addHelpButton('cmidnumber', 'idnumbermod');
+        $mform->addElement('text', 'cmidnumber', get_string('idnumbermod'));
+        if ($striptags) {
+            $mform->setType('cmidnumber', PARAM_TEXT);
+        } else {
+            $mform->setType('cmidnumber', PARAM_CLEANHTML);
         }
+        $mform->addHelpButton('cmidnumber', 'idnumbermod');
 
         // Add our submission buttons.
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton2', get_string('saveandreturn', 'mod_qbank'));
@@ -101,6 +102,10 @@ class mod_qbank_mod_form extends moodleform_mod {
         $mform =& $this->_form;
         $mform->addElement('hidden', 'visible', 0);
         $mform->setType('visible', PARAM_INT);
+
+        $mform->addElement('hidden', 'type');
+        $mform->setDefaults('type',\core_question\sharing\helper::STANDARD);
+        $mform->setType('type', PARAM_TEXT);
     }
 
     public function validation($data, $files): array {
@@ -118,7 +123,7 @@ class mod_qbank_mod_form extends moodleform_mod {
             }
         }
 
-        if (!empty($data['cmidnumber']) && $mform->elementExists('cmidnumber')) {
+        if (!empty($data['cmidnumber'])) {
             $idnumexists = $DB->record_exists_select(
                     'course_modules',
                     'id <> :id AND course = :course AND idnumber = :idnumber',
@@ -127,6 +132,10 @@ class mod_qbank_mod_form extends moodleform_mod {
             if ($idnumexists) {
                 $errors['cmidnumber'] = get_string('idnumbertaken');
             }
+        }
+
+        if (!empty($data['type']) && !in_array($data['type'], core_question\sharing\helper::TYPES, true)) {
+            $errors['type'] = get_string('unknownbanktype', 'mod_qbank', $data['type']);
         }
 
         return $errors;

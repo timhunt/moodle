@@ -40,6 +40,7 @@ class backup_qbank_activity_structure_step extends backup_activity_structure_ste
                         'timemodified',
                         'intro',
                         'introformat',
+                        'type'
                 ]
         );
 

@@ -27,10 +27,10 @@
 namespace core_question\sharing;
 
 use cm_info;
-use core_component;
-use core_course\local\entity\content_item;
+use context_course;
 use core_course_category;
 use core_question\local\bank\question_edit_contexts;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -43,6 +43,20 @@ class helper {
     private static array $openmods = [];
 
     private static array $closedmods = [];
+
+    /** @var string the type of qbank module that users create */
+    public const STANDARD = 'standard';
+
+    /**
+     * The type of module that the system creates.
+     * These are created in course restores when no target context can be found,
+     * and also for when a question category cannot be deleted safely due to questions being in use.
+     *
+     * @var string
+     */
+    public const SYSTEM = 'system';
+
+    public const TYPES = [self::STANDARD, self::SYSTEM];
 
     /**
      * Modules that share questions via FEATURE_PUBLISHES_QUESTIONS.
@@ -92,6 +106,7 @@ class helper {
         foreach (self::get_open_modules() as $plugin) {
             $coursemodinfo = \course_modinfo::instance($courseid);
             if ($plugininstances = $coursemodinfo->get_instances_of($plugin)) {
+                usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
                 $instances[$plugin] = $plugininstances;
             }
         }
@@ -103,10 +118,23 @@ class helper {
      * @return cm_info[][]
      */
     public static function get_course_closed_instances(int $courseid): array {
-        //TODO: only get mods which have questions locally.
         foreach (self::get_closed_modules() as $plugin) {
             $coursemodinfo = \course_modinfo::instance($courseid);
             if ($plugininstances = $coursemodinfo->get_instances_of($plugin)) {
+                $plugininstances = array_filter($plugininstances, static function($instance) {
+                    global $DB;
+                    if ($instance->deletioninprogress) {
+                        return false;
+                    }
+                    $categories = $DB->get_records('question_categories', ['contextid' => $instance->context->id]);
+                    foreach ($categories as $category) {
+                        if (question_category_in_use($category->id)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
                 $instances[$plugin] = $plugininstances;
             }
         }
@@ -124,8 +152,9 @@ class helper {
             foreach ($category->get_courses(['recursive', 'idonly']) as $course) {
                 foreach ($plugins as $plugin) {
                     $coursemodinfo = \course_modinfo::instance($course->id);
-                    if ($modinfo = $coursemodinfo->get_instances_of($plugin)) {
-                        $instances[$plugin . '_' . $course->id] = $modinfo;
+                    if ($modinstances = $coursemodinfo->get_instances_of($plugin)) {
+                        usort($modinstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
+                        $instances[$plugin . '_' . $course->id] = $modinstances;
                     }
                 }
             }
@@ -152,15 +181,87 @@ class helper {
     }
 
     /**
-     * @param \stdClass $course
-     * @param string $bankname
-     * @return object|\stdClass
+     * Get the system type mod_qbank instance for this course, optionally create it if it does not yet exist.
+     * @see self::SYSTEM
+     *
+     * @param stdClass $course
+     * @param bool $createifnotexists
+     * @return cm_info|false
      */
-    public static function create_default_open_instance(\stdClass $course, string $bankname) {
-        [$module, $context, $cw, $cm, $data] = prepare_new_moduleinfo_data($course, 'qbank', 0);
-        unset($data->completion);
+    public static function get_default_open_instance_system_type(stdClass $course, bool $createifnotexists = false): cm_info|false {
+
+        $modinfo = get_fast_modinfo($course);
+        $qbanks = $modinfo->get_instances_of('qbank');
+
+        $qbanks = array_filter($qbanks, static function($qbank) {
+            global $DB;
+            return $DB->record_exists('qbank', ['id' => $qbank->instance, 'type' => self::SYSTEM]);
+        });
+
+        // Should only be one of these so return the first anyway.
+        $qbank = reset($qbanks);
+
+        if (!$qbank && $createifnotexists) {
+            $qbank = self::create_default_open_instance($course, "{$course->fullname} system bank", self::SYSTEM);
+        }
+
+        return $qbank;
+    }
+
+    /**
+     * @param stdClass $course the course that the new module is being created in
+     * @param string $bankname name of the new module
+     * @param string $type @see self::TYPES
+     * @return cm_info
+     */
+    public static function create_default_open_instance(stdClass $course, string $bankname, string $type = self::STANDARD): cm_info {
+        global $DB;
+
+        if (!in_array($type, self::TYPES)) {
+            throw new \RuntimeException('invalid type');
+        }
+
+        // We can only have one of these types per course.
+        if ($type === self::SYSTEM && $qbank = self::get_default_open_instance_system_type($course)) {
+            return $qbank;
+        }
+
+        $module = $DB->get_record('modules', ['name' => 'qbank'], '*', MUST_EXIST);
+        $context = context_course::instance($course->id);
+
+        // Types other than system need capability checks.
+        if ($type !== self::SYSTEM) {
+            require_capability('moodle/course:manageactivities', $context);
+            if (!course_allowed_module($course, $module->name)) {
+                throw new \moodle_exception('moduledisable');
+            }
+        }
+
+        $data = new stdClass();
+        $data->section = 0;
+        $data->visible = 0;
+        $data->course = $course->id;
+        $data->module = $module->id;
+        $data->modulename = $module->name;
+        $data->groupmode = $course->groupmode;
+        $data->groupingid = $course->defaultgroupingid;
+        $data->id = '';
+        $data->instance = '';
+        $data->coursemodule = '';
+        $data->downloadcontent = DOWNLOAD_COURSE_CONTENT_ENABLED;
         $data->visibleoncoursepage = 0;
-        $data->name = "{$bankname} course question bank";
-        return add_moduleinfo($data, $course);
+        $data->name = $bankname;
+        $data->type = in_array($type, self::TYPES) ? $type : self::STANDARD;
+        $data->showdescription = $type === self::STANDARD ? 0 : 1;
+
+        $mod = add_moduleinfo($data, $course);
+
+        // Have to set this manually as the system because this bank type is not intended to be created directly by a user.
+        if ($type === self::SYSTEM) {
+            $DB->set_field('qbank', 'intro', get_string('systembankdescription', 'mod_qbank'), ['id' => $mod->instance]);
+            $DB->set_field('qbank', 'introformat', FORMAT_HTML, ['id' => $mod->instance]);
+        }
+
+        return get_fast_modinfo($course)->get_cm($mod->coursemodule);
     }
 }

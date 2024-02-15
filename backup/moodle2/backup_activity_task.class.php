@@ -283,10 +283,6 @@ abstract class backup_activity_task extends backup_task {
         $activities = $this->plan->get_setting('activities');
         $activities->add_dependency($activity_included);
 
-        if (question_module_uses_questions($this->modulename)) {
-            $questionbank = $this->plan->get_setting('questionbank');
-            $questionbank->add_dependency($activity_included);
-        }
 
         // Look for "section_included" section setting (if exists)
         $settingname = 'section_' . $this->sectionid . '_included';

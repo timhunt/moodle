@@ -62,8 +62,8 @@ class question_bank_list implements \renderable, \templatable {
                 }
 
                 $managequestions = new action_link(
-                        new \moodle_url('/question/edit.php', [
-                                'cmid' => $cminfo->id,
+                        new \moodle_url("/mod/{$cminfo->modname}/view.php", [
+                                'id' => $cminfo->id,
                         ]),
                         $cminfo->get_formatted_name(),
                 );
@@ -71,7 +71,7 @@ class question_bank_list implements \renderable, \templatable {
                 $banks[] = [
                         'purpose' => plugin_supports('mod', $cminfo->modname, FEATURE_MOD_PURPOSE),
                         'iconurl' => $cminfo->get_icon_url(),
-                        'modname' => $cminfo->modname,
+                        'modname' => $cminfo->get_formatted_name(),
                         'description' => $cminfo->get_formatted_content(),
                         'managequestions' => $managequestions->export_for_template($output),
                         'managebank' => $managebankexport,

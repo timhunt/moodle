@@ -65,6 +65,7 @@ abstract class base extends area_base {
     }
 
     /**
+     * MDL-71378 TODO: Update this to deprecate text on questions at course context
      * Find recordset of the course areas.
      *
      * @param int $courseid
