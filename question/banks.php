@@ -49,7 +49,7 @@ $PAGE->set_url($pageurl);
 
 if ($createdefault) {
     require_sesskey();
-    helper::create_default_open_instance($course, $course->fullname);
+    question_bank_helper::create_default_open_instance($course, $course->fullname . ' course question bank');
     \core\notification::add(get_string('defaultcreated', 'question'), \core\notification::SUCCESS);
     redirect($pageurl);
 }
@@ -57,6 +57,9 @@ if ($createdefault) {
 $output = $PAGE->get_renderer('core_question', 'bank');
 
 echo $output->header();
+if (!\mod_qbank\task\install::has_completed_successfully()) {
+    echo $output->notification(get_string('installnotfinished', 'mod_qbank'), \core\output\notification::NOTIFY_WARNING);
+}
 echo $output->heading(get_string('banksincourse', 'question'));
 echo $output->render(new view_banks($openbanksgenerator, $closedbanksgenerator, $course));
 echo $output->footer();

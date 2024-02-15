@@ -160,6 +160,8 @@ class question_bank_helper_test extends \advanced_testcase {
     }
 
     public function test_create_default_open_instance(): void {
+        global $DB;
+
         $this->resetAfterTest();
         self::setAdminUser();
 
@@ -168,13 +170,53 @@ class question_bank_helper_test extends \advanced_testcase {
         // Create the instance and assert default values.
         question_bank_helper::create_default_open_instance($course, $course->fullname);
         $modinfo = get_fast_modinfo($course);
-        $cminfos = $modinfo->get_instances();
-        $cminfo = reset($cminfos['qbank']);
-
-        $this->assertCount(1, $cminfos['qbank']);
-        $this->assertEquals("{$course->fullname} course question bank", $cminfo->get_name());
+        $cminfos = $modinfo->get_instances_of('qbank');
+        $this->assertCount(1, $cminfos);
+        $cminfo = reset($cminfos);
+        $this->assertEquals($course->fullname, $cminfo->get_name());
         $this->assertEquals(0, $cminfo->sectionnum);
+        $modrecord = $DB->get_record('qbank', ['id' => $cminfo->instance]);
+        $this->assertEquals(question_bank_helper::STANDARD, $modrecord->type);
         $this->assertEmpty($cminfo->idnumber);
         $this->assertEmpty($cminfo->content);
+
+        // Create a system type bank.
+        question_bank_helper::create_default_open_instance($course, 'System bank 1', question_bank_helper::SYSTEM);
+
+        // Try and create another system type bank.
+        question_bank_helper::create_default_open_instance($course, 'System bank 2', question_bank_helper::SYSTEM);
+
+        $modinfo = get_fast_modinfo($course);
+        $cminfos = $modinfo->get_instances_of('qbank');
+        $cminfos = array_filter($cminfos, static function($cminfo) {
+            global $DB;
+            return $DB->record_exists('qbank', ['id' => $cminfo->instance, 'type' => question_bank_helper::SYSTEM]);
+        });
+
+        // Can only be 1 system 'type' bank per course.
+        $this->assertCount(1, $cminfos);
+        $cminfo = reset($cminfos);
+        $this->assertEquals('System bank 1', $cminfo->get_name());
+        $moddata = $DB->get_record('qbank', ['id' => $cminfo->instance]);
+        $this->assertEquals(get_string('systembankdescription', 'mod_qbank'), $moddata->intro);
+        $this->assertEquals(1, $cminfo->showdescription);
+    }
+
+    public function test_get_default_open_instance_system_type() {
+        global $DB;
+
+        $this->resetAfterTest();
+        self::setAdminUser();
+
+        $course = self::getDataGenerator()->create_course();
+        $modinfo = get_fast_modinfo($course);
+        $qbanks = $modinfo->get_instances_of('qbank');
+        $this->assertCount(0, $qbanks);
+        $qbank = question_bank_helper::get_default_open_instance_system_type($course);
+        $this->assertFalse($qbank);
+        $qbank = question_bank_helper::get_default_open_instance_system_type($course, true);
+        $this->assertEquals(get_string('systembank', 'mod_qbank'), $qbank->get_name());
+        $modrecord = $DB->get_record('qbank', ['id' => $qbank->instance]);
+        $this->assertEquals(question_bank_helper::SYSTEM, $modrecord->type);
     }
 }

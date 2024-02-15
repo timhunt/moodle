@@ -47,3 +47,6 @@ $string['systembankdescription'] = "This type of question bank is created automa
 $string['unknownbanktype'] = 'Unknown question bank type {$a}';
 $string['systembank'] = "System shared question bank";
 $string['previewbank'] = "Preview shared question bank";
+$string['sharedbank'] = '{$a} shared question bank';
+$string['coursecategory'] = 'Shared teaching resources for category: {$a}';
+$string['installnotfinished'] = "Adhoc task \\mod_qbank\\task\\install has not yet completed or has failed. Some of your pre-install banks may not have been transferred to mod_qbank instances yet. Any question categories they contained will not be able to be shared or managed until the task has completed successfully";

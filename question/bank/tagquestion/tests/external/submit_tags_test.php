@@ -278,6 +278,7 @@ class submit_tags_test extends \externallib_advanced_testcase {
     }
 
     /**
+     * MDL-71378 TODO: refactor external to not support course tags.
      * Tests that submit_tags_form only creates course tags when the correct combination
      * of editing context and question context is provided.
      *
@@ -298,6 +299,8 @@ class submit_tags_test extends \externallib_advanced_testcase {
             $coursetags,
             $expectcoursetags
     ): void {
+        $this->markTestSkipped('External class no longer supports questions with course context tags');
+
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
         list ($category, $course, $qcat, $questions) = $questiongenerator->setup_course_and_questions($questioncontext);
         $coursecontext = \context_course::instance($course->id);

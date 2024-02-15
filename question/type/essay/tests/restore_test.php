@@ -16,6 +16,11 @@
 
 namespace qtype_essay;
 
+use backup;
+use backup_controller;
+use restore_controller;
+use restore_dbops;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -38,13 +43,14 @@ class restore_test extends \restore_date_testcase {
      * That is what is tested in this file.
      */
     public function test_restore_create_missing_qtype_essay_options(): void {
-        global $DB;
+        global $DB, $CFG, $USER;
 
         // Create a course with one essay question in its question bank.
         $generator = $this->getDataGenerator();
         $course = $generator->create_course();
-        $contexts = new \core_question\local\bank\question_edit_contexts(\context_course::instance($course->id));
-        $category = question_make_default_categories($contexts->all());
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
+        $category = question_make_default_categories([$context]);
         $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
         $essay = $questiongenerator->create_question('essay', null, array('category' => $category->id));
 
@@ -54,9 +60,12 @@ class restore_test extends \restore_date_testcase {
         // Do backup and restore.
         $newcourseid = $this->backup_and_restore($course);
 
+        $modinfo = get_fast_modinfo($newcourseid);
+        $newqbanks = array_filter($modinfo->get_instances_of('qbank'), static fn($qbank) => $qbank->get_name() === 'Question bank 1');
+        $newqbank = reset($newqbanks);
+
         // Verify that the restored question has options.
-        $contexts = new \core_question\local\bank\question_edit_contexts(\context_course::instance($newcourseid));
-        $newcategory = question_make_default_categories($contexts->all());
+        $newcategory = question_make_default_categories([\context_module::instance($newqbank->id)]);
         $newessay = $DB->get_record_sql('SELECT q.*
                                               FROM {question} q
                                               JOIN {question_versions} qv ON qv.questionid = q.id

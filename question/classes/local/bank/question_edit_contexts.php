@@ -17,6 +17,7 @@
 namespace core_question\local\bank;
 
 /**
+ * MDL-71378 TODO: probably don't need this class anymore.
  * Tracks all the contexts related to the one we are currently editing questions and provides helper methods to check permissions.
  *
  * @package   core_question

@@ -19,7 +19,9 @@
 
     Example context (json):
     {
+        "hasopenbanks": boolean,
         "openbanks": [core_question/question_banks_list],
+        "hasclosedbanks": boolean,
         "closedbanks": [core_question/question_banks_list],
         "createdefault": single_button,
         "addbanks": action_link
@@ -36,12 +38,14 @@
     </div>
 {{/openbanks}}
 
-{{#openbanks}}
+{{#hasopenbanks}}
     <div class="open-banks">
-        {{< core_question/question_banks_list}}
-        {{/core_question/question_banks_list}}
+        {{#openbanks}}
+            {{< core_question/question_banks_list}}
+            {{/core_question/question_banks_list}}
+        {{/openbanks}}
     </div>
-{{/openbanks}}
+{{/hasopenbanks}}
 
 {{#addbanks}}
     <div class="add-bank pt-2">
@@ -53,11 +57,13 @@
     </div>
 {{/addbanks}}
 
-{{#closedbanks}}
+{{#hasclosedbanks}}
     <div class="closed-banks pt-5">
         <h2>{{#str}}otherbanks, question{{/str}}</h2>
         <p>{{#str}}otherbanksdesc, question{{/str}}</p>
-        {{< core_question/question_banks_list}}
-        {{/core_question/question_banks_list}}
+        {{#closedbanks}}
+            {{< core_question/question_banks_list}}
+            {{/core_question/question_banks_list}}
+        {{/closedbanks}}
     </div>
-{{/closedbanks}}
+{{/hasclosedbanks}}

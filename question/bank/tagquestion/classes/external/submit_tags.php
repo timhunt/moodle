@@ -52,6 +52,7 @@ class submit_tags extends external_api {
     }
 
     /**
+     * MDL-71378 TODO: deprecate this for course context tags.
      * Handles the tags form submission.
      *
      * @param int $questionid The question id.
@@ -110,7 +111,7 @@ class submit_tags extends external_api {
 
                     $result['status'] = true;
                 }
-
+                // MDL-71378 TODO: update this and affiliated code.
                 if (isset($validateddata->coursetags)) {
                     $coursetags = is_array($validateddata->coursetags) ? $validateddata->coursetags : [];
                     core_tag_tag::set_item_tags('core_question', 'question', $validateddata->id,

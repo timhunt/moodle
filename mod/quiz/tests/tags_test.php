@@ -49,7 +49,13 @@ class tags_test extends \advanced_testcase {
         $rc = new \restore_controller($backupid, $newcourseid, \backup::INTERACTIVE_NO, \backup::MODE_GENERAL, $USER->id,
                 \backup::TARGET_NEW_COURSE);
 
-        $this->assertTrue($rc->execute_precheck());
+        $rc->execute_precheck();
+        $results = $rc->get_precheck_results();
+        // Backup contains categories attached to deprecated contexts.
+        $this->assertCount(2, $results['warnings']);
+        foreach ($results['warnings'] as $warning) {
+            $this->assertStringStartsWith('The questions category', $warning);
+        }
         $rc->execute_plan();
         $rc->destroy();
 
@@ -85,7 +91,13 @@ class tags_test extends \advanced_testcase {
         $slottags = explode(',', $slottags);
         $this->assertEquals("{$tag2->id},{$tag2->name}", "{$slottags[0]},{$slottags[1]}");
 
-        $defaultcategory = question_get_default_category(\context_course::instance($newcourseid)->id);
+        // Course context question cats get restored to a default qbank module instance.
+        $modinfo = get_fast_modinfo($newcourseid);
+        $qbanks = $modinfo->get_instances_of('qbank');
+        $this->assertCount(1, $qbanks);
+        $qbank = reset($qbanks);
+
+        $defaultcategory = question_get_default_category(\context_module::instance($qbank->id)->id);
         $this->assertEquals($defaultcategory->id, $question->category);
         $randomincludingsubcategories = $DB->get_record('question_set_references',
             ['itemid' => reset($slots)->id, 'component' => 'mod_quiz', 'questionarea' => 'slot']);

@@ -4794,6 +4794,11 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     // Delete every instance of every module,
     // this has to be done before deleting of course level stuff.
     $locations = core_component::get_plugin_list('mod');
+    // Make sure we remove any mod instance that publishes questions last, as they could have questions in use by other
+    // activities in this course.
+    uksort($locations, static function($a, $b) {
+        return plugin_supports('mod', $a, FEATURE_PUBLISHES_QUESTIONS) <=> plugin_supports('mod', $b, FEATURE_PUBLISHES_QUESTIONS);
+    });
     foreach ($locations as $modname => $moddir) {
         if ($modname === 'NEWMODULE') {
             continue;

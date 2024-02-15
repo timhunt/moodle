@@ -123,3 +123,4 @@ registrationcontactyes,core
 error:duplicatename,core_badges
 error:cannotact,core_badges
 reviewbadge,core_badges
+configgeneralquestionbank,core_backup

@@ -22,4 +22,11 @@
  * @author     Simon Adams <simon.adams@catalyst-eu.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class mod_qbank_generator extends testing_module_generator {}
+class mod_qbank_generator extends testing_module_generator {
+    public function create_instance($record = null, array $options = null) {
+        if (empty($record['type'])) {
+            $record['type'] = core_question\local\bank\question_bank_helper::STANDARD;
+        }
+        return parent::create_instance($record, $options);
+    }
+}

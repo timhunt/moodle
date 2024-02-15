@@ -46,8 +46,9 @@ class backup_qbank_activity_task extends backup_activity_task {
      * Define (add) particular steps this activity can have
      */
     protected function define_my_steps() {
-        // Qbank only has one structure step
         $this->add_step(new backup_qbank_activity_structure_step('qbank_structure', 'qbank.xml'));
+        $this->add_step(new backup_calculate_question_categories('qbank_activity_question_categories'));
+        $this->add_step(new backup_delete_temp_questions('clean_temp_questions'));
     }
 
     /**
@@ -55,6 +56,13 @@ class backup_qbank_activity_task extends backup_activity_task {
      * order to get transportable (encoded) links
      */
     public static function encode_content_links($content) {
-        return $content;
+        global $CFG;
+
+        $base = preg_quote($CFG->wwwroot, '/');
+
+        // Link to qbank view by moduleid.
+        $search="/(".$base."\/mod\/qbank\/view.php\?id\=)([0-9]+)/";
+
+        return preg_replace($search, '$@QBANKVIEWBYID*$2@$', $content);
     }
 }
