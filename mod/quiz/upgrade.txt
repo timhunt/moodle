@@ -22,6 +22,7 @@ This file describes API changes in the quiz code.
 * The following previously deprecated methods have been removed and can no longer be used:
   - `get_slot_tags_for_slot_id`
   - `quiz_retrieve_tags_for_slot_ids`
+* There is a new renderable grade_out_of to help with display a nicely formatted "42.00 out of 100.00" with a few variants.
 
 === 4.3 ===
 
