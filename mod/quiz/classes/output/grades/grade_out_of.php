@@ -38,6 +38,9 @@ class grade_out_of implements renderable {
     /** @var string like normal, but with the percent equivalent in brackets. Also the lang string used */
     const WITH_PERCENT = 'outofpercent';
 
+    /** @var string|null optional, a name for what this grade is. */
+    public readonly ?string $name;
+
     /**
      * Constructor.
      *
