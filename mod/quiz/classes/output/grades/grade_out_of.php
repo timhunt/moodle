@@ -50,6 +50,9 @@ class grade_out_of implements renderable {
     /** @var string The display style, one of the consts above. */
     public string $style;
 
+    /** @var string|null Optional field which can be used to store a name for what this grade is. */
+    public ?string $name = null;
+
     /**
      * Constructor.
      *
