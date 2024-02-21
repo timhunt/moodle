@@ -317,7 +317,7 @@ class qbank_helper {
               -- Join in the question metadata which says if this is a qa from a 'Try another question like this one'.
               JOIN {question_attempt_steps} firststep ON firststep.questionattemptid = qa.id
                            AND firststep.sequencenumber = 0
-         LEFT JOIN {question_attempt_step_data} otherslotinfo ON otherslotinfo.attemptstepid = qa.id
+         LEFT JOIN {question_attempt_step_data} otherslotinfo ON otherslotinfo.attemptstepid = firststep.id
                            AND otherslotinfo.name = :otherslotmetadataname
 
               -- Join in the quiz slot information, and hence for non-random slots, the questino_reference.
