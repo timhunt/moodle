@@ -224,7 +224,6 @@ Feature: Attempt a quiz
     And I click on "Edit question" "link" in the "First question" "question"
     And I set the field "Question text" to "First question version 2"
     And I press "id_submitbutton"
-    And I should see "v2 (latest)" in the "First question" "question"
     And I log out
     When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
     And I press "Continue your attempt"

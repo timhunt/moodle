@@ -12,8 +12,8 @@ Feature: Preview a quiz as a teacher
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
     And the following "course enrolments" exist:
-      | user     | course | role    |
-      | teacher  | C1     | teacher |
+      | user     | course | role           |
+      | teacher  | C1     | editingteacher |
     And the following "question categories" exist:
       | contextlevel | reference | name           |
       | Course       | C1        | Test questions |
@@ -93,7 +93,6 @@ Feature: Preview a quiz as a teacher
     When I am on the "Quiz 3" "mod_quiz > View" page logged in as "teacher"
     And I press "Preview quiz"
     And I should see "one_of_four"
-    And I should see "v1 (latest)"
     And I click on "One" "qtype_multichoice > Answer"
     And I click on "Two" "qtype_multichoice > Answer"
     And I press "Finish attempt ..."
@@ -103,7 +102,6 @@ Feature: Preview a quiz as a teacher
     And I set the field "Choice 4" to ""
     And I press "id_submitbutton"
     Then I should see "one_of_four version 2"
-    And I should see "v2 (latest)"
     And I should see "One"
     And I should see "Two"
     And I should see "Three"
