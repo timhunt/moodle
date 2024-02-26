@@ -55,7 +55,7 @@ class quiz_overview_report extends attempts_report {
     protected $newquestionidsforold = null;
 
     public function display($quiz, $cm, $course) {
-        global $DB, $PAGE;
+        global $DB, $PAGE, $OUTPUT;
 
         list($currentgroup, $studentsjoins, $groupstudentsjoins, $allowedjoins) = $this->init(
                 'overview', 'quiz_overview_settings_form', $quiz, $cm, $course);
@@ -127,45 +127,15 @@ class quiz_overview_report extends attempts_report {
         if ($hasquestions && ($hasstudents || $options->attempts == self::ALL_WITH)) {
             // Construct the SQL.
             $table->setup_sql_queries($allowedjoins);
-
+            $canregrade = has_capability('mod/quiz:regrade', $this->context);
             if (!$table->is_downloading()) {
                 // Output the regrade buttons.
-                if (has_capability('mod/quiz:regrade', $this->context)) {
-                    $regradesneeded = $this->count_question_attempts_needing_regrade(
-                            $quiz, $groupstudentsjoins);
-                    if ($currentgroup) {
-                        $a= new stdClass();
-                        $a->groupname = format_string(groups_get_group_name($currentgroup), true, [
-                            'context' => $this->context,
-                        ]);
-                        $a->coursestudents = get_string('participants');
-                        $a->countregradeneeded = $regradesneeded;
-                        $regradealldrydolabel =
-                                get_string('regradealldrydogroup', 'quiz_overview', $a);
-                        $regradealldrylabel =
-                                get_string('regradealldrygroup', 'quiz_overview', $a);
-                        $regradealllabel =
-                                get_string('regradeallgroup', 'quiz_overview', $a);
-                    } else {
-                        $regradealldrydolabel =
-                                get_string('regradealldrydo', 'quiz_overview', $regradesneeded);
-                        $regradealldrylabel =
-                                get_string('regradealldry', 'quiz_overview');
-                        $regradealllabel =
-                                get_string('regradeall', 'quiz_overview');
-                    }
+                if ($canregrade) {
                     $displayurl = new moodle_url($options->get_url(), ['sesskey' => sesskey()]);
                     echo '<div class="regradebuttons">';
                     echo '<form action="'.$displayurl->out_omit_querystring().'">';
                     echo '<div>';
                     echo html_writer::input_hidden_params($displayurl);
-                    echo '<input type="submit" class="btn btn-secondary" name="regradeall" value="'.$regradealllabel.'"/>';
-                    echo '<input type="submit" class="btn btn-secondary ml-1" name="regradealldry" value="' .
-                            $regradealldrylabel . '"/>';
-                    if ($regradesneeded) {
-                        echo '<input type="submit" class="btn btn-secondary ml-1" name="regradealldrydo" value="' .
-                                $regradealldrydolabel . '"/>';
-                    }
                     echo '</div>';
                     echo '</form>';
                     echo '</div>';
@@ -193,7 +163,7 @@ class quiz_overview_report extends attempts_report {
 
             $this->add_grade_columns($quiz, $options->usercanseegrades, $columns, $headers, false);
 
-            if (!$table->is_downloading() && has_capability('mod/quiz:regrade', $this->context) &&
+            if (!$table->is_downloading() && $canregrade &&
                     $this->has_regraded_questions($table->sql->from, $table->sql->where, $table->sql->params)) {
                 $columns[] = 'regraded';
                 $headers[] = get_string('regrade', 'quiz_overview');
@@ -217,6 +187,20 @@ class quiz_overview_report extends attempts_report {
             $table->set_attribute('class', 'generaltable generalbox grades');
 
             $table->out($options->pagesize, true);
+            if ($canregrade && !$table->is_downloading() &&
+                    $attempts = $this->count_question_attempts_or_questions_needing_regrade($quiz, $groupstudentsjoins)) {
+                    $a = new stdClass();
+                    $a->questions = $this->count_question_attempts_or_questions_needing_regrade($quiz, $groupstudentsjoins, true);
+                    $a->attempts = $attempts;
+
+                    $regradenotification = new stdClass();
+                    $regradenotification->name = 'regradealldrydo';
+                    $regradenotification->message = get_string('regrade_regradeneedednotificationmessage', 'quiz_overview', $a);
+                    $regradenotification->value = get_string('regrade_commitregrade', 'quiz_overview');
+                    $regradenotification->actionurl = $displayurl->out_omit_querystring();
+                    $regradenotification->hiddenparams = html_writer::input_hidden_params($displayurl);
+                    echo $OUTPUT->render_from_template('mod_quiz/regrade_needed_notification', $regradenotification);
+            }
         }
 
         if (!$table->is_downloading() && $options->usercanseegrades) {
@@ -250,6 +234,7 @@ class quiz_overview_report extends attempts_report {
                 echo $output->chart($chart, $graphname, ['dir' => 'ltr']);
             }
         }
+
         return true;
     }
 
@@ -266,27 +251,37 @@ class quiz_overview_report extends attempts_report {
     protected function process_actions($quiz, $cm, $currentgroup, \core\dml\sql_join $groupstudentsjoins,
             \core\dml\sql_join $allowedjoins, $redirecturl) {
         parent::process_actions($quiz, $cm, $currentgroup, $groupstudentsjoins, $allowedjoins, $redirecturl);
-
+        $dryrun = false;
+        if (optional_param('dryrun', 0, PARAM_BOOL)) {
+            $dryrun = true;
+        }
         if (empty($currentgroup) || $this->hasgroupstudents) {
             if (optional_param('regrade', 0, PARAM_BOOL) && confirm_sesskey()) {
                 if ($attemptids = optional_param_array('attemptid', [], PARAM_INT)) {
                     $this->start_regrade($quiz, $cm);
-                    $this->regrade_attempts($quiz, false, $groupstudentsjoins, $attemptids);
+                    $this->regrade_attempts($quiz, $dryrun, $groupstudentsjoins, $attemptids);
                     $this->finish_regrade($redirecturl);
                 }
+            }
+            if (optional_param('regradealllwithquestionselected', 0, PARAM_BOOL) && confirm_sesskey()) {
+                $this->start_regrade($quiz, $cm);
+                $this->regrade_attempts($quiz, $dryrun, $groupstudentsjoins, null,
+                    optional_param('questionslots', 0, PARAM_RAW));
+                $this->finish_regrade($redirecturl);
+            }
+            if (optional_param('regradewithquestionselected', 0, PARAM_BOOL) && confirm_sesskey()) {
+                $attemptids = optional_param_array('attemptid', [], PARAM_INT);
+                $this->start_regrade($quiz, $cm);
+                $this->regrade_attempts($quiz, $dryrun, $groupstudentsjoins, $attemptids,
+                    optional_param('questionslots', 0, PARAM_RAW));
+                $this->finish_regrade($redirecturl);
             }
         }
 
         if (optional_param('regradeall', 0, PARAM_BOOL) && confirm_sesskey()) {
             $this->start_regrade($quiz, $cm);
-            $this->regrade_attempts($quiz, false, $groupstudentsjoins);
+            $this->regrade_attempts($quiz, $dryrun, $groupstudentsjoins);
             $this->finish_regrade($redirecturl);
-
-        } else if (optional_param('regradealldry', 0, PARAM_BOOL) && confirm_sesskey()) {
-            $this->start_regrade($quiz, $cm);
-            $this->regrade_attempts($quiz, true, $groupstudentsjoins);
-            $this->finish_regrade($redirecturl);
-
         } else if (optional_param('regradealldrydo', 0, PARAM_BOOL) && confirm_sesskey()) {
             $this->start_regrade($quiz, $cm);
             $this->regrade_attempts_needing_it($quiz, $groupstudentsjoins);
@@ -466,9 +461,10 @@ class quiz_overview_report extends attempts_report {
      * for these users.
      * @param array $attemptids blank for all attempts, otherwise only regrade
      * attempts whose id is in this list.
+     * @param string $slot blank for all slots, otherwise only regrade attempts with these slots.
      */
     protected function regrade_attempts($quiz, $dryrun = false,
-            core\dml\sql_join $groupstudentsjoins = null, $attemptids = []) {
+            core\dml\sql_join $groupstudentsjoins = null, $attemptids = [], $slot = '') {
         global $DB;
         $this->unlock_session();
 
@@ -496,7 +492,11 @@ class quiz_overview_report extends attempts_report {
         if (!$attempts) {
             return;
         }
-
+        if ($slot) {
+            foreach ($attempts as $attempt) {
+                $attempt->regradeonlyslots = explode(',', $slot);
+            }
+        }
         $this->regrade_batch_of_attempts($quiz, $attempts, $dryrun, $groupstudentsjoins);
     }
 
@@ -611,14 +611,16 @@ class quiz_overview_report extends attempts_report {
     }
 
     /**
-     * Count the number of attempts in need of a regrade.
+     * Count the number of attempts or question in need of a regrade.
      *
      * @param stdClass $quiz the quiz settings.
      * @param \core\dml\sql_join $groupstudentsjoins (joins, wheres, params) If this is given, only data relating
      * to these users is cleared.
+     * @param bool $countquestions if true, count the number of questions, otherwise count the number of attempts.
      * @return int the number of attempts.
      */
-    protected function count_question_attempts_needing_regrade($quiz, \core\dml\sql_join $groupstudentsjoins) {
+    protected function count_question_attempts_or_questions_needing_regrade($quiz,
+            \core\dml\sql_join $groupstudentsjoins, bool $countquestions = false): int {
         global $DB;
 
         $userjoin = '';
@@ -632,7 +634,8 @@ class quiz_overview_report extends attempts_report {
         }
 
         $params['cquiz'] = $quiz->id;
-        $sql = "SELECT COUNT(DISTINCT quiza.id)
+        $selectvalues = $countquestions ? 'qqr.slot' : 'quiza.id';
+        $sql = "SELECT COUNT(DISTINCT $selectvalues)
                   FROM {quiz_attempts} quiza
                   JOIN {quiz_overview_regrades} qqr ON quiza.uniqueid = qqr.questionusageid
                 $userjoin

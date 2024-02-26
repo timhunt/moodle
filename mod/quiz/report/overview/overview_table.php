@@ -204,20 +204,19 @@ class quiz_overview_table extends attempts_report_table {
     }
 
     protected function submit_buttons() {
+        global $PAGE;
+        parent::submit_buttons();
         if (has_capability('mod/quiz:regrade', $this->context)) {
             $regradebuttonparams = [
                 'type'  => 'submit',
+                'id'    => 'regradeattempts',
                 'class' => 'btn btn-secondary mr-1',
-                'name'  => 'regrade',
-                'value' => get_string('regradeselected', 'quiz_overview'),
-                'data-action' => 'toggle',
-                'data-togglegroup' => $this->togglegroup,
-                'data-toggle' => 'action',
-                'disabled' => true
+                'name'  => 'regradeattempts',
+                'value' => get_string('regrade_attempts', 'quiz_overview'),
             ];
             echo html_writer::empty_tag('input', $regradebuttonparams);
+            $PAGE->requires->js_call_amd('mod_quiz/regrade_modal', 'init', [$this->context->id]);
         }
-        parent::submit_buttons();
     }
 
     public function col_sumgrades($attempt) {

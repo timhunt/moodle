@@ -670,6 +670,17 @@ abstract class attempts_report_table extends \table_sql {
         $url = $this->options->get_url();
         $url->param('sesskey', sesskey());
 
+        foreach ($this->questions as $question) {
+            $questionid[] = $question->id;
+            $questionslot[] = $question->slot;
+        }
+        $questionids = implode(',', $questionid);
+        $questionslots = implode(',', $questionslot);
+        // Add the questionids and questionslots to the hidden params.
+        // So that the regrade report can get the questionids and questionslots.
+        $url->param('questionids', $questionids);
+        $url->param('questionslots', $questionslots);
+
         echo '<div id="tablecontainer">';
         echo '<form id="attemptsform" method="post" action="' . $url->out_omit_querystring() . '">';
 
