@@ -16,6 +16,8 @@ Overview of this plugin type at http://docs.moodle.org/dev/Quiz_reports
 * The function quiz_grading_renderer::render_grade_link now requires a string identifier and
   a component identifier so that it is possible to address strings outside of
   quiz/report/grading/lang/en/quiz_grading.php.
+* The functions quiz_overview_report::regrade_attempts and regrade_batch_of_attempts now have a
+  third parameter $slot which is a string to indicate which slots to regrade (default all).
 
 === 4.2 ===
 
