@@ -46,6 +46,8 @@ class question_bank_helper_test extends \advanced_testcase {
         global $DB;
 
         $this->resetAfterTest();
+        //MDL-71378 TODO: update for capability checks.
+        self::setAdminUser();
 
         $qgen = self::getDataGenerator()->get_plugin_generator('core_question');
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
@@ -154,8 +156,8 @@ class question_bank_helper_test extends \advanced_testcase {
 
         $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
 
-        $this->assertCount(1, $filteredmods['qbank']);
-        $filteredmod = reset($filteredmods['qbank']);
+        $this->assertCount(1, $filteredmods['qbank_' . $course->id]);
+        $filteredmod = reset($filteredmods['qbank_' . $course->id]);
         $this->assertEquals($openmod1->name, $filteredmod->name);
     }
 
@@ -218,5 +220,85 @@ class question_bank_helper_test extends \advanced_testcase {
         $this->assertEquals(get_string('systembank', 'mod_qbank'), $qbank->get_name());
         $modrecord = $DB->get_record('qbank', ['id' => $qbank->instance]);
         $this->assertEquals(question_bank_helper::SYSTEM, $modrecord->type);
+    }
+
+    public function test_recently_viewed_question_banks() {
+        $this->resetAfterTest();
+
+        $user = self::getDataGenerator()->create_user();
+        $course1 = self::getDataGenerator()->create_course();
+        $course2 = self::getDataGenerator()->create_course();
+        $banks = [];
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course1->id]);
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course1->id]);
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course1->id]);
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course2->id]);
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course2->id]);
+        $banks[] = self::getDataGenerator()->create_module('qbank', ['course' => $course2->id]);
+
+        self::setUser($user);
+
+        // Trigger bank view on each of them.
+        foreach ($banks as $bank) {
+            $cat = question_make_default_category(\context_module::instance($bank->cmid));
+            $context = \context::instance_by_id($cat->contextid);
+            question_bank_helper::add_category_to_recently_viewed($context);
+        }
+
+        $viewedorder = array_reverse($banks);
+        // Check that the courseid filter works.
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id, $course1->id);
+        $this->assertCount(3, $recentlyviewed);
+
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id);
+
+        // We only keep a record of 5 maximum.
+        $this->assertCount(5, $recentlyviewed);
+        foreach ($recentlyviewed as $order => $record) {
+            $this->assertEquals($viewedorder[$order]->cmid, $record->modid);
+        }
+
+        // Now if we view one of those again it should get bumped to the front of the list.
+        $bank3cat = question_get_default_category(\context_module::instance($banks[2]->cmid)->id);
+        $bank3context = \context::instance_by_id($bank3cat->contextid);
+        question_bank_helper::add_category_to_recently_viewed($bank3context);
+
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id);
+
+        // We should still have 5 maximum.
+        $this->assertCount(5, $recentlyviewed);
+        // The recently viewed on got bumped to the front.
+        $this->assertEquals($banks[2]->cmid, $recentlyviewed[0]->modid);
+        // The others got sorted accordingly behind it.
+        $this->assertEquals($banks[5]->cmid, $recentlyviewed[1]->modid);
+        $this->assertEquals($banks[4]->cmid, $recentlyviewed[2]->modid);
+        $this->assertEquals($banks[3]->cmid, $recentlyviewed[3]->modid);
+        $this->assertEquals($banks[1]->cmid, $recentlyviewed[4]->modid);
+
+        // Now create a quiz and trigger the bank view of it.
+        $quiz = self::getDataGenerator()->get_plugin_generator('mod_quiz')->create_instance(['course' => $course1]);
+        $quizcat = question_make_default_category(\context_module::instance($quiz->cmid));
+        $quizcontext = \context::instance_by_id($quizcat->contextid);
+        question_bank_helper::add_category_to_recently_viewed($quizcontext);
+
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id);
+        // We should still have 5 maximum.
+        $this->assertCount(5, $recentlyviewed);
+
+        // Make sure that we only store bank views for plugins that support FEATURE_PUBLISHES_QUESTIONS.
+        foreach ($recentlyviewed as $record) {
+            $this->assertNotEquals($quiz->cmid, $record->modid);
+        }
+
+        // Now delete one of the viewed bank modules and get the records again.
+        course_delete_module($banks[2]->cmid);
+        $recentlyviewed = question_bank_helper::get_recently_used_open_banks($user->id);
+        $this->assertCount(4, $recentlyviewed);
+
+        // Check the order was retained.
+        $this->assertEquals($banks[5]->cmid, $recentlyviewed[0]->modid);
+        $this->assertEquals($banks[4]->cmid, $recentlyviewed[1]->modid);
+        $this->assertEquals($banks[3]->cmid, $recentlyviewed[2]->modid);
+        $this->assertEquals($banks[1]->cmid, $recentlyviewed[3]->modid);
     }
 }

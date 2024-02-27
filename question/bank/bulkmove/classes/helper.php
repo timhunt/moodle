@@ -52,6 +52,7 @@ class helper {
     }
 
     /**
+     *  MDL-71378 - TODO deprecate or use to return the open instances
      * Get the display data for the move form.
      *
      * @param array $addcontexts the array of contexts to be considered in order to render the category select menu.

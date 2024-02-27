@@ -960,6 +960,7 @@ class secondary_test extends \advanced_testcase {
                 'id',
                 false
             ],
+            //MDL-71378 TODO: Deprecate this
             "Question bank should return nothing" => [
                 '/question/edit.php',
                 'courseid',

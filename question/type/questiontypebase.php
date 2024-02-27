@@ -1406,8 +1406,12 @@ class question_type {
         $form->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
         $form->generalfeedback = "Well done";
 
-        $context = context_course::instance($courseid);
-        $newcategory = question_make_default_categories(array($context));
+        $course = get_course($courseid);
+        $qbank = \core_question\local\bank\question_bank_helper::create_default_open_instance($course,
+                get_string('defaultbank', 'core_question', ['coursename' => $course->fullname])
+        );
+        $context = context_module::instance($qbank->cmid);
+        $newcategory = question_make_default_category($context);
         $form->category = $newcategory->id . ',1';
 
         $question = new stdClass();

@@ -1236,58 +1236,43 @@ function question_get_top_categories_for_contexts($contextids): array {
 }
 
 /**
- * // MDL-71378 TODO: refactor for deprecated contexts.
- * Gets the default category in the most specific context.
- * If no categories exist yet then default ones are created in all contexts.
+ * Create a default category for the module context in the argument. If it already exists return that category.
  *
- * @param array $contexts  The context objects for this context and all parent contexts.
- * @return object The default category - the category in the course context
+ * @param $context
+ * @return stdClass
+ * @throws coding_exception
+ * @throws dml_exception
  */
-function question_make_default_categories($contexts): object {
+function question_make_default_category($context): stdClass {
     global $DB;
-    static $preferredlevels = array(
-        CONTEXT_COURSE => 4,
-        CONTEXT_MODULE => 3,
-        CONTEXT_COURSECAT => 2,
-        CONTEXT_SYSTEM => 1,
-    );
 
-    $toreturn = null;
-    $preferredness = 0;
-    // If it already exists, just return it.
-    foreach ($contexts as $key => $context) {
-        $topcategory = question_get_top_category($context->id, true);
-        if (!$exists = $DB->record_exists("question_categories",
-                array('contextid' => $context->id, 'parent' => $topcategory->id))) {
-            // Otherwise, we need to make one.
-            $category = new stdClass();
-            $contextname = $context->get_context_name(false, true);
-            // Max length of name field is 255.
-            $category->name = shorten_text(get_string('defaultfor', 'question', $contextname), 255);
-            $category->info = get_string('defaultinfofor', 'question', $contextname);
-            $category->contextid = $context->id;
-            $category->parent = $topcategory->id;
-            // By default, all categories get this number, and are sorted alphabetically.
-            $category->sortorder = 999;
-            $category->stamp = make_unique_id_code();
-            $category->id = $DB->insert_record('question_categories', $category);
-        } else {
-            $category = question_get_default_category($context->id);
-        }
-        $thispreferredness = $preferredlevels[$context->contextlevel];
-        if (has_any_capability(array('moodle/question:usemine', 'moodle/question:useall'), $context)) {
-            $thispreferredness += 10;
-        }
-        if ($thispreferredness > $preferredness) {
-            $toreturn = $category;
-            $preferredness = $thispreferredness;
-        }
+    if ($context->contextlevel !== CONTEXT_MODULE) {
+        debugging("Invalid context level {$context->contextlevel} category creation. Please use CONTEXT_MODULE");
+        return null;
     }
 
-    if (!is_null($toreturn)) {
-        $toreturn = clone($toreturn);
+    // We need to make a top category first if it doesn't exist.
+    $topcategory = question_get_top_category($context->id, true);
+
+    // Grab the first category that isn't a 'top' category.
+    $defaultcat = question_get_default_category($context->id);
+
+    if (!$defaultcat) {
+        // We don't have one, so we need to make one.
+        $defaultcat = new stdClass();
+        $contextname = $context->get_context_name(false, true);
+        // Max length of name field is 255.
+        $defaultcat->name = shorten_text(get_string('defaultfor', 'question', $contextname), 255);
+        $defaultcat->info = get_string('defaultinfofor', 'question', $contextname);
+        $defaultcat->contextid = $context->id;
+        $defaultcat->parent = $topcategory->id;
+        // By default, all categories get this number, and are sorted alphabetically.
+        $defaultcat->sortorder = 999;
+        $defaultcat->stamp = make_unique_id_code();
+        $defaultcat->id = $DB->insert_record('question_categories', $defaultcat);
     }
-    return $toreturn;
+
+    return $defaultcat;
 }
 
 /**
@@ -1512,6 +1497,7 @@ function question_edit_url($context) {
     if ($defaultcategory) {
         $baseurl .= 'cat=' . $defaultcategory->id . ',' . $context->id . '&amp;';
     }
+    // MDL-71378 TODO: deprecate this
     switch ($context->contextlevel) {
         case CONTEXT_SYSTEM:
             return $baseurl . 'courseid=' . $SITE->id;
@@ -1556,7 +1542,7 @@ function question_extend_settings_navigation(navigation_node $navigationnode, $c
         $params['cat'] = $cat;
     }
 
-    $questionnode = $navigationnode->add(get_string('questionbank', 'question'),
+    $questionnode = $navigationnode->add(get_string($iscourse ? 'questionbank_plural' : 'questionbank', 'question'),
             new moodle_url($baseurl, $params), navigation_node::TYPE_CONTAINER, null, 'questionbank');
 
     $corenavigations = [

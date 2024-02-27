@@ -56,9 +56,11 @@ abstract class question_base extends base {
                 return new \moodle_url('/question/edit.php',
                         ['cmid' => $this->contextinstanceid, 'cat' => $cat, 'lastchanged' => $this->objectid]);
             }
+            //MDL-71378 TODO: Deprecate this
             return new \moodle_url('/question/edit.php',
                     ['courseid' => $this->courseid, 'cat' => $cat, 'lastchanged' => $this->objectid]);
         }
+        //MDL-71378 TODO: Deprecate this
         // Lets try viewing from the frontpage for contexts above course.
         return new \moodle_url('/question/edit.php',
                 ['courseid' => SITEID, 'edit' => $cat, 'lastchanged' => $this->objectid]);

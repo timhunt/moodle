@@ -15,8 +15,9 @@ Feature: Edit quiz page - adding things
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
     And the following "activities" exist:
-      | activity   | name   | intro                           | course | idnumber |
-      | quiz       | Quiz 1 | Quiz 1 for testing the Add menu | C1     | quiz1    |
+      | activity   | name    | intro                                     | course | idnumber  |
+      | quiz       | Quiz 1  | Quiz 1 for testing the Add menu           | C1     | quiz1     |
+      | qbank      | Qbank 1 | Question bank 1 for testing the Add menu  | C1     | qbank1    |
     And I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
 
   @javascript
@@ -98,11 +99,12 @@ Feature: Edit quiz page - adding things
       add questions from question bank to the quiz, first we create some new questions
       in various categories and add them to the question bank.
 
+    # MDL-71378 TODO: see where this url is being created question/bank/managecategories/category.php for courses as this is now deprecated.
     # Create a couple of sub categories.
     When I am on the "Course 1" "core_question > course question categories" page
     Then I should see "Add category"
     And I follow "Add category"
-    Then I set the field "Parent category" to "Default for C1"
+    Then I set the field "Parent category" to "Default for Bank 1"
     And I set the field "Name" to "Subcat 1"
     And I set the field "Category info" to "This is sub category 1"
     And I press "id_submitbutton"

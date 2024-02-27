@@ -30,6 +30,7 @@ use core_question\local\bank\view;
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->dirroot . '/question/editlib.php');
 
+//MDL-71378 TODO: check this
 list($thispageurl, $contexts, $cmid, $cm, $module, $pagevars) =
         question_edit_setup('questions', '/question/edit.php');
 
@@ -73,5 +74,6 @@ $category->id = $categoryid;
 $catcontext = context::instance_by_id($contextid);
 $event = question_category_viewed::create_from_question_category_instance($category, $catcontext);
 $event->trigger();
+\core_question\local\bank\question_bank_helper::add_category_to_recently_viewed($catcontext);
 
 echo $OUTPUT->footer();

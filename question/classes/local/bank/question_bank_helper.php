@@ -26,6 +26,7 @@
 namespace core_question\local\bank;
 
 use cm_info;
+use context;
 use context_course;
 use moodle_url;
 use stdClass;
@@ -265,7 +266,7 @@ class question_bank_helper {
         $invalidcontexts = [];
 
         foreach ($contextids as $contextid) {
-            if (!$context = \context::instance_by_id($contextid, IGNORE_MISSING)) {
+            if (!$context = context::instance_by_id($contextid, IGNORE_MISSING)) {
                 $invalidcontexts[] = $context;
                 continue;
             }
@@ -288,6 +289,37 @@ class question_bank_helper {
         }
 
         return $toreturn ?? [];
+    }
+
+    /**
+     * Mark a user as having viewed a category in the user_preferences table with key @see self::RECENTLY_VIEWED
+     *
+     * @param context $categorycontext
+     * @return void
+     */
+    public static function add_category_to_recently_viewed(context $categorycontext): void {
+
+        if ($categorycontext->contextlevel !== CONTEXT_MODULE) {
+            return;
+        }
+
+        [, $cm] = get_module_from_cmid($categorycontext->instanceid);
+
+        if (!plugin_supports('mod', $cm->modname, FEATURE_PUBLISHES_QUESTIONS)) {
+            return;
+        }
+
+        $userprefs = get_user_preferences(self::RECENTLY_VIEWED);
+        $recentlyviewed = !empty($userprefs) ? explode(',', $userprefs) : [];
+        $recentlyviewed = array_combine($recentlyviewed, $recentlyviewed);
+        $tostore = [];
+        $tostore[] = $categorycontext->id;
+        if (!empty($recentlyviewed[$categorycontext->id])) {
+            unset($recentlyviewed[$categorycontext->id]);
+        }
+        $tostore = array_merge($tostore, array_values($recentlyviewed));
+        $tostore = array_slice($tostore, 0, 5);
+        set_user_preference(self::RECENTLY_VIEWED, implode(',', $tostore));
     }
 
     /**

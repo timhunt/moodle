@@ -22,6 +22,9 @@
  */
 
 import Modal from 'core/modal';
+import * as Fragment from 'core/fragment';
+import {getString} from 'core/str';
+import AutoComplete from 'core/form-autocomplete';
 
 export default class AddQuestionModal extends Modal {
     configure(modalConfig) {
@@ -35,6 +38,11 @@ export default class AddQuestionModal extends Modal {
         // Apply question modal configuration.
         this.setContextId(modalConfig.contextId);
         this.setAddOnPageId(modalConfig.addOnPage);
+
+        // Store the quiz module id for when we need to POST to the quiz.
+        // This is because the URL cmid param will change during filter operations as we will be in another bank context.
+        this.quizModId = modalConfig.quizModId;
+        this.bankModId = modalConfig.bankModId;
 
         // Apply standard configuration.
         super.configure(modalConfig);
@@ -89,4 +97,35 @@ export default class AddQuestionModal extends Modal {
         return this.addOnPageId;
     }
 
+    /**
+     * @param {String} Selector for the original select element.
+     * @return {Promise} Modal.
+     */
+    async handleSwitchBankContentReload(Selector) {
+        this.setTitle(getString('selectquestionbank', 'mod_quiz'));
+        this.setBody(
+            Fragment.loadFragment(
+                'mod_quiz',
+                'switch_question_bank',
+                this.getContextId(),
+                {
+                    'quizcmid': this.quizModId,
+                    'bankmodid': this.bankModId,
+                })
+        );
+        const placeholder = await getString('searchbyname', 'mod_quiz').then((str) => { return str;});
+        await this.getBodyPromise();
+        await AutoComplete.enhance(
+            Selector,
+            false,
+            '',
+            placeholder,
+            false,
+            true,
+            '',
+            true
+        );
+
+        return this;
+    }
 }

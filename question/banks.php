@@ -46,10 +46,14 @@ $closedbanksgenerator = question_bank_helper::get_instances(question_bank_helper
 
 $pageurl = question_bank_helper::get_url_for_qbank_list($course->id);
 $PAGE->set_url($pageurl);
+$PAGE->add_body_class('limitedwidth');
 
 if ($createdefault) {
     require_sesskey();
-    question_bank_helper::create_default_open_instance($course, $course->fullname . ' course question bank');
+    question_bank_helper::create_default_open_instance(
+        $course,
+        get_string('defaultbank', 'core_question', ['coursename' => $course->fullname])
+    );
     \core\notification::add(get_string('defaultcreated', 'question'), \core\notification::SUCCESS);
     redirect($pageurl);
 }
