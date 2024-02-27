@@ -51,10 +51,21 @@ class edit_renderer extends \plugin_renderer_base {
      * @param \core_question\local\bank\question_edit_contexts $contexts the relevant question bank contexts.
      * @param \moodle_url $pageurl the canonical URL of this page.
      * @param array $pagevars the variables from {@link question_edit_setup()}.
+     * @param \cm_info[][] $courseopenbanks
+     * @param \cm_info[][] $allopenbanks
      * @return string HTML to output.
      */
-    public function edit_page(\mod_quiz\quiz_settings $quizobj, structure $structure,
-        \core_question\local\bank\question_edit_contexts $contexts, \moodle_url $pageurl, array $pagevars) {
+    public function edit_page(
+            \mod_quiz\quiz_settings $quizobj,
+            structure $structure,
+            \core_question\local\bank\question_edit_contexts $contexts,
+            \moodle_url $pageurl,
+            array $pagevars,
+            array $courseopenbanks,
+            array $allopenbanks
+    ) {
+        global $USER;
+
         $output = '';
 
         // Page title.
@@ -107,19 +118,35 @@ class edit_renderer extends \plugin_renderer_base {
 
         // Initialise the JavaScript.
         $this->initialise_editing_javascript($structure, $contexts, $pagevars, $pageurl);
+        $courseopenbanks = $this->format_banks_for_output($courseopenbanks);
+        $allopenbanks = $this->format_banks_for_output($allopenbanks);
+        $recentlyused = $this->format_banks_for_output([\core_question\sharing\helper::get_recently_used_open_banks($USER->id)]);
+        // Just show those not in the current course already.
+        $recentlyused = array_values(
+                array_udiff($recentlyused, $courseopenbanks, static fn($a, $b) => $a['bankmodid'] <=> $b['bankmodid'])
+        );
 
         // Include the contents of any other popups required.
         if ($structure->can_be_edited()) {
             $thiscontext = $contexts->lowest();
             $this->page->requires->js_call_amd('mod_quiz/modal_quiz_question_bank', 'init', [
-                $thiscontext->id
+                $thiscontext->id,
+                $quizobj->get_cm()->id,
+                $quizobj->get_cm()->id,
+                $courseopenbanks,
+                $allopenbanks,
+                $recentlyused,
             ]);
 
             $this->page->requires->js_call_amd('mod_quiz/modal_add_random_question', 'init', [
                 $thiscontext->id,
+                $quizobj->get_cm()->id,
                 $pagevars['cat'],
                 $pageurl->out_as_local_url(true),
                 $pageurl->param('cmid'),
+                $courseopenbanks,
+                $allopenbanks,
+                $recentlyused,
                 \core\plugininfo\qbank::is_plugin_enabled(\qbank_managecategories\helper::PLUGINNAME),
             ]);
 
@@ -128,6 +155,54 @@ class edit_renderer extends \plugin_renderer_base {
         }
 
         return $output;
+    }
+
+    /**
+     * @param \cm_info[][] $banks
+     * @return array
+     */
+    private function format_banks_for_output(array $banks): array {
+
+        $flattened = array_merge(...array_values($banks));
+
+        foreach ($flattened as $bank) {
+            $foroutput[] = [
+                    'bankmodid' => $bank->id,
+                    'name' => $bank->get_formatted_name(),
+            ];
+        }
+
+        return $foroutput ?? [];
+    }
+
+    /**
+     * Renders the switch question bank content list for mod_quiz/modal_quiz_question_bank
+     *
+     * @param string $quizname
+     * @param int $quizmodid
+     * @param array $courseopenbanks
+     * @param array $allopenbanks
+     * @param array $recentlyviewedbanks
+     * @return bool|string
+     */
+    public function switch_question_bank_fragment(
+            string $quizname,
+            int $quizmodid,
+            array $courseopenbanks,
+            array $allopenbanks,
+            array $recentlyviewedbanks,
+    ) {
+        $context = [
+                'quizname' => $quizname,
+                'quizmodid' => $quizmodid,
+                'hascourseopenbanks' => !empty($courseopenbanks),
+                'courseopenbanks' => $courseopenbanks,
+                'hasrecentlyviewedbanks' => !empty($recentlyviewedbanks),
+                'recentlyviewedbanks' => $recentlyviewedbanks,
+                'allopenbanks' => $allopenbanks,
+        ];
+
+        return $this->render_from_template('mod_quiz/switch_question_bank', $context);
     }
 
     /**
@@ -1060,9 +1135,10 @@ class edit_renderer extends \plugin_renderer_base {
      */
     public function random_question(structure $structure, $slotnumber, $pageurl) {
         $question = $structure->get_question_in_slot($slotnumber);
+        $bankcontext = \context::instance_by_id($question->contextid);
         $slot = $structure->get_slot_by_number($slotnumber);
         $editurl = new \moodle_url('/mod/quiz/editrandom.php',
-                ['returnurl' => $pageurl->out_as_local_url(), 'slotid' => $slot->id]);
+                ['returnurl' => $pageurl->out_as_local_url(), 'slotid' => $slot->id, 'bankmodid' => $bankcontext->instanceid]);
 
         $temp = clone($question);
         $temp->questiontext = '';
@@ -1076,7 +1152,7 @@ class edit_renderer extends \plugin_renderer_base {
 
         $editicon = $this->pix_icon('t/edit', $configuretitle, 'moodle', ['title' => '']);
         $qbankurlparams = [
-            'cmid' => $structure->get_cmid(),
+            'cmid' => $bankcontext->instanceid,
             'cat' => $slot->category . ',' . $slot->contextid,
         ];
 

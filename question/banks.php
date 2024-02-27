@@ -46,10 +46,11 @@ $closedbanks = helper::filter_by_question_edit_access(array_keys(question_edit_c
 
 $pageurl = new moodle_url('/question/banks.php', ['courseid' => $course->id]);
 $PAGE->set_url($pageurl);
+$PAGE->add_body_class('limitedwidth');
 
 if ($createdefault) {
     require_sesskey();
-    helper::create_default_open_instance($course, $course->fullname . ' course question bank');
+    helper::create_default_open_instance($course, get_string('defaultbank', 'core_question', ['coursename' => $course->fullname]));
     \core\notification::add(get_string('defaultcreated', 'question'), \core\notification::SUCCESS);
     redirect($pageurl);
 }

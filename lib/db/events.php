@@ -75,6 +75,11 @@ $observers = array(
         'eventname'   => '\core\event\course_module_completion_updated',
         'callback'    => 'core_competency\api::observe_course_module_completion_updated',
     ),
+    // Question bank
+    array(
+        'eventname'   => '\core\event\question_category_viewed',
+        'callback'    => '\core_question\sharing\observer::handle_question_category_viewed',
+    )
 );
 
 // List of all events triggered by Moodle can be found using Events list report.

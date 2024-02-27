@@ -141,6 +141,7 @@ if ($form = $importform->get_data()) {
     $event = \core\event\questions_imported::create($eventparams);
     $event->trigger();
 
+    //MDL-71378 TODO: check this
     $params = $thispageurl->params() + ['category' => $qformat->category->id . ',' . $qformat->category->contextid];
     echo $OUTPUT->continue_button(new moodle_url('/question/edit.php', $params));
     echo $OUTPUT->footer();

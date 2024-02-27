@@ -2325,11 +2325,14 @@ function mod_quiz_output_fragment_quiz_question_bank($args): string {
     // Retrieve params.
     $params = [];
     $extraparams = [];
-    $querystring = parse_url($args['querystring'], PHP_URL_QUERY);
-    parse_str($querystring, $params);
+    // Load the bank we are looking at rather than always the quiz module itself.
+    $params['cmid'] = clean_param($args['bankmodid'], PARAM_INT);
 
     $viewclass = \mod_quiz\question\bank\custom_view::class;
     $extraparams['view'] = $viewclass;
+
+    // We need the quiz modid to POST back to.
+    $extraparams['quizmodid'] = clean_param($args['quizmodid'], PARAM_INT);
 
     // Build required parameters.
     [$contexts, $thispageurl, $cm, $pagevars, $extraparams] =
@@ -2346,15 +2349,34 @@ function mod_quiz_output_fragment_quiz_question_bank($args): string {
     return $renderer->question_bank_contents($questionbank, $pagevars);
 }
 
+function mod_quiz_output_fragment_switch_question_bank($args): string {
+    global $PAGE;
+
+    $quizcmid = clean_param($args['quizcmid'], PARAM_INT);
+    [, $cm] = get_module_from_cmid($quizcmid);
+    $cminfo = cm_info::create($cm);
+    $courseopenbanks = json_decode($args['courseopenbanks'], true, 3, JSON_THROW_ON_ERROR);
+    $allopenbanks = json_decode($args['allopenbanks'], true, 3, JSON_THROW_ON_ERROR);
+    $recentlyviewedbanks = json_decode($args['recentlyviewedbanks'], true, 3, JSON_THROW_ON_ERROR);
+
+    return $PAGE->get_renderer('mod_quiz', 'edit')->switch_question_bank_fragment(
+            $cminfo->get_formatted_name(),
+            $quizcmid,
+            $courseopenbanks,
+            $allopenbanks,
+            $recentlyviewedbanks
+    );
+}
+
 /**
  * Generates the add random question in a fragment output. This allows the
  * form to be rendered in javascript, for example inside a modal.
  *
  * The required arguments as keys in the $args array are:
- *      cat {string} The category and category context ids comma separated.
  *      addonpage {int} The page id to add this question to.
  *      returnurl {string} URL to return to after form submission.
- *      cmid {int} The course module id the questions are being added to.
+ *      quizmodid {int} The quiz course module id the questions are being added to.
+ *      bankmodid {int} The question bank course module id the questions are being added from.
  *
  * @param array $args The fragment arguments.
  * @return string The rendered mform fragment.
@@ -2363,6 +2385,8 @@ function mod_quiz_output_fragment_add_random_question_form($args) {
     global $PAGE, $OUTPUT;
 
     $extraparams = [];
+    $extraparams['quizmodid'] = clean_param($args['quizmodid'], PARAM_INT);
+    $extraparams['cmid'] = clean_param($args['bankmodid'], PARAM_INT);
 
     // Build required parameters.
     [$contexts, $thispageurl, $cm, $pagevars, $extraparams] =
@@ -2477,12 +2501,14 @@ function mod_quiz_output_fragment_question_data(array $args): string {
     $thispageurl = new \moodle_url('/mod/quiz/edit.php', ['cmid' => $cmid]);
     $thiscontext = \context_module::instance($cmid);
     $contexts = new \core_question\local\bank\question_edit_contexts($thiscontext);
-    $defaultcategory = question_make_default_categories($contexts->all());
+    $defaultcategory = question_make_default_category($contexts->lowest());
     $params['cat'] = implode(',', [$defaultcategory->id, $defaultcategory->contextid]);
 
     $course = get_course($params['courseid']);
-    [, $cm] = get_module_from_cmid($cmid);
+    // The viewing bank mod id.
+    [, $cm] = get_module_from_cmid(clean_param($args['cmid'], PARAM_INT));
     $params['tabname'] = 'questions';
+    $extraparams['quizmodid'] = clean_param($args['quizmodid'], PARAM_INT);
 
     // Custom question bank View.
     $viewclass = clean_param($args['view'], PARAM_NOTAGS);

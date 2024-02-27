@@ -33,7 +33,6 @@ use core_question\local\bank\condition;
 use core_question\local\bank\column_manager_base;
 use core_question\local\bank\question_version_status;
 use mod_quiz\question\bank\filter\custom_category_condition;
-use qbank_managecategories\category_condition;
 
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 /**
@@ -57,6 +56,13 @@ class custom_view extends \core_question\local\bank\view {
      * @var string $component the component the api is used from.
      */
     public $component = 'mod_quiz';
+
+    /**
+     * Determine if the 'switch question bank' button must be displayed.
+     *
+     * @var bool
+     */
+    private bool $requirebankswitch;
 
     /**
      * Constructor.
@@ -83,9 +89,10 @@ class custom_view extends \core_question\local\bank\view {
 
         $this->init_columns($this->wanted_columns(), $this->heading_column());
         parent::__construct($contexts, $pageurl, $course, $cm, $params, $extraparams);
-        [$this->quiz, ] = get_module_from_cmid($cm->id);
+        [$this->quiz, ] = get_module_from_cmid($extraparams['quizmodid'] ?? $cm->id);
         $this->set_quiz_has_attempts(quiz_has_attempts($this->quiz->id));
         $this->pagesize = self::DEFAULT_PAGE_SIZE;
+        $this->requirebankswitch = $extraparams['requirebankswitch'] ?? true;
     }
 
     /**
@@ -299,5 +306,43 @@ class custom_view extends \core_question\local\bank\view {
      */
     public function get_quiz() {
         return $this->quiz;
+    }
+
+    public function display(): void {
+        $editcontexts = $this->contexts->having_one_edit_tab_cap('questions');
+
+        echo \html_writer::start_div('questionbankwindow boxwidthwide boxaligncenter', [
+                'data-component' => 'core_question',
+                'data-callback' => 'display_question_bank',
+                'data-contextid' => $editcontexts[array_key_last($editcontexts)]->id,
+        ]);
+
+        // Show the 'switch question bank' button.
+        $this->display_bank_switch();
+
+        // Show the filters and search options.
+        $this->wanted_filters();
+        // Continues with list of questions.
+        $this->display_question_list();
+        echo \html_writer::end_div();
+    }
+
+    /**
+     * Display the current bank and bank switch button.
+     *
+     * @return void
+     */
+    public function display_bank_switch(): void {
+        if (!$this->requirebankswitch) {
+            return;
+        }
+        echo \html_writer::start_div('switch-question-bank h5');
+        echo \html_writer::label(format_text(get_string('currentbank', 'mod_quiz', $this->cm->name)), 'switch-question-bank');
+        echo \html_writer::start_div('switch-question-bank-button');
+        echo '<button data-action="switch-question-bank" type="button" class="btn btn-secondary" id="switch-question-bank">' .
+                get_string('switchbank', 'core_question') .
+                '</button>';
+        echo \html_writer::end_div();
+        echo \html_writer::end_div();
     }
 }

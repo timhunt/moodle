@@ -3216,3 +3216,27 @@ function question_fix_top_names() {
 function search_generate_text_SQL() {
     \core\deprecation::emit_deprecation_if_present(__FUNCTION__);
 }
+
+/**
+ *  Gets the default category for a module context.
+ *  If no categories exist yet then default ones are created in all contexts.
+ *
+ * @param array $contexts The context objects.
+ * @return object|null The default category - the category in the first module context supplied in $contexts
+ * @deprecated since 4.5.question_make_default_category
+ */
+function question_make_default_categories(array $contexts): ?object {
+    debugging(
+            __FUNCTION__ . '() is deprecated.' .
+            'Please use question_make_default_category instead.',
+            DEBUG_DEVELOPER
+    );
+
+    $toreturn = [];
+
+    foreach ($contexts as $context) {
+        $toreturn[] = question_make_default_category($context);
+    }
+
+    return $toreturn[0];
+}

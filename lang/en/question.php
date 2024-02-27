@@ -98,6 +98,7 @@ will have their sharing status changed to the same sharing status as the categor
 on upgrading to Moodle 1.9. The following categories will have their sharing status changed. Questions which are
 affected will continue to work in all existing quizzes until you remove them from these quizzes.</p>';
 $string['cwrqpfsnoprob'] = 'No question categories in your site are affected by the \'Random questions selecting questions from sub categories\' issue.';
+$string['defaultbank'] = '{$a->coursename} course question bank';
 $string['defaultcreated'] = 'Default course question bank created';
 $string['defaultfor'] = 'Default for {$a}';
 $string['defaultinfofor'] = 'The default category for questions shared in context \'{$a}\'.';
@@ -293,7 +294,8 @@ $string['permissionto'] = 'You have permission to :';
 $string['published'] = 'shared';
 $string['qtypeveryshort'] = 'T';
 $string['questionaffected'] = '<a href="{$a->qurl}">Question "{$a->name}" ({$a->qtype})</a> is in this question category but is also being used in <a href="{$a->qurl}">quiz "{$a->quizname}"</a> in another course "{$a->coursename}".';
-$string['questionbank'] = 'Question banks';
+$string['questionbank'] = 'Question bank';
+$string['questionbank_plural'] = 'Question banks';
 $string['questionbanknavigation'] = 'Question bank tertiary navigation';
 $string['questioncategories'] = 'Question categories';
 $string['questioncategory'] = 'Question category';
@@ -322,6 +324,7 @@ $string['selectquestionsforbulk'] = 'Select questions for bulk actions';
 $string['shareincontext'] = 'Share in context for {$a}';
 $string['stoponerror'] = 'Stop on error';
 $string['stoponerror_help'] = 'This setting determines whether the import process stops when an error is detected, resulting in no questions being imported, or whether any questions containing errors are ignored and any valid questions are imported.';
+$string['switchbank'] = 'Switch to another bank';
 $string['tofilecategory'] = 'Write category to file';
 $string['tofilecontext'] = 'Write context to file';
 $string['topfor'] = 'Top for {$a}';

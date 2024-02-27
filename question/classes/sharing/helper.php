@@ -56,7 +56,15 @@ class helper {
      */
     public const SYSTEM = 'system';
 
-    public const TYPES = [self::STANDARD, self::SYSTEM];
+    /** @var string The type of module that the system creates for previews. Not used for any other purpose. */
+    public const PREVIEW = 'preview';
+
+    public const TYPES = [self::STANDARD, self::SYSTEM, self::PREVIEW];
+
+    /**
+     * User preferences record key to store recently viewed question banks.
+     */
+    public const RECENTLY_VIEWED = 'recently_viewed_open_banks';
 
     /**
      * Modules that share questions via FEATURE_PUBLISHES_QUESTIONS.
@@ -99,15 +107,29 @@ class helper {
     }
 
     /**
+     * Get instances in $courseid that implement FEATURE_PUBLISHES_QUESTIONS.
+     *
      * @param int $courseid
-     * @return cm_info[][]
+     * @return cm_info[]
      */
     public static function get_course_open_instances(int $courseid): array {
+        global $DB;
+
         foreach (self::get_open_modules() as $plugin) {
-            $coursemodinfo = \course_modinfo::instance($courseid);
-            if ($plugininstances = $coursemodinfo->get_instances_of($plugin)) {
-                usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
-                $instances[$plugin] = $plugininstances;
+            $sql = "SELECT cm.*
+                    FROM {course_modules} AS cm
+                    JOIN {modules} AS m ON m.id = cm.module
+                    JOIN {{$plugin}} AS p ON p.id = cm.instance
+                    WHERE m.name = :modname AND cm.course = :courseid";
+            $params = ['modname' => $plugin, 'courseid' => $courseid];
+            if ($plugin === 'qbank') {
+                $sql .= ' AND p.type <> :type';
+                $params['type'] = self::PREVIEW;
+            }
+            if ($plugininstances = $DB->get_records_sql($sql, $params)) {
+                $cminfos = array_map(static fn($cmrecord) => cm_info::create($cmrecord), $plugininstances);
+                usort($cminfos, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
+                $instances[$plugin . '_' . $courseid] = $cminfos;
             }
         }
         return $instances ?? [];
@@ -135,7 +157,7 @@ class helper {
                     return false;
                 });
                 usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
-                $instances[$plugin] = $plugininstances;
+                $instances[$plugin . '_' . $courseid] = $plugininstances;
             }
         }
         return $instances ?? [];
@@ -144,22 +166,61 @@ class helper {
     /**
      * Get instances that exist across ALL courses that implement FEATURE_PUBLISHES_QUESTIONS.
      *
+     * @param [] $notincourse array of course ids where you do not want instances included.
      * @return cm_info[][]
      */
-    public static function get_all_open_instances(): array {
-        $plugins = self::get_open_modules();
+    public static function get_all_open_instances($notincourseids = []): array {
+        $instances = [];
         foreach (core_course_category::get_all() as $category) {
             foreach ($category->get_courses(['recursive', 'idonly']) as $course) {
-                foreach ($plugins as $plugin) {
-                    $coursemodinfo = \course_modinfo::instance($course->id);
-                    if ($modinstances = $coursemodinfo->get_instances_of($plugin)) {
-                        usort($modinstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
-                        $instances[$plugin . '_' . $course->id] = $modinstances;
-                    }
+                if (in_array($course->id, $notincourseids)) {
+                    continue;
                 }
+                $courseinstances = self::get_course_open_instances($course->id);
+                if (empty($courseinstances)) {
+                    continue;
+                }
+
+                $instances[] = $courseinstances;
             }
         }
-        return $instances ?? [];
+        return array_merge([], ...$instances);
+    }
+
+    /**
+     * Get a list of recently viewed question banks that implement FEATURE_PUBLISHES_QUESTIONS.
+     * If any of the stored contexts don't exist anymore then update the user preference record accordingly.
+     *
+     * @param $userid
+     * @return cm_info[]
+     */
+    public static function get_recently_used_open_banks($userid): array {
+        $prefs = get_user_preferences(self::RECENTLY_VIEWED, null, $userid);
+        $contextids = !empty($prefs) ? explode(',', $prefs) : [];
+        if (empty($contextids)) {
+            return $contextids;
+        }
+        $invalidcontexts = [];
+
+        foreach ($contextids as $contextid) {
+            if (!$context = \context::instance_by_id($contextid, IGNORE_MISSING)) {
+                $invalidcontexts[] = $context;
+                continue;
+            }
+            if ($context->contextlevel !== CONTEXT_MODULE) {
+                throw new \moodle_exception('Invalid question bank contextlevel: ' . $context->contextlevel);
+            }
+            [, $cm] = get_module_from_cmid($context->instanceid);
+            $toreturn[] = cm_info::create($cm);
+        }
+
+        if (!empty($invalidcontexts)) {
+            $tostore = array_diff($contextids, $invalidcontexts);
+            $tostore = implode(',', $tostore);
+            set_user_preference(self::RECENTLY_VIEWED, $tostore, $userid);
+        }
+
+        return $toreturn ?? [];
     }
 
     /**
@@ -208,6 +269,24 @@ class helper {
         return $qbank;
     }
 
+    public static function get_preview_open_instance_type($createifnotexists = false) {
+        $modinfo = get_fast_modinfo(get_site());
+        $qbanks = $modinfo->get_instances_of('qbank');
+        $qbanks = array_filter($qbanks, static function($qbank) {
+            global $DB;
+            return $DB->record_exists('qbank', ['id' => $qbank->instance, 'type' => self::PREVIEW]);
+        });
+
+        // Should only be one of these so return the first anyway.
+        $qbank = reset($qbanks);
+
+        if (!$qbank && $createifnotexists) {
+            $qbank = self::create_default_open_instance(get_site(), "Preview system bank", self::PREVIEW);
+        }
+
+        return $qbank;
+    }
+
     /**
      * @param stdClass $course the course that the new module is being created in
      * @param string $bankname name of the new module
@@ -221,6 +300,14 @@ class helper {
             throw new \RuntimeException('invalid type');
         }
 
+        // Preview bank must be created at site course.
+        if ($type === self::PREVIEW) {
+            if ($qbank = self::get_preview_open_instance_type()) {
+                return $qbank;
+            }
+            $course = get_site();
+        }
+
         // We can only have one of these types per course.
         if ($type === self::SYSTEM && $qbank = self::get_default_open_instance_system_type($course)) {
             return $qbank;
@@ -229,8 +316,8 @@ class helper {
         $module = $DB->get_record('modules', ['name' => 'qbank'], '*', MUST_EXIST);
         $context = context_course::instance($course->id);
 
-        // Types other than system need capability checks.
-        if ($type !== self::SYSTEM) {
+        // STANDARD type needs capability checks.
+        if ($type === self::STANDARD) {
             require_capability('moodle/course:manageactivities', $context);
             if (!course_allowed_module($course, $module->name)) {
                 throw new \moodle_exception('moduledisable');

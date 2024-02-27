@@ -1,0 +1,46 @@
+{{$title}}{{/title}}
+
+<div class="quiz-bank">
+    <h5>{{#str}}quizquestionbank, mod_quiz{{/str}}</h5>
+    <a href="#" class="ml-3" data-newmodid="{{quizmodid}}">{{quizname}}</a>
+</div>
+
+<hr class="w-75">
+
+{{#hascourseopenbanks}}
+    <div class="course-open-banks">
+        <h5>{{#str}}coursequestionbanks, mod_quiz{{/str}}</h5>
+        {{#courseopenbanks}}
+            <ul class="list-unstyled ml-3">
+                <li>
+                    <a href="#" data-newmodid="{{bankmodid}}">{{name}}</a>
+                </li>
+            </ul>
+        {{/courseopenbanks}}
+    </div>
+    <hr class="w-75">
+{{/hascourseopenbanks}}
+
+{{#hasrecentlyviewedbanks}}
+    <div class="recently-viewed-banks">
+        <h5>{{#str}}recentlyviewedquestionbanks, mod_quiz{{/str}}</h5>
+        {{#recentlyviewedbanks}}
+            <ul class="list-unstyled ml-3">
+                <li>
+                    <a href="#" data-newmodid="{{bankmodid}}">{{name}}</a>
+                </li>
+            </ul>
+        {{/recentlyviewedbanks}}
+    </div>
+    <hr class="w-75">
+{{/hasrecentlyviewedbanks}}
+
+<div class="search-banks">
+    <h5>{{#str}}otherquestionbank, mod_quiz{{/str}}</h5>
+    <select class="custom-select" id="searchbanks">
+        <option value=""></option>
+        {{#allopenbanks}}
+            <option value="{{bankmodid}}">{{{name}}}</option>
+        {{/allopenbanks}}
+    </select>
+</div>

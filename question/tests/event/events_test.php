@@ -58,7 +58,7 @@ class events_test extends \advanced_testcase {
 
         $contexts = new \core_question\local\bank\question_edit_contexts(\context_module::instance($quiz->cmid));
 
-        $defaultcategoryobj = question_make_default_categories([$contexts->lowest()]);
+        $defaultcategoryobj = question_make_default_category($contexts->lowest());
         $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
 
         $qcobject = new question_category_object(
@@ -109,7 +109,7 @@ class events_test extends \advanced_testcase {
 
         $contexts = new \core_question\local\bank\question_edit_contexts(\context_module::instance($quiz->cmid));
 
-        $defaultcategoryobj = question_make_default_categories([$contexts->lowest()]);
+        $defaultcategoryobj = question_make_default_category($contexts->lowest());
         $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
 
         $qcobject = new question_category_object(

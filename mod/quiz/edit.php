@@ -64,7 +64,7 @@ $quizobj = new quiz_settings($quiz, $cm, $course);
 $structure = $quizobj->get_structure();
 $gradecalculator = $quizobj->get_grade_calculator();
 
-$defaultcategoryobj = question_make_default_categories($contexts->all());
+$defaultcategoryobj = question_make_default_category($contexts->lowest());
 $defaultcategory = $defaultcategoryobj->id . ',' . $defaultcategoryobj->contextid;
 
 $quizhasattempts = quiz_has_attempts($quiz->id);
@@ -187,9 +187,12 @@ if ($message = optional_param('message', '', PARAM_TEXT)) {
     core\notification::add($message, core\notification::SUCCESS);
 }
 
-$tertiarynav = new edit_nav_actions($cmid, edit_nav_actions::SUMMARY);
+// Load the lists of question banks.
+$courseopenbanks = \core_question\sharing\helper::get_course_open_instances($course->id);
+$allopenbanks = \core_question\sharing\helper::get_all_open_instances([$course->id]);
 
 // Do output.
+$tertiarynav = new edit_nav_actions($cmid, edit_nav_actions::SUMMARY);
 echo $output->header();
 echo $output->render($tertiarynav);
 
@@ -212,7 +215,7 @@ $PAGE->requires->js_call_amd('core_question/question_engine');
 // Questions wrapper start.
 echo html_writer::start_tag('div', ['class' => 'mod-quiz-edit-content']);
 
-echo $output->edit_page($quizobj, $structure, $contexts, $thispageurl, $pagevars);
+echo $output->edit_page($quizobj, $structure, $contexts, $thispageurl, $pagevars, $courseopenbanks, $allopenbanks);
 
 // Questions wrapper end.
 echo html_writer::end_tag('div');

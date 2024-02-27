@@ -25,6 +25,7 @@ use core_question\local\bank\column_base;
 use core_question\local\bank\column_manager_base;
 use core_question\local\bank\question_edit_contexts;
 use core_question\local\bank\view;
+use core_question\sharing\helper;
 use qbank_columnsortorder\local\bank\column_action_move;
 use qbank_columnsortorder\local\bank\column_action_remove;
 use qbank_columnsortorder\local\bank\column_action_resize;
@@ -172,9 +173,10 @@ class column_manager extends column_manager_base {
      */
     public function get_questionbank(): view {
         $course = (object) ['id' => 0];
-        $context = context_system::instance();
+        $previewbank = helper::get_preview_open_instance_type(true);
+        $context = \context_module::instance($previewbank->id);
         $contexts = new question_edit_contexts($context);
-        $category = question_make_default_categories($contexts->all());
+        $category = question_make_default_category($contexts->lowest());
         $params = ['cat' => $category->id . ',' . $context->id];
         // Dummy call to get the objects without error.
         $questionbank = new preview_view(

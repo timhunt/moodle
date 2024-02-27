@@ -76,6 +76,7 @@ $PAGE->set_url('/question/bank/editquestion/addquestion.php', $hiddenparams);
 if ($cmid) {
     $questionbankurl = new moodle_url('/question/edit.php', array('cmid' => $cmid));
 } else {
+    //MDL-71378 TODO: Deprecate this
     $questionbankurl = new moodle_url('/question/edit.php', array('courseid' => $courseid));
 }
 navigation_node::override_active_url($questionbankurl);

@@ -15,15 +15,17 @@ Feature: Adding random questions to a quiz based on category and tags
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
     And the following "activities" exist:
-      | activity   | name   | intro                                           | course | idnumber |
-      | quiz       | Quiz 1 | Quiz 1 for testing the Add random question form | C1     | quiz1    |
+      | activity   | name    | intro                                           | course | idnumber |
+      | quiz       | Quiz 1  | Quiz 1 for testing the Add random question form | C1     | quiz1    |
+      | qbank      | Qbank 1 | Question bank 1 for testing the Add menu        | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name                 |
-      | Course       | C1        | Questions Category 1 |
-      | Course       | C1        | Questions Category 2 |
+      | contextlevel    | reference    | name                 |
+      | Activity module | quiz1        | Questions Category 1 |
+      | Activity module | quiz1        | Questions Category 2 |
+      | Activity module | qbank1       | Qbank questions      |
     And the following "question categories" exist:
-      | contextlevel | reference | name        | questioncategory     |
-      | Course       | C1        | Subcategory | Questions Category 1 |
+      | contextlevel    | reference | name        | questioncategory     |
+      | Activity module | quiz1     | Subcategory | Questions Category 1 |
     And the following "questions" exist:
       | questioncategory     | qtype | name                | user     | questiontext    |
       | Questions Category 1 | essay | question 1 name     | admin    | Question 1 text |
@@ -31,13 +33,15 @@ Feature: Adding random questions to a quiz based on category and tags
       | Subcategory          | essay | question 3 name     | teacher1 | Question 3 text |
       | Subcategory          | essay | question 4 name     | teacher1 | Question 4 text |
       | Questions Category 1 | essay | "listen" & "answer" | teacher1 | Question 5 text |
+      | Qbank questions      | essay | Qbank question 1    | teacher1 | Qbank question  |
     And the following "core_question > Tags" exist:
-      | question            | tag |
-      | question 1 name     | foo |
-      | question 2 name     | bar |
-      | question 3 name     | foo |
-      | question 4 name     | bar |
-      | "listen" & "answer" | foo |
+      | question            | tag      |
+      | question 1 name     | foo      |
+      | question 2 name     | bar      |
+      | question 3 name     | foo      |
+      | question 4 name     | bar      |
+      | "listen" & "answer" | foo      |
+      | Qbank question 1    | qbanktag |
 
   Scenario: Available tags are shown in the autocomplete tag field
     Given I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
@@ -70,6 +74,21 @@ Feature: Adding random questions to a quiz based on category and tags
     And I should not see "question 2 name"
     And I should not see "question 4 name"
 
+  Scenario: Questions can be filtered by tags on a shared question bank
+    Given I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
+    When I open the "last" add to quiz menu
+    And I follow "a random question"
+    Then I click on "Switch to another bank" "button"
+    And I click on "Qbank 1" "link"
+    And I apply question bank filter "Category" with value "Qbank questions"
+    And I apply question bank filter "Tag" with value "qbanktag"
+    And I click on "Apply filters" "button"
+    And I wait until the page is ready
+    And I should see "Qbank question 1"
+    And I should not see "question 3 name"
+    And I should not see "question 2 name"
+    And I should not see "question 4 name"
+
   Scenario: A random question can be added to the quiz
     Given I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
     When I open the "last" add to quiz menu
@@ -83,6 +102,26 @@ Feature: Adding random questions to a quiz based on category and tags
     And I should see "foo"
     And I should see "question 1 name"
     And I should see "\"listen\" & \"answer\""
+
+  Scenario: A random question can be added to the quiz from a shared question bank
+    Given I am on the "Quiz 1" "mod_quiz > Edit" page logged in as "teacher1"
+    And I open the "last" add to quiz menu
+    And I follow "a random question"
+    Then I should see "Current bank: Quiz 1"
+    And I should see "question 1 name"
+    Then I click on "Switch to another bank" "button"
+    And I click on "Qbank 1" "link"
+    Then I should see "Current bank: Qbank 1"
+    And I should see "Qbank question 1"
+    But I should not see "question 1 name"
+    And I apply question bank filter "Tag" with value "qbanktag"
+    And I select "1" from the "randomcount" singleselect
+    And I press "Add random question"
+    And I should see "Random question based on filter condition with tags: qbanktag" on quiz page "1"
+    When I click on "Configure question" "link" in the "Random question based on filter condition with tags: qbank" "list_item"
+    Then I should see "Qbank questions"
+    And I should see "qbanktag"
+    And I should see "Qbank question 1"
 
   Scenario: Teacher without moodle/question:useall should not see the add a random question menu item
     Given the following "permission overrides" exist:
@@ -101,7 +140,7 @@ Feature: Adding random questions to a quiz based on category and tags
     And "Help with Parent category" "icon" should exist in the "Random question using a new category" "fieldset"
     And I set the following fields to these values:
       | Name            | New Random category |
-      | Parent category |  Default for Quiz 1 |
+      | Parent category | Questions Category 1 |
     And I press "Create category and add random question"
     And I should see "Random question based on filter condition" on quiz page "1"
     And I click on "Configure question" "link" in the "Random question based on filter condition" "list_item"

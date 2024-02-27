@@ -26,6 +26,7 @@
 
 namespace sharing;
 
+use context_system;
 use core_question\local\bank\question_edit_contexts;
 use core_question\sharing\helper;
 
@@ -46,6 +47,8 @@ class helper_test extends \advanced_testcase {
 
     public function test_get_course_instances(): void {
         $this->resetAfterTest();
+        //MDL-71378 TODO: update for capability checks.
+        self::setAdminUser();
 
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
         $closedmodgen = self::getDataGenerator()->get_plugin_generator('mod_quiz');
@@ -61,24 +64,28 @@ class helper_test extends \advanced_testcase {
         // Expect 1 plugin that has open instances in this course.
         $openinstances = helper::get_course_open_instances($course->id);
         $this->assertCount(1, $openinstances);
-        $this->assertArrayHasKey('qbank', $openinstances);
-        $this->assertCount(1, $openinstances['qbank']);
+        $this->assertArrayHasKey('qbank_' . $course->id, $openinstances);
+        $this->assertCount(1, $openinstances['qbank_' . $course->id]);
 
         // Make sure no closed mod instances were returned.
-        $this->assertArrayNotHasKey('quiz', $openinstances);
+        $this->assertArrayNotHasKey('quiz_' . $course->id, $openinstances);
 
         // Expect 1 plugin that has closed instances in this course.
         $closedinstances = helper::get_course_closed_instances($course->id);
         $this->assertCount(1, $closedinstances);
-        $this->assertArrayHasKey('quiz', $closedinstances);
-        $this->assertCount(1, $closedinstances['quiz']);
+        $this->assertArrayHasKey('quiz_' . $course->id, $closedinstances);
+        $this->assertCount(1, $closedinstances['quiz_' . $course->id]);
 
         // Make sure no open mod instances were returned.
-        $this->assertArrayNotHasKey('qbank', $closedinstances);
+        $this->assertArrayNotHasKey('qbank_' . $course->id, $closedinstances);
     }
 
     public function test_get_all_open_instances(): void {
         $this->resetAfterTest();
+        $user = self::getDataGenerator()->create_user();
+        $roleid = self::getDataGenerator()->create_role();
+        role_assign($roleid, $user->id, context_system::instance()->id);
+        self::setUser($user);
 
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
         $closedmodgen = self::getDataGenerator()->get_plugin_generator('mod_quiz');
@@ -88,18 +95,22 @@ class helper_test extends \advanced_testcase {
         $course2 = self::getDataGenerator()->create_course(['category' => $category1->id]);
         $course3 = self::getDataGenerator()->create_course(['category' => $category2->id]);
 
-        $openmodgen->create_instance(['course' => $course1]);
+
+        $openmod1 = $openmodgen->create_instance(['course' => $course1]);
         $closedmodgen->create_instance(['course' => $course1]);
+        //assign_capability('moodle/question:usemine', CAP_ALLOW, $roleid, \context_module::instance($openmod1->cmid)->id, true);
 
-        $openmodgen->create_instance(['course' => $course2]);
+        $openmod2 = $openmodgen->create_instance(['course' => $course2]);
         $closedmodgen->create_instance(['course' => $course2]);
+        //assign_capability('moodle/question:useall', CAP_ALLOW, $roleid, \context_module::instance($openmod2->cmid)->id, true);
 
-        $openmodgen->create_instance(['course' => $course3]);
+        // User doesn't have the capability on this one.
+        $openmod3 = $openmodgen->create_instance(['course' => $course3]);
         $closedmodgen->create_instance(['course' => $course3]);
 
         $categoryinstances = helper::get_all_open_instances();
 
-        // Expect top level count of 3 items, 1 per category that has a course containing an open module instance.
+        // Expect top level count of 2 items, 1 per category that has a course containing an open module instance.
         $this->assertCount(3, $categoryinstances);
         foreach ($categoryinstances as $key => $courseinstances) {
             // Should be 1 instance per category and course.
@@ -138,8 +149,8 @@ class helper_test extends \advanced_testcase {
 
         $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
 
-        $this->assertCount(1, $filteredmods['qbank']);
-        $filteredmod = reset($filteredmods['qbank']);
+        $this->assertCount(1, $filteredmods['qbank_' . $course->id]);
+        $filteredmod = reset($filteredmods['qbank_' . $course->id]);
         $this->assertEquals($openmod1->name, $filteredmod->name);
     }
 
