@@ -144,7 +144,7 @@ class renderer extends plugin_renderer_base {
         attempt_summary_information $summarydata,
         int $page
     ): void {
-        if ($page > 1) {
+        if ($page > 0) {
             $summarydata->filter_keeping_only(['user', 'attemptlist']);
         }
     }
