@@ -18,10 +18,8 @@ namespace mod_quiz\output;
 
 use core\output\named_templatable;
 use mod_quiz\quiz_attempt;
-use mod_quiz\question\display_options;
 use renderable;
 use renderer_base;
-use templatable;
 
 /**
  * Display summary information about a list of attempts.
