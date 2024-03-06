@@ -25,8 +25,8 @@ use url_select;
 /**
  * Represents the tertiary navigation around the quiz edit pages.
  *
- * @package mod_quiz
- * @copyright 2021 Sujith Haridasan <sujith@moodle.com>
+ * @package   mod_quiz
+ * @copyright 2023 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class edit_nav_actions implements renderable, templatable {
