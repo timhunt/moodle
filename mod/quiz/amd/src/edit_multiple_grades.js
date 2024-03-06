@@ -42,7 +42,7 @@ const deleteGradeItem = (quizId, gradeItemId) => fetchMany([{
 }])[0];
 
 /**
- * Handle the an event if it is a click on the delete icon.
+ * Handle click events on the delete icon.
  *
  * @param {Event} e click event.
  */
