@@ -23,8 +23,8 @@ Feature: Setup multiple grades for a quiz
       | Test questions   | truefalse | Question B | This is question 02 |
       | Test questions   | truefalse | Question C | This is question 03 |
     And the following "activities" exist:
-      | activity   | name   | course |
-      | quiz       | Quiz 1 | C1     |
+      | activity | name   | course |
+      | quiz     | Quiz 1 | C1     |
 
   Scenario: Navigation to, and display of, grading setup
     Given the following "mod_quiz > grade items" exist:
