@@ -921,18 +921,19 @@ class structure_test extends \advanced_testcase {
 
         // Having done an update, we need to reload $structure.
         $structure = structure::create_for_quiz($quizobj);
-        $this->assertEquals($gradeitem->id, $structure->get_slot_by_number(1)->quizgradeitemid);
+        $slot = $structure->get_slot_by_number(1);
+        $this->assertEquals($gradeitem->id, $slot->quizgradeitemid);
 
         // Test returns false if no change.
         $this->assertFalse($structure->update_slot_grade_item($slot, $gradeitem->id));
 
         // Test unsetting grade item.
-        $slot = $structure->get_slot_by_number(1);
         $this->assertTrue($structure->update_slot_grade_item($slot, 0));
 
         // Having done an update, we need to reload $structure.
         $structure = structure::create_for_quiz($quizobj);
-        $this->assertEquals(null, $structure->get_slot_by_number(1)->quizgradeitemid);
+        $slot = $structure->get_slot_by_number(1);
+        $this->assertEquals(null, $slot->quizgradeitemid);
 
         // Test returns false if no change.
         $this->assertFalse($structure->update_slot_grade_item($slot, null));

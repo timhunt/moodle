@@ -1185,6 +1185,12 @@ class structure {
             $gradeitemid = null;
         }
 
+        if ($slot->quizgradeitemid !== null) {
+            // Object $slot likely comes from the database, which means int may be
+            // represented as a string, which breaks the next test, so fix up.
+            $slot->quizgradeitemid = (int) $slot->quizgradeitemid;
+        }
+
         if ($gradeitemid === $slot->quizgradeitemid) {
             // Grade has not changed. Nothing to do.
             return false;
