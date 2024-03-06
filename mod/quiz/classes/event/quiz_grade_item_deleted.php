@@ -29,7 +29,7 @@ namespace mod_quiz\event;
 class quiz_grade_item_deleted extends \core\event\base {
     protected function init() {
         $this->data['objecttable'] = 'quiz_grade_items';
-        $this->data['crud'] = 'u';
+        $this->data['crud'] = 'd';
         $this->data['edulevel'] = self::LEVEL_TEACHING;
     }
 

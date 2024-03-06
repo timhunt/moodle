@@ -1441,7 +1441,7 @@ class structure {
      *
      * @return stdClass[] quiz_grade_item rows, indexed by id.
      */
-    public function get_grade_items() {
+    public function get_grade_items(): array {
         return $this->gradeitems;
     }
 

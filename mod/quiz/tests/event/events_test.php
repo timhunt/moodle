@@ -1265,9 +1265,9 @@ class events_test extends \advanced_testcase {
     }
 
     /**
-     * Test slot_grade_item_updated.
+     * Test quiz_grade_item_deleted.
      *
-     * @covers \mod_quiz\event\slot_grade_item_updated
+     * @covers \mod_quiz\event\quiz_grade_item_deleted
      */
     public function test_quiz_grade_item_deleted(): void {
         global $USER;
