@@ -109,7 +109,7 @@ const stopEditingGadeItem = (editableSpan) => {
 };
 
 /**
- * Handle the an event if it is a click on the delete icon.
+ * Handle click events on the start rename icon.
  *
  * @param {Event} e click event.
  */
