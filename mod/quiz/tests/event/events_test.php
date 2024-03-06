@@ -1201,9 +1201,9 @@ class events_test extends \advanced_testcase {
     }
 
     /**
-     * Test slot_grade_item_updated.
+     * Test quiz_grade_item_created.
      *
-     * @covers \mod_quiz\event\slot_grade_item_updated
+     * @covers \mod_quiz\event\quiz_grade_item_created
      */
     public function test_quiz_grade_item_created(): void {
         global $USER;
@@ -1232,9 +1232,9 @@ class events_test extends \advanced_testcase {
     }
 
     /**
-     * Test slot_grade_item_updated.
+     * Test quiz_grade_item_updated.
      *
-     * @covers \mod_quiz\event\slot_grade_item_updated
+     * @covers \mod_quiz\event\quiz_grade_item_updated
      */
     public function test_quiz_grade_item_updated(): void {
         global $USER;
