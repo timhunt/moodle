@@ -1163,7 +1163,7 @@ class structure {
      * @param int|null $gradeitemid id of the grade item this slot should contribute to. 0 or null means none.
      * @return bool true if the new $gradeitemid is different from the previous one.
      */
-    public function update_slot_grade_item(stdClass $slot, ?int $gradeitemid) {
+    public function update_slot_grade_item(stdClass $slot, ?int $gradeitemid): bool {
         global $DB;
 
         if ($gradeitemid === 0) {

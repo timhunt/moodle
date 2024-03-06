@@ -1229,7 +1229,8 @@ class events_test extends \advanced_testcase {
         $this->assertInstanceOf(slot_grade_item_updated::class, $event);
         $this->assertEquals($quizobj->get_context(), $event->get_context());
         $this->assertEventContextNotUsed($event);
-        $this->assertEquals($quizobj->edit_url(), $event->get_url());
+        $this->assertEquals(new \moodle_url('/mod/quiz/editgrading.php', ['cmid' => $quizobj->get_cmid()]),
+            $event->get_url());
         $this->assertEquals("The user with id '$USER->id' updated the slot with id '{$slot->id}' " .
             "belonging to the quiz with course module id '{$quizobj->get_cmid()}'. " .
             "The grade item this slot contributes to was changed from '' to '$gradeitem->id'.",

@@ -52,7 +52,7 @@ class slot_grade_item_updated extends base {
     }
 
     public function get_url() {
-        return new \moodle_url('/mod/quiz/edit.php', [
+        return new \moodle_url('/mod/quiz/editgrading.php', [
             'cmid' => $this->contextinstanceid,
         ]);
     }
