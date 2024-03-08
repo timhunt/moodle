@@ -2568,22 +2568,6 @@ function mod_quiz_output_fragment_question_data(array $args): string {
 }
 
 /**
- * Regrade modal fragment to get the question html via ajax call.
- *
- * @param array $args The fragment arguments.
- * @return string The rendered mform fragment.
- */
-function mod_quiz_output_fragment_regrade_modal(array $args): string {
-    $mform = new mod_quiz\form\regrade_modal_form(null, [
-        'questionids' => $args['questionIdsInTable'],
-        'questionslots' => $args['questionSlotsInTable'],
-        'reportid' => $args['reportId'],
-        'mode' => $args['questionMode'],
-    ]);
-    return $mform->render();
-}
-
-/**
  * Build required parameters for question bank custom view
  *
  * @param array $params the page parameters

@@ -503,50 +503,6 @@ table.quizreviewsummary td.cell {
     border-top: none;
 }
 
-/** Regrade modal form **/
-#page-mod-quiz-report .regrade-modal-form .attempt-radio-buttons .col-md-3,
-#page-mod-quiz-report .regrade-modal-form .question-radio-buttons .col-md-3,
-#page-mod-quiz-report .regrade-modal-form .questionlist .col-md-3 {
-    position: absolute;
-}
-
-#page-mod-quiz-report .regrade-modal-form .attempt-radio-buttons .col-md-9 label,
-#page-mod-quiz-report .regrade-modal-form .question-radio-buttons .col-md-9 label {
-    min-width: 180px;
-    max-width: 180px;
-    justify-content: left;
-}
-
-#page-mod-quiz-report .regrade-modal-form .attempt-radio-buttons .col-md-9 label input[type="radio"],
-#page-mod-quiz-report .regrade-modal-form .question-radio-buttons .col-md-9 label input[type='radio'] {
-    margin-right: 8px;
-}
-
-#page-mod-quiz-report .regrade-modal-form .attempt-radio-buttons .col-md-9,
-#page-mod-quiz-report .regrade-modal-form .question-radio-buttons .col-md-9 {
-    flex-basis: unset;
-    max-width: 100%;
-}
-
-#page-mod-quiz-report .regrade-modal-form .questionlist .col-md-9 {
-    padding-left: 207px;
-}
-
-#page-mod-quiz-report .regrade-modal-form .questionlist .form-group {
-    margin-bottom: 4px;
-}
-
-#page-mod-quiz-report .regrade-modal-form .regrade-modal-submit-button .align-items-center {
-    float: right;
-    gap: 4px;
-}
-
-#page-mod-quiz-report .regrade-modal-form .questionlist {
-    height: auto;
-    max-height: 345px;
-    overflow-x: hidden;
-}
-
 /** Mod quiz edit **/
 #page-mod-quiz-edit .statusdisplay {
     background-color: #ffc;

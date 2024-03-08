@@ -108,8 +108,16 @@ Feature: Regrading quiz attempts using the Grades report
     And I follow "Attempts: 2"
     And I click on "Select attempt" "checkbox" in the "Student Two" "table_row"
     And I press "Regrade attempts..."
+    And the "Question 1" "checkbox" should be disabled
+    And the "Question 2" "checkbox" should be disabled
     And I click on "Selected questions" "radio"
+    And the "Question 1" "checkbox" should be enabled
+    And the "Question 2" "checkbox" should be enabled
+    And the "Regrade now" "button" should be disabled
+    And the "Dry run" "button" should be disabled
     And I click on "Question 1" "checkbox"
+    And the "Regrade now" "button" should be enabled
+    And the "Dry run" "button" should be enabled
     And I click on "Regrade now" "button" in the "Regrade" "dialogue"
     Then I should see "Quiz for testing regrading"
     And I should see "Finished regrading (1/1)"
