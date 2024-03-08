@@ -624,7 +624,7 @@ class quiz_overview_report extends attempts_report {
      * Count the number of attempts and questions in need of regrading after the last dry run.
      *
      * @param stdClass $quiz the quiz settings.
-     * @param \core\dml\sql_join $groupstudentsjoins (joins, wheres, params) if this is given, only data relating to these users is counted.
+     * @param \core\dml\sql_join $groupstudentsjoins which users' attempts should be considered.
      * @return array of two elements: the number of different attempts and questions needed to be regraded.
      */
     protected function count_attempts_and_questions_needing_regrade($quiz,
