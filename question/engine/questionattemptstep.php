@@ -87,10 +87,10 @@ class question_attempt_step {
      */
     private $fraction = null;
 
-    /** @var integer the timestamp when this step was created. */
+    /** @var int the timestamp when this step was created. */
     private $timecreated;
 
-    /** @var integer the id of the user resonsible for creating this step. */
+    /** @var int the id of the user responsible for creating this step. */
     private $userid;
 
     /** @var array name => value pairs. The submitted data. */
@@ -107,12 +107,12 @@ class question_attempt_step {
      * normally created by {@see question_attempt} methods like
      * {@see question_attempt::process_action()}.
      * @param array $data the submitted data that defines this step.
-     * @param int $timestamp the time to record for the action. (If not given, use now.)
-     * @param int $userid the user to attribute the aciton to. (If not given, use the current user.)
-     * @param int $existingstepid if this step is going to replace an existing step
+     * @param int|null $timecreated the time to record for the action. (If not given, use now.)
+     * @param int|null $userid the user to attribute the aciton to. (If not given, use the current user.)
+     * @param int|null $existingstepid if this step is going to replace an existing step
      *      (for example, during a regrade) this is the id of the previous step we are replacing.
      */
-    public function __construct($data = array(), $timecreated = null, $userid = null,
+    public function __construct($data = [], $timecreated = null, $userid = null,
             $existingstepid = null) {
         global $USER;
 

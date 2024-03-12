@@ -791,11 +791,13 @@ class question_no_pattern_expectation {
 abstract class qbehaviour_walkthrough_test_base extends question_testcase {
     /** @var question_display_options */
     protected $displayoptions;
+
     /** @var question_usage_by_activity */
     protected $quba;
-    /** @var integer */
 
+    /** @var int The slot number of the question_attempt we are using in $quba. */
     protected $slot;
+
     /**
      * @var string after {@link render()} has been called, this contains the
      * display of the question in its current state.
