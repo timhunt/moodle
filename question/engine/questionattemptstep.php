@@ -99,7 +99,7 @@ class question_attempt_step {
     /** @var array name => array of {@see stored_file}s. Caches the contents of file areas. */
     private $files = array();
 
-    /** @var stdClass User information. */
+    /** @var stdClass|null User information. */
     private $user = null;
 
     /**
@@ -199,7 +199,7 @@ class question_attempt_step {
      * @return null|stdClass Get full user object.
      */
     public function get_user(): ?stdClass {
-        if ($this->userid !== null && $this->user === null) {
+        if ($this->user === null) {
             debugging('Attempt to access the step user before it was initialised. ' .
                 'Did you forget to call question_usage_by_activity::preload_all_step_users() or similar?', DEBUG_DEVELOPER);
         }
