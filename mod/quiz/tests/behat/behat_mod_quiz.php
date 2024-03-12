@@ -443,7 +443,7 @@ class behat_mod_quiz extends behat_question_base {
      */
     public function i_set_the_max_mark_for_quiz_question($questionname, $newmark) {
         $this->execute('behat_forms::i_set_the_field_to',
-                [get_string('editmaxmarkhint', 'mod_quiz'), $newmark]);
+                [get_string('editmaxmark', 'mod_quiz'), $newmark]);
         $this->execute('behat_general::i_press_named_key', ['', 'enter']);
     }
 

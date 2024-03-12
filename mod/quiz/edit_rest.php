@@ -120,27 +120,6 @@ switch($requestmethod) {
                         $result = ['visible' => true];
                         break;
 
-                    case 'getmaxmark':
-                        require_capability('mod/quiz:manage', $modcontext);
-                        $slot = $DB->get_record('quiz_slots', ['id' => $id], '*', MUST_EXIST);
-                        $result = ['instancemaxmark' => quiz_format_question_grade($quiz, $slot->maxmark)];
-                        break;
-
-                    case 'updatemaxmark':
-                        require_capability('mod/quiz:manage', $modcontext);
-                        $slot = $structure->get_slot_by_id($id);
-                        if ($structure->update_slot_maxmark($slot, $maxmark)) {
-                            // Grade has really changed.
-                            quiz_delete_previews($quiz);
-                            $gradecalculator->recompute_quiz_sumgrades();
-                            $gradecalculator->recompute_all_attempt_sumgrades();
-                            $gradecalculator->recompute_all_final_grades();
-                            quiz_update_grades($quiz, 0, true);
-                        }
-                        $result = ['instancemaxmark' => quiz_format_question_grade($quiz, $maxmark),
-                                'newsummarks' => quiz_format_grade($quiz, $quiz->sumgrades)];
-                        break;
-
                     case 'updatepagebreak':
                         require_capability('mod/quiz:manage', $modcontext);
                         $slots = $structure->update_page_break($id, $value);

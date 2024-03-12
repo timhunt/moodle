@@ -51,6 +51,7 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
         M.mod_quiz.quizbase.register_module(this);
         Y.delegate('click', this.handle_data_action, BODY, SELECTOR.ACTIVITYACTION, this);
         Y.delegate('click', this.handle_data_action, BODY, SELECTOR.DEPENDENCY_LINK, this);
+        document.body.addEventListener('core/inplace_editable:updated', this.handle_slot_mark_updated);
         this.initialise_select_multiple();
     },
 
@@ -126,6 +127,23 @@ Y.extend(RESOURCETOOLBOX, TOOLBOX, {
                 // Nothing to do here!
                 break;
         }
+    },
+
+    /**
+     * Event handler for when and inplace editable change has been saved.
+     *
+     * If it was the max mark for a slot, we need to get the new total, and update that.
+     *
+     * @param e the event we are handling.
+     */
+    handle_slot_mark_updated: function(e) {
+        var editable = e.target.closest('.inplaceeditable');
+        if (!editable || editable.dataset.itemtype !== 'slotmaxmark') {
+            return; // Not one we need to handle.
+        }
+
+        var newTotal = editable.querySelector('[data-sum-marks]').dataset.sumMarks;
+        document.querySelector('.mod_quiz_summarks').innerText = newTotal;
     },
 
     /**

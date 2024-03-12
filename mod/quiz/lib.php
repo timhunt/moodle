@@ -1198,11 +1198,18 @@ function mod_quiz_inplace_editable(string $itemtype, int $itemid, string $newval
         return $structure->make_slot_display_number_in_place_editable($itemid, $context);
     }
     if ($itemtype === 'slotmaxmark') {
-        // Update the value - truncating the size of the DB column.
-        $structure->update_slot_maxmark($structure->get_slot_by_id($slot->id),
-                format_float($newvalue, $structure->get_decimal_places_for_question_marks() + 2));
+        if ($structure->update_slot_maxmark($slot, $newvalue)) {
+            // Grade has really changed.
+            $gradecalculator = $quizobj->get_grade_calculator();
+            quiz_delete_previews($quizobj->get_quiz());
+            $gradecalculator->recompute_quiz_sumgrades();
+            $gradecalculator->recompute_all_attempt_sumgrades();
+            $gradecalculator->recompute_all_final_grades();
+            quiz_update_grades($quizobj->get_quiz());
+        }
 
-        // Prepare the element for the output.
+        // Prepare the element for the output - reload structure to ensure totals are correct.
+        $structure = $quizobj->get_structure();
         return $structure->make_slot_maxmark_in_place_editable($itemid, $context);
     }
 }

@@ -200,16 +200,12 @@ class structure {
         $editable = has_capability('mod/quiz:manage', $context);
 
         // Get the current value.
-        $value = $slot->maxmark;
-        $displayvalue = s($this->formatted_question_grade($slot->slot));
-        $quiz = $this->get_quiz();
-        $result = ['instancemaxmark' => quiz_format_question_grade($quiz, $displayvalue),
-                'newsummarks' => quiz_format_grade($quiz, $quiz->sumgrades)];
+        $displayvalue = \html_writer::span(s($this->formatted_question_grade($slot->slot)),
+            '', ['data-sum-marks' => quiz_format_grade($this->get_quiz(), $this->get_quiz()->sumgrades)]);
         return new inplace_editable('mod_quiz', 'slotmaxmark', $slotid,
-                $editable, $displayvalue, $value,
-                get_string('editmaxmarkhint', 'mod_quiz'),
-                get_string('editmaxmark', 'mod_quiz', $displayvalue));
-
+                $editable, $displayvalue, $slot->maxmark + 0,
+                get_string('editmaxmark', 'mod_quiz'),
+                get_string('editmaxmarkhint', 'mod_quiz', $displayvalue));
     }
 
     /**
@@ -1156,11 +1152,6 @@ class structure {
         \question_engine::set_max_mark_in_attempts(new qubaids_for_quiz($slot->quizid),
                 $slot->slot, $maxmark);
         $trans->allow_commit();
-
-        // Update sumgardes in quiz.
-        $quiz = $this->get_quiz();
-        $newsumgardes =  $quiz->sumgrades + $maxmark - $previousmaxmark;
-        $DB->set_field('quiz', 'sumgrades', $newsumgardes, ['id' => $quiz->id]);
 
         // Log slot mark updated event.
         // We use $num + 0 as a trick to remove the useless 0 digits from decimals.
