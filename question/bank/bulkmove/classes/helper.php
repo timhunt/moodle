@@ -16,6 +16,8 @@
 
 namespace qbank_bulkmove;
 
+use cm_info;
+
 /**
  * Bulk move helper.
  *
@@ -33,7 +35,8 @@ class helper {
      * @param \stdClass $tocategory the category where the questions will be moved to.
      */
     public static function bulk_move_questions(string $movequestionselected, \stdClass $tocategory): void {
-        global $DB;
+        global $DB, $CFG;
+        require_once $CFG->libdir .'/questionlib.php';
         if ($questionids = explode(',', $movequestionselected)) {
             list($usql, $params) = $DB->get_in_or_equal($questionids);
             $sql = "SELECT q.*, c.contextid
@@ -52,7 +55,7 @@ class helper {
     }
 
     /**
-     *  MDL-71378 - TODO deprecate or use to return the open instances
+     *  MDL-71378 - TODO open deprecate tracker
      * Get the display data for the move form.
      *
      * @param array $addcontexts the array of contexts to be considered in order to render the category select menu.
@@ -61,12 +64,57 @@ class helper {
      * @return array the data to be rendered in the mustache where it contains the dropdown, move url and return url.
      */
     public static function get_displaydata(array $addcontexts, \moodle_url $moveurl, \moodle_url $returnurl): array {
+
+        debugging('qbank_bulkmove::get_displaydata is deprecated, and has been replaced by a modal and webservice.
+         See qbank_bulkmove/repository and qbank_bulkmove\external\move_questions', DEBUG_DEVELOPER);
+
         $displaydata = [];
         $displaydata ['categorydropdown'] = \qbank_managecategories\helper::question_category_select_menu($addcontexts,
             false, 0, '', -1, true);
         $displaydata ['moveurl'] = $moveurl;
         $displaydata['returnurl'] = $returnurl;
         return $displaydata;
+    }
+
+    /**
+     * @param cm_info|object[] $items either a cm_info or question category record.
+     * @param int $currentselection
+     * @param int $currentbankcontextid
+     * @return array[] for use by \qbank_bulkmove\output\renderer::render_bulk_move_form
+     */
+    public static function format_for_display(array $items, int $currentselection, int $currentbankcontextid) {
+        $currentoption = [];
+        $toreturn = [];
+        foreach ($items as $item) {
+            switch ($item) {
+                case $item instanceof cm_info:
+                    $formatted = [
+                            'id' => $item->context->id,
+                            'name' => $item->get_formatted_name(),
+                    ];
+                    break;
+                case $item instanceof \stdClass:
+                    $formatted = [
+                            'id' => $item->id,
+                            'name' => $item->name,
+                            'bankcontextid' => $item->contextid,
+                            'enabled' => $item->contextid == $currentbankcontextid ? 'enabled' : 'disabled'
+                    ];
+                    break;
+                default:
+                    throw new \Exception('Unexpected value');
+            }
+            if ($formatted['id'] == $currentselection) {
+                $currentoption = $formatted;
+                continue;
+            }
+            $toreturn[] = $formatted;
+        }
+        if (!empty($currentoption)) {
+            array_unshift($toreturn, $currentoption);
+        }
+
+        return $toreturn;
     }
 
     /**

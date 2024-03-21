@@ -17,28 +17,61 @@
 {{!
     @template qbank_bulkmove/bulk_move
 
-    The move form to move selested questions.
-
-    Context variables required for this template:
-    * categorydropdown - dropdown html from the managecategories plugin for the list of categories
-    * moveurl - the url to post the selected category
-    * returnurl - the base page to return to
+    Template for qbank_bulkmove/modal_question_bank_bulkmove
 
     Example context (json):
     {
-        "categorydropdown": "<select class='select custom-select custom-select'><optgroup label='Course: tes'><option value='2,13'>Default for test (5)</option></optgroup></select>",
-        "moveurl": "/question/bank/bulkmove/move.php?courseid=2",
-        //MDL-71378 TODO: Deprecate this
-        "returnurl": "/question/edit.php?courseid=2"
+        "allopenbanks": [
+            {
+                "id": 1,
+                "name": "Bank 1",
+            }
+        ],
+        "allcategories": [
+            {
+                "id": 1,
+                "name": "Category 1",
+                "bankcontextid": 1
+            }
+        ],
+        "save": {
+            "id": "buttonid",
+            "method" : "get",
+            "url" : "#",
+            "primary" : true,
+            "tooltip" : "This is a tooltip",
+            "label" : "Button",
+            "attributes": [
+                {
+                  "name": "data-attribute",
+                  "value": "value"
+                }
+            ]
+        }
+
     }
 }}
 
-<div class="bulkmovequestion-header">
-    <h3>{{#str}} bulkmoveheader, qbank_bulkmove {{/str}}</h3>
+<div class="search-banks">
+    <h5>{{#str}}questionbank, question{{/str}}</h5>
+    <select class="custom-select bulk-move d-none" id="searchbanks">
+        {{#allopenbanks}}
+            <option value="{{id}}">{{{name}}}</option>
+        {{/allopenbanks}}
+    </select>
 </div>
-<form action="{{{moveurl}}}" method="post" id="bulkmovequestion">
-    {{{categorydropdown}}}
-    <input type="submit" value="{{#str}} moveto, question {{/str}}" class="btn btn-primary" name="move" data-action="toggle" data-togglegroup="qbank"
-           data-toggle="action" form="bulkmovequestion">
-    <a href="{{{returnurl}}}" class="btn btn-secondary">{{#str}} close, qbank_bulkmove {{/str}}</a>
-</form>
+<div class="search-categories mt-3">
+    <h5>{{#str}}questioncategories, question{{/str}}</h5>
+    <select class="custom-select bulk-move d-none" id="searchcategories">
+        {{#allcategories}}
+            <option value="{{id}}" data-bank-contextid="{{bankcontextid}}" data-enabled={{enabled}}>{{{name}}}</option>
+        {{/allcategories}}
+    </select>
+    <div id="searchcatwarning" class="d-none">{{#str}}warning, qbank_bulkmove{{/str}}</div>
+</div>
+
+{{#save}}
+    <div class="move-questions mt-3">
+        {{>core/single_button}}
+    </div>
+{{/save}}

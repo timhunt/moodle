@@ -13,19 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * Version information for qbank_bulkmove.
+ * qbank_bulkmove services definition.
  *
  * @package    qbank_bulkmove
- * @copyright  2021 Catalyst IT Australia Pty Ltd
- * @author     Safat Shahin <safatshahin@catalyst-au.net>
+ * @copyright  2024 onwards Catalyst IT EU {@link https://catalyst-eu.net}
+ * @author     Simon Adams <simon.adams@catalyst-eu.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'qbank_bulkmove';
-$plugin->version   = 2024051300;
-$plugin->requires  = 2024041600;
-$plugin->maturity  = MATURITY_STABLE;
+$functions = [
+    'qbank_bulkmove_move_questions' => [
+        'classname' => 'qbank_bulkmove\external\move_questions',
+        'description' => 'Bulk move questions to a new category.',
+        'type' => 'write',
+        'ajax' => true,
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+];

@@ -3218,6 +3218,7 @@ function search_generate_text_SQL() {
 }
 
 /**
+ *  MDL-71378 TODO: create a deprecation tracker
  *  Gets the default category for a module context.
  *  If no categories exist yet then default ones are created in all contexts.
  *

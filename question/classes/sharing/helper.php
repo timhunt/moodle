@@ -110,10 +110,19 @@ class helper {
      * Get instances in $courseid that implement FEATURE_PUBLISHES_QUESTIONS.
      *
      * @param int $courseid
-     * @return cm_info[]
+     * @param array $havingcap capabilities to check current user access for.
+     * @param bool $getcategories optionally return categories
+     * @return array
      */
-    public static function get_course_open_instances(int $courseid): array {
+    public static function get_course_open_instances(
+            int $courseid,
+            array $havingcap = [],
+            bool $getcategories = false
+    ): array {
         global $DB;
+
+        $categories = [];
+        $instances = [];
 
         foreach (self::get_open_modules() as $plugin) {
             $sql = "SELECT cm.*
@@ -122,32 +131,73 @@ class helper {
                     JOIN {{$plugin}} AS p ON p.id = cm.instance
                     WHERE m.name = :modname AND cm.course = :courseid";
             $params = ['modname' => $plugin, 'courseid' => $courseid];
+
             if ($plugin === 'qbank') {
                 $sql .= ' AND p.type <> :type';
                 $params['type'] = self::PREVIEW;
             }
+
             if ($plugininstances = $DB->get_records_sql($sql, $params)) {
                 $cminfos = array_map(static fn($cmrecord) => cm_info::create($cmrecord), $plugininstances);
+
+                if (!empty($havingcap)) {
+                    $cminfos = array_filter($cminfos, static function($cminfo) use ($havingcap) {
+                        return (new question_edit_contexts($cminfo->context))->have_one_cap($havingcap);
+                    });
+                }
+
+                if (empty($cminfos)) {
+                    continue;
+                }
+
                 usort($cminfos, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
+
+                if ($getcategories) {
+                    $contextids = array_map(static fn($cminfo) => $cminfo->context->id, $cminfos);
+                    $categories[] = self::get_categories($contextids);
+                }
                 $instances[$plugin . '_' . $courseid] = $cminfos;
             }
         }
-        return $instances ?? [];
+        return [$instances, $categories];
+    }
+
+    /**
+     * @param $contextids
+     * @return array
+     */
+    private static function get_categories($contextids): array {
+        global $DB;
+        if (empty($contextids)) {
+            return [];
+        }
+
+        [$insql, $inparams] = $DB->get_in_or_equal($contextids);
+        $sql = "SELECT * FROM {question_categories} WHERE contextid {$insql} AND parent <> 0";
+        return $DB->get_records_sql($sql, $inparams);
     }
 
     /**
      * @param int $courseid
+     * @param array $havingcap capabilities to check against each module context for the current user.
      * @return cm_info[][]
      */
-    public static function get_course_closed_instances(int $courseid): array {
+    public static function get_course_closed_instances(int $courseid, array $havingcap = []): array {
         foreach (self::get_closed_modules() as $plugin) {
             $coursemodinfo = \course_modinfo::instance($courseid);
             if ($plugininstances = $coursemodinfo->get_instances_of($plugin)) {
-                $plugininstances = array_filter($plugininstances, static function($instance) {
+                $plugininstances = array_filter($plugininstances, static function($instance) use ($havingcap) {
                     global $DB;
                     if ($instance->deletioninprogress) {
                         return false;
                     }
+                    if (!empty($havingcap)) {
+                        $hasacapability = (new question_edit_contexts($instance->context))->have_one_cap($havingcap);
+                        if (!$hasacapability) {
+                            return false;
+                        }
+                    }
+
                     $categories = $DB->get_records('question_categories', ['contextid' => $instance->context->id]);
                     foreach ($categories as $category) {
                         if (question_category_in_use($category->id)) {
@@ -156,6 +206,9 @@ class helper {
                     }
                     return false;
                 });
+                if (empty($plugininstances)) {
+                    continue;
+                }
                 usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
                 $instances[$plugin . '_' . $courseid] = $plugininstances;
             }
@@ -166,25 +219,35 @@ class helper {
     /**
      * Get instances that exist across ALL courses that implement FEATURE_PUBLISHES_QUESTIONS.
      *
-     * @param [] $notincourse array of course ids where you do not want instances included.
-     * @return cm_info[][]
+     * @param array $notincourseids array of course ids where you do not want instances included.
+     * @param array $havingcap current user must have these capabilities on each bank context.
+     * @param bool $getcategories optionally return the categories belonging to these banks.
+     * @return array
      */
-    public static function get_all_open_instances($notincourseids = []): array {
+    public static function get_all_open_instances(
+            array $notincourseids = [],
+            array $havingcap = [],
+            bool $getcategories = false
+    ): array {
         $instances = [];
+        $allcategories = [];
         foreach (core_course_category::get_all() as $category) {
             foreach ($category->get_courses(['recursive', 'idonly']) as $course) {
                 if (in_array($course->id, $notincourseids)) {
                     continue;
                 }
-                $courseinstances = self::get_course_open_instances($course->id);
+                [$courseinstances, $categories] = self::get_course_open_instances($course->id, $havingcap, $getcategories);
                 if (empty($courseinstances)) {
                     continue;
                 }
+                $allcategories[] = array_merge([], ...$categories);
 
                 $instances[] = $courseinstances;
             }
         }
-        return array_merge([], ...$instances);
+        $instances = array_merge([], ...$instances);
+        $allcategories = array_merge([],... $allcategories);
+        return [$instances, $allcategories];
     }
 
     /**
@@ -221,24 +284,6 @@ class helper {
         }
 
         return $toreturn ?? [];
-    }
-
-    /**
-     * @param array $tabs
-     * @param cm_info[][] $allinstances
-     * @return cm_info[][]
-     */
-    public static function filter_by_question_edit_access(array $tabs, array $allinstances): array {
-        $filtered = [];
-        foreach ($allinstances as $plugin => $plugininstances) {
-            $instances = array_filter($plugininstances, static function($cminfo) use ($tabs) {
-                return (new question_edit_contexts($cminfo->context))->have_one_edit_tab_cap($tabs);
-            });
-            if (!empty($instances)) {
-                $filtered[$plugin] = $instances;
-            }
-        }
-        return $filtered;
     }
 
     /**

@@ -44,4 +44,8 @@ class bulk_move_action extends \core_question\local\bank\bulk_action_base {
             'moodle/question:add',
         ];
     }
+
+    public function get_bulk_action_amd(): ?string {
+        return 'qbank_bulkmove/modal_question_bank_bulkmove';
+    }
 }

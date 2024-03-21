@@ -26,8 +26,6 @@
 
 namespace sharing;
 
-use context_system;
-use core_question\local\bank\question_edit_contexts;
 use core_question\sharing\helper;
 
 class helper_test extends \advanced_testcase {
@@ -46,45 +44,56 @@ class helper_test extends \advanced_testcase {
     }
 
     public function test_get_course_instances(): void {
+        global $DB;
         $this->resetAfterTest();
-        //MDL-71378 TODO: update for capability checks.
-        self::setAdminUser();
+        $user = self::getDataGenerator()->create_user();
+        $roles = $DB->get_records('role', [], '', 'shortname, id');
+        self::setUser($user);
 
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
         $closedmodgen = self::getDataGenerator()->get_plugin_generator('mod_quiz');
         $qgen = self::getDataGenerator()->get_plugin_generator('core_question');
-        $course = self::getDataGenerator()->create_course();
-        $openmodgen->create_instance(['course' => $course]);
-        $quiz = $closedmodgen->create_instance(['course' => $course]);
-        $quizcontext = \context_module::instance($quiz->cmid);
-        $quizqcat = $qgen->create_question_category(['contextid' => $quizcontext->id]);
-        $quizquestion = $qgen->create_question('shortanswer', null, ['category' => $quizqcat->id, 'idnumber' => 'quizq1']);
-        quiz_add_quiz_question($quizquestion->id, $quiz);
+        $course1 = self::getDataGenerator()->create_course();
+        $openmodgen->create_instance(['course' => $course1]);
+        $quiz1 = $closedmodgen->create_instance(['course' => $course1]);
+        $quiz2 = $closedmodgen->create_instance(['course' => $course1]);
+        $quiz1context = \context_module::instance($quiz1->cmid);
+        $quiz1qcat = $qgen->create_question_category(['contextid' => $quiz1context->id]);
+        $quiz1question = $qgen->create_question('shortanswer', null, ['category' => $quiz1qcat->id, 'idnumber' => 'quizq1']);
+        quiz_add_quiz_question($quiz1question->id, $quiz1);
+        $quiz2context = \context_module::instance($quiz2->cmid);
+        $quiz2qcat = $qgen->create_question_category(['contextid' => $quiz2context->id]);
+        $quiz2question = $qgen->create_question('shortanswer', null, ['category' => $quiz2qcat->id, 'idnumber' => 'quizq2']);
+        quiz_add_quiz_question($quiz2question->id, $quiz2);
+
+        // User only has access to quiz 1.
+        role_assign($roles['editingteacher']->id, $user->id, \context_module::instance($quiz1->cmid));
 
         // Expect 1 plugin that has open instances in this course.
-        $openinstances = helper::get_course_open_instances($course->id);
+        [$openinstances, ] = helper::get_course_open_instances($course1->id);
         $this->assertCount(1, $openinstances);
-        $this->assertArrayHasKey('qbank_' . $course->id, $openinstances);
-        $this->assertCount(1, $openinstances['qbank_' . $course->id]);
+        $this->assertArrayHasKey('qbank_' . $course1->id, $openinstances);
+        $this->assertCount(1, $openinstances['qbank_' . $course1->id]);
 
         // Make sure no closed mod instances were returned.
-        $this->assertArrayNotHasKey('quiz_' . $course->id, $openinstances);
+        $this->assertArrayNotHasKey('quiz_' . $course1->id, $openinstances);
 
         // Expect 1 plugin that has closed instances in this course.
-        $closedinstances = helper::get_course_closed_instances($course->id);
+        $closedinstances = helper::get_course_closed_instances($course1->id, ['moodle/question:add']);
         $this->assertCount(1, $closedinstances);
-        $this->assertArrayHasKey('quiz_' . $course->id, $closedinstances);
-        $this->assertCount(1, $closedinstances['quiz_' . $course->id]);
+        $this->assertArrayHasKey('quiz_' . $course1->id, $closedinstances);
+        $this->assertCount(1, $closedinstances['quiz_' . $course1->id]);
 
         // Make sure no open mod instances were returned.
-        $this->assertArrayNotHasKey('qbank_' . $course->id, $closedinstances);
+        $this->assertArrayNotHasKey('qbank_' . $course1->id, $closedinstances);
     }
 
     public function test_get_all_open_instances(): void {
+        global $DB;
+
         $this->resetAfterTest();
         $user = self::getDataGenerator()->create_user();
-        $roleid = self::getDataGenerator()->create_role();
-        role_assign($roleid, $user->id, context_system::instance()->id);
+        $roles = $DB->get_records('role', [], '', 'shortname, id');
         self::setUser($user);
 
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
@@ -98,20 +107,20 @@ class helper_test extends \advanced_testcase {
 
         $openmod1 = $openmodgen->create_instance(['course' => $course1]);
         $closedmodgen->create_instance(['course' => $course1]);
-        //assign_capability('moodle/question:usemine', CAP_ALLOW, $roleid, \context_module::instance($openmod1->cmid)->id, true);
+        role_assign($roles['editingteacher']->id, $user->id, \context_module::instance($openmod1->cmid));
 
         $openmod2 = $openmodgen->create_instance(['course' => $course2]);
         $closedmodgen->create_instance(['course' => $course2]);
-        //assign_capability('moodle/question:useall', CAP_ALLOW, $roleid, \context_module::instance($openmod2->cmid)->id, true);
+        role_assign($roles['editingteacher']->id, $user->id, \context_module::instance($openmod2->cmid));
 
         // User doesn't have the capability on this one.
         $openmod3 = $openmodgen->create_instance(['course' => $course3]);
         $closedmodgen->create_instance(['course' => $course3]);
 
-        $categoryinstances = helper::get_all_open_instances();
+        [$categoryinstances, ] = helper::get_all_open_instances([], ['moodle/question:add']);
 
         // Expect top level count of 2 items, 1 per category that has a course containing an open module instance.
-        $this->assertCount(3, $categoryinstances);
+        $this->assertCount(2, $categoryinstances);
         foreach ($categoryinstances as $key => $courseinstances) {
             // Should be 1 instance per category and course.
             $this->assertCount(1, $courseinstances);
@@ -120,41 +129,13 @@ class helper_test extends \advanced_testcase {
                 $this->assertEquals($key, $cminfo->modname . '_' . $cminfo->course);
                 // All instances must be of the qbank type.
                 $this->assertEquals('qbank', $cminfo->modname);
+                // Make sure we don't have the module they can't access.
+                $this->assertNotEquals($openmod3->name, $cminfo->name);
             }
         }
     }
 
-    public function test_filter_by_question_tab_access(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
-        $course = self::getDataGenerator()->create_course();
-        $openmod1 = $openmodgen->create_instance(['course' => $course]);
-        $context = \context_module::instance($openmod1->cmid);
-
-        $user = self::getDataGenerator()->create_and_enrol($course, 'student');
-        self::setUser($user);
-
-        $allopenmods = helper::get_course_open_instances($course->id);
-        $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
-
-        // Make sure student can't see any of the tabs of the question/edit.php page on any of the mod instances.
-        $this->assertCount(0, $filteredmods);
-
-        // User now given editingteacher role on openmod1 context.
-        $roles = $DB->get_records('role', [], '', 'shortname, id');
-        role_assign($roles['editingteacher']->id, $user->id, $context->id);
-
-        $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
-
-        $this->assertCount(1, $filteredmods['qbank_' . $course->id]);
-        $filteredmod = reset($filteredmods['qbank_' . $course->id]);
-        $this->assertEquals($openmod1->name, $filteredmod->name);
-    }
-
-    public function test_create_default_open_instance(): void {
+        public function test_create_default_open_instance(): void {
         global $DB;
 
         $this->resetAfterTest();

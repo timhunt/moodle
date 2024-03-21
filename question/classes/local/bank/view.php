@@ -334,7 +334,8 @@ class view {
                 $this->bulkactions[$bulkactionobject->get_key()] = [
                     'title' => $bulkactionobject->get_bulk_action_title(),
                     'url' => $bulkactionobject->get_bulk_action_url(),
-                    'capabilities' => $bulkactionobject->get_bulk_action_capabilities()
+                    'capabilities' => $bulkactionobject->get_bulk_action_capabilities(),
+                    'amd' => $bulkactionobject->get_bulk_action_amd()
                 ];
             }
         }
@@ -1344,6 +1345,18 @@ class view {
                 $bulkactiondata[] = $actiondata;
 
                 $bulkactiondatas ['bulkactionitems'] = $bulkactiondata;
+
+                if (!empty($action['amd'])) {
+                    $PAGE->requires->js_call_amd($action['amd'],
+                            'init',
+                            [
+                                    'contextid' => $catcontext->id,
+                                    'params' => json_encode($params, JSON_THROW_ON_ERROR),
+                                    'category' => question_get_category_id_from_pagevars($this->pagevars),
+                                    'returnurl' => $returnurl->out(),
+                            ]
+                    );
+                }
             }
             // We dont need to show this section if none of the plugins are enabled.
             if (!empty($bulkactiondatas)) {

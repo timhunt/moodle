@@ -24,7 +24,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use core_question\local\bank\question_edit_contexts;
 use core_question\sharing\helper;
 
 require_once __DIR__ . '/../config.php';
@@ -39,10 +38,21 @@ $coursecontext = context_course::instance($course->id);
 require_login($course, false);
 require_capability('moodle/course:manageactivities', \context_course::instance($course->id));
 
-$allopenbanks = helper::get_course_open_instances($course->id);
-$allclosedbanks = helper::get_course_closed_instances($course->id);
-$openbanks = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenbanks);
-$closedbanks = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allclosedbanks);
+$allcaps = [
+        'moodle/question:add',
+        'moodle/question:editmine',
+        'moodle/question:editall',
+        'moodle/question:viewmine',
+        'moodle/question:viewall',
+        'moodle/question:usemine',
+        'moodle/question:useall',
+        'moodle/question:movemine',
+        'moodle/question:moveall',
+        'moodle/question:managecategory'
+];
+
+[$openbanks, ] = helper::get_course_open_instances($course->id, $allcaps);
+$closedbanks = helper::get_course_closed_instances($course->id, $allcaps);
 
 $pageurl = new moodle_url('/question/banks.php', ['courseid' => $course->id]);
 $PAGE->set_url($pageurl);

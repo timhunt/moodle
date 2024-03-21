@@ -70,6 +70,16 @@ abstract class bulk_action_base {
     }
 
     /**
+     * Override with the module component/amdmodule if you want to load some javascript.
+     * Javascript must implement a function named 'init'.
+     *
+     * @return string|null
+     */
+    public function get_bulk_action_amd(): ?string {
+        return null;
+    }
+
+    /**
      * @deprecated since Moodle 4.0
      */
     public function get_bulk_action_key() {
