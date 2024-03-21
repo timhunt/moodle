@@ -246,7 +246,7 @@ class helper {
      * Get all the category objects, including a count of the number of questions in that category,
      * for all the categories in the lists $contexts.
      *
-     * @param context $contexts
+     * @param string $contexts comma separated list of contextids
      * @param string $sortorder used as the ORDER BY clause in the select statement.
      * @param bool $top Whether to return the top categories or not.
      * @param int $showallversions 1 to show all versions not only the latest.
@@ -256,6 +256,20 @@ class helper {
     public static function get_categories_for_contexts($contexts, string $sortorder = 'parent, sortorder, name ASC',
                                                        bool $top = false, int $showallversions = 0): array {
         global $DB;
+
+        $contextids = explode(',', $contexts);
+        foreach ($contextids as $contextid) {
+            $context = context::instance_by_id($contextid);
+            if ($context->contextlevel === CONTEXT_MODULE) {
+                $validcontexts[] = $contextid;
+            }
+        }
+        if (empty($validcontexts)) {
+            return [];
+        }
+
+        [$insql, $inparams] = $DB->get_in_or_equal($validcontexts);
+
         $topwhere = $top ? '' : 'AND c.parent <> 0';
         $statuscondition = "AND (qv.status = '". question_version_status::QUESTION_STATUS_READY . "' " .
             " OR qv.status = '" . question_version_status::QUESTION_STATUS_DRAFT . "' )";
@@ -268,7 +282,7 @@ class helper {
                       WHERE q.parent = '0'
                         $statuscondition
                             AND c.id = qbe.questioncategoryid
-                            AND ($showallversions = 1
+                            AND ({$showallversions} = 1
                                 OR (qv.version = (SELECT MAX(v.version)
                                                     FROM {question_versions} v
                                                     JOIN {question_bank_entries} be ON be.id = v.questionbankentryid
@@ -277,10 +291,10 @@ class helper {
                                 )
                             ) AS questioncount
                   FROM {question_categories} c
-                 WHERE c.contextid IN ($contexts) $topwhere
-              ORDER BY $sortorder";
+                 WHERE c.contextid {$insql} {$topwhere}
+              ORDER BY {$sortorder}";
 
-        return $DB->get_records_sql($sql);
+        return $DB->get_records_sql($sql, $inparams);
     }
 
     /**
@@ -301,6 +315,9 @@ class helper {
         global $CFG;
         $pcontexts = [];
         foreach ($contexts as $context) {
+            if ($context->contextlevel !== CONTEXT_MODULE) {
+                continue;
+            }
             $pcontexts[] = $context->id;
         }
         $contextslist = join(', ', $pcontexts);

@@ -203,16 +203,17 @@ class version_test extends \advanced_testcase {
         $qcategory = $this->qgenerator->create_question_category(['contextid' => $this->context->id]);
         $qcategorychild = $this->qgenerator->create_question_category(['contextid' => $this->context->id,
             'parent' => $qcategory->id]);
-        $systemcontext = \context_system::instance();
-        $qcategorysys = $this->qgenerator->create_question_category(['contextid' => $systemcontext->id]);
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $this->course->id]);
+        $bankcontext = \context_module::instance($qbank->cmid);
+        $qcategorysys = $this->qgenerator->create_question_category(['contextid' => $bankcontext->id]);
         $question = $this->qgenerator->create_question('shortanswer', null, ['category' => $qcategorychild->id]);
         $questiondefinition = question_bank::load_question($question->id);
 
         // Add it to the quiz.
         quiz_add_quiz_question($question->id, $this->quiz);
 
-        // Move the category to system context.
-        $contexts = new \core_question\local\bank\question_edit_contexts($systemcontext);
+        // Move the category to qbank context.
+        $contexts = new \core_question\local\bank\question_edit_contexts($bankcontext);
         $qcobject = new \qbank_managecategories\question_category_object(null,
             new \moodle_url('/question/bank/managecategories/category.php', ['courseid' => SITEID]),
             $contexts->having_one_edit_tab_cap('categories'), 0, null, 0,

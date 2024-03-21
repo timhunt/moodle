@@ -1173,18 +1173,24 @@ function sort_categories_by_tree(&$categories, $id = 0, $level = 1): array {
 /**
  * Get the default category for the context.
  *
- * @param integer $contextid a context id.
- * @return object|bool the default question category for that context, or false if none.
+ * @param int $contextid a context id.
+ * @return stdClass|bool the default question category for that context, or false if none.
  */
-function question_get_default_category($contextid) {
+function question_get_default_category(int $contextid): stdClass|bool {
     global $DB;
-    $category = $DB->get_records_select('question_categories', 'contextid = ? AND parent <> 0',
-                                        [$contextid], 'id', '*', 0, 1);
-    if (!empty($category)) {
-        return reset($category);
-    } else {
+
+    $context = \core\context::instance_by_id($contextid);
+    if ($context->contextlevel !== CONTEXT_MODULE) {
+        debugging("Invalid context level {$context->contextlevel} for default category. Please use CONTEXT_MODULE");
         return false;
     }
+
+    $sql = "SELECT *
+            FROM {question_categories}
+            WHERE contextid = :contextid AND parent <> 0
+            ORDER BY id ASC LIMIT 1";
+
+    return $DB->get_record_sql($sql, ['contextid' => $contextid]);
 }
 
 /**
