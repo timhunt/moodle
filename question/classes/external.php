@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\context;
+use core\notification;
 use core_external\external_api;
 use core_external\external_description;
 use core_external\external_value;
@@ -31,6 +33,7 @@ use core_external\external_single_structure;
 use core_external\external_multiple_structure;
 use core_external\external_function_parameters;
 use core_external\external_warnings;
+use core_question\local\bank\filter_condition_manager;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -238,5 +241,76 @@ class core_question_external extends external_api {
                 \core_question\external\question_summary_exporter::get_read_structure()
             )
         ]);
+    }
+
+    public static function move_questions_parameters() {
+        return new external_function_parameters(
+            [
+                'contextid' => new external_value(PARAM_INT, 'Contextid of the target question bank'),
+                'categoryid' => new external_value(PARAM_INT, 'Id of the target question category'),
+                'movequestionsselected' => new external_value(PARAM_SEQUENCE, 'Comma separated list of question ids to move'),
+                'returnurl' => new external_value(PARAM_URL, 'The return URL to be modified'),
+            ]
+        );
+    }
+
+    public static function move_questions_returns() {
+        return new external_value(PARAM_URL, 'Modified return URL');
+    }
+
+    /**
+     * @param int $contextid of the target question bank
+     * @param int $categoryid of the target category
+     * @param string $movequestions comma separated list of question ids to move
+     * @param string $returnurl the current page URL including category filter params.
+     * @return string the return URL for redirection to the new category.
+     */
+    public static function move_questions($contextid, $categoryid, $movequestions, $returnurl) {
+        global $DB;
+
+        $params = self::validate_parameters(self::move_questions_parameters(), [
+            'contextid' => $contextid,
+            'categoryid' => $categoryid,
+            'movequestionsselected' => $movequestions,
+            'returnurl' => $returnurl,
+        ]);
+
+        $targetcontextid = $params['contextid'];
+        $targetcontext = context::instance_by_id($targetcontextid);
+        self::validate_context($targetcontext);
+
+        $targetcategoryid = $params['categoryid'];
+        $movequestionselected = $params['movequestionsselected'];
+        $returnurlstring = $params['returnurl'];
+        require_sesskey();
+
+        \core_question\local\bank\helper::require_plugin_enabled('qbank_bulkmove');
+
+        $contexts = new \core_question\local\bank\question_edit_contexts($targetcontext);
+        $contexts->require_cap('moodle/question:add');
+        $returnurl = new moodle_url($returnurlstring);
+
+        if (!$targetcategory = $DB->get_record('question_categories', ['id' => $targetcategoryid, 'contextid' => $targetcontextid])) {
+            throw new \moodle_exception('cannotfindcate', 'question');
+        }
+
+        \qbank_bulkmove\helper::bulk_move_questions($movequestionselected, $targetcategory);
+        $filter = $returnurl->param('filter');
+        if ($filter) {
+            $returnfilters = filter_condition_manager::update_filter_param_to_category(
+                $filter,
+                $targetcategoryid,
+            );
+        } else {
+            $returnfilters = json_encode(
+                filter_condition_manager::get_default_filter("{$targetcategoryid},{$targetcontextid}"),
+                JSON_THROW_ON_ERROR
+            );
+        }
+
+        $returnurl->param('filter', $returnfilters);
+
+        notification::success(get_string('questionsmoved', 'qbank_bulkmove'));
+        return $returnurl->out(false);
     }
 }

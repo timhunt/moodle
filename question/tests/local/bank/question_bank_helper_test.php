@@ -46,8 +46,9 @@ class question_bank_helper_test extends \advanced_testcase {
         global $DB;
 
         $this->resetAfterTest();
-        //MDL-71378 TODO: update for capability checks.
-        self::setAdminUser();
+        $user = self::getDataGenerator()->create_user();
+        $roles = $DB->get_records('role', [], '', 'shortname, id');
+        self::setUser($user);
 
         $qgen = self::getDataGenerator()->get_plugin_generator('core_question');
         $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
@@ -131,37 +132,7 @@ class question_bank_helper_test extends \advanced_testcase {
         $this->assertEquals(1, $count);
     }
 
-    public function test_filter_by_question_tab_access(): void {
-        global $DB;
-
-        $this->resetAfterTest();
-
-        $openmodgen = self::getDataGenerator()->get_plugin_generator('mod_qbank');
-        $course = self::getDataGenerator()->create_course();
-        $openmod1 = $openmodgen->create_instance(['course' => $course]);
-        $context = \context_module::instance($openmod1->cmid);
-
-        $user = self::getDataGenerator()->create_and_enrol($course, 'student');
-        self::setUser($user);
-
-        $allopenmods = helper::get_course_open_instances($course->id);
-        $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
-
-        // Make sure student can't see any of the tabs of the question/edit.php page on any of the mod instances.
-        $this->assertCount(0, $filteredmods);
-
-        // User now given editingteacher role on openmod1 context.
-        $roles = $DB->get_records('role', [], '', 'shortname, id');
-        role_assign($roles['editingteacher']->id, $user->id, $context->id);
-
-        $filteredmods = helper::filter_by_question_edit_access(array_keys(question_edit_contexts::$caps), $allopenmods);
-
-        $this->assertCount(1, $filteredmods['qbank_' . $course->id]);
-        $filteredmod = reset($filteredmods['qbank_' . $course->id]);
-        $this->assertEquals($openmod1->name, $filteredmod->name);
-    }
-
-    public function test_create_default_open_instance(): void {
+        public function test_create_default_open_instance(): void {
         global $DB;
 
         $this->resetAfterTest();

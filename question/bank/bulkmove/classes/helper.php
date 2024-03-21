@@ -33,9 +33,10 @@ class helper {
      * @param \stdClass $tocategory the category where the questions will be moved to.
      */
     public static function bulk_move_questions(string $movequestionselected, \stdClass $tocategory): void {
-        global $DB;
+        global $DB, $CFG;
+        require_once $CFG->libdir .'/questionlib.php';
         if ($questionids = explode(',', $movequestionselected)) {
-            list($usql, $params) = $DB->get_in_or_equal($questionids);
+            [$usql, $params] = $DB->get_in_or_equal($questionids);
             $sql = "SELECT q.*, c.contextid
                       FROM {question} q
                       JOIN {question_versions} qv ON qv.questionid = q.id
@@ -52,7 +53,6 @@ class helper {
     }
 
     /**
-     *  MDL-71378 - TODO deprecate or use to return the open instances
      * Get the display data for the move form.
      *
      * @param array $addcontexts the array of contexts to be considered in order to render the category select menu.
@@ -60,7 +60,14 @@ class helper {
      * @param \moodle_url $returnurl return url in case the form is cancelled.
      * @return array the data to be rendered in the mustache where it contains the dropdown, move url and return url.
      */
+    #[\core\attribute\deprecated(
+        replacement: 'replaced by a modal and webservice. 
+        See qbank_bulkmove/modal_question_bank_bulkmove and core_question_external\move_questions',
+        since: '4.5',
+        mdl: 'MDL-71378'
+    )]
     public static function get_displaydata(array $addcontexts, \moodle_url $moveurl, \moodle_url $returnurl): array {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
         $displaydata = [];
         $displaydata ['categorydropdown'] = \qbank_managecategories\helper::question_category_select_menu($addcontexts,
             false, 0, '', -1, true);

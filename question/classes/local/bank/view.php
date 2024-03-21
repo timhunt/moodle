@@ -237,20 +237,7 @@ class view {
 
         // Default filter condition.
         if (!isset($params['filter']) && isset($params['cat'])) {
-            $params['filter']  = [];
-            [$categoryid, $contextid] = category_condition::validate_category_param($params['cat']);
-            if (!is_null($categoryid)) {
-                $category = category_condition::get_category_record($categoryid, $contextid);
-                $params['filter']['category'] = [
-                    'jointype' => category_condition::JOINTYPE_DEFAULT,
-                    'values' => [$category->id],
-                    'filteroptions' => ['includesubcategories' => false],
-                ];
-            }
-            $params['filter']['hidden'] = [
-                'jointype' => hidden_condition::JOINTYPE_DEFAULT,
-                'values' => [0],
-            ];
+            $params['filter']  = filter_condition_manager::get_default_filter($params['cat']);
             $params['jointype'] = datafilter::JOINTYPE_ALL;
         }
         if (!empty($params['filter'])) {
@@ -334,7 +321,8 @@ class view {
                 $this->bulkactions[$bulkactionobject->get_key()] = [
                     'title' => $bulkactionobject->get_bulk_action_title(),
                     'url' => $bulkactionobject->get_bulk_action_url(),
-                    'capabilities' => $bulkactionobject->get_bulk_action_capabilities()
+                    'capabilities' => $bulkactionobject->get_bulk_action_capabilities(),
+                    'component' => $bulkactionobject::class
                 ];
             }
         }
@@ -1350,6 +1338,16 @@ class view {
             if (!empty($bulkactiondatas)) {
                 echo $PAGE->get_renderer('core_question', 'bank')->render_bulk_actions_ui($bulkactiondatas);
             }
+        }
+    }
+
+    /**
+     * @param array $params any parameters required to load the js.
+     * @return void
+     */
+    public function init_bulk_actions_js(array $params): void {
+        foreach ($this->bulkactions as $action) {
+            (new $action['component'])->initialise_javascript($params);
         }
     }
 

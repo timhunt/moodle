@@ -32,7 +32,9 @@ class renderer extends \plugin_renderer_base {
      * @param array $displaydata
      * @return string
      */
+    #[\core\attribute\deprecated('qbank_bulkmove\output\bulk_move', since: '4.5', mdl: 'MDL-71378')]
     public function render_bulk_move_form($displaydata) {
+        \core\deprecation::emit_deprecation_if_present([self::class, __FUNCTION__]);
         return $this->render_from_template('qbank_bulkmove/bulk_move', $displaydata);
     }
 

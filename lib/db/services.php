@@ -3209,6 +3209,13 @@ $functions = array(
         'type'        => 'read',
         'ajax'        => true,
     ],
+    'core_question_move_questions' => [
+        'classname' => 'core_question_external',
+        'methodname' => 'move_questions',
+        'description' => 'Bulk move questions to a new category.',
+        'type' => 'write',
+        'ajax' => true,
+    ],
 );
 
 $services = array(

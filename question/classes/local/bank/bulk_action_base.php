@@ -70,6 +70,14 @@ abstract class bulk_action_base {
     }
 
     /**
+     * Override if you want to load your own javascript.
+     *
+     * @param array $params initialise the javascript with any params it needs.
+     * @return void
+     */
+    public function initialise_javascript(array $params = []): void {}
+
+    /**
      * @deprecated since Moodle 4.0
      */
     public function get_bulk_action_key() {
