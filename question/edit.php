@@ -30,7 +30,7 @@ use core_question\local\bank\view;
 require_once(__DIR__ . '/../config.php');
 require_once($CFG->dirroot . '/question/editlib.php');
 
-//MDL-71378 TODO: check this
+//MDL-71378 TODO: deprecate anything using param courseid
 list($thispageurl, $contexts, $cmid, $cm, $module, $pagevars) =
         question_edit_setup('questions', '/question/edit.php');
 

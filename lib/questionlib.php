@@ -1178,6 +1178,13 @@ function sort_categories_by_tree(&$categories, $id = 0, $level = 1): array {
  */
 function question_get_default_category($contextid) {
     global $DB;
+
+    $context = \core\context::instance_by_id($contextid);
+    if ($context->contextlevel !== CONTEXT_MODULE) {
+        debugging("Invalid context level {$context->contextlevel} for default category. Please use CONTEXT_MODULE");
+        return false;
+    }
+
     $category = $DB->get_records_select('question_categories', 'contextid = ? AND parent <> 0',
                                         [$contextid], 'id', '*', 0, 1);
     if (!empty($category)) {

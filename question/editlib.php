@@ -114,6 +114,53 @@ function get_questions_category(object $category, bool $noparent, bool $recurse 
 }
 
 /**
+ * Checks whether this is the only child of a top category in a context.
+ *
+ * @param int $categoryid a category id.
+ * @return bool
+ * @deprecated since Moodle 4.0 MDL-71585
+ * @see qbank_managecategories\helper
+ * @todo Final deprecation on Moodle 4.4 MDL-72438
+ */
+function question_is_only_child_of_top_category_in_context($categoryid) {
+    debugging('Function question_is_only_child_of_top_category_in_context()
+    has been deprecated and moved to qbank_managecategories plugin,
+    Please use qbank_managecategories\helper::question_is_only_child_of_top_category_in_context() instead.',
+        DEBUG_DEVELOPER);
+    return \qbank_managecategories\helper::question_is_only_child_of_top_category_in_context($categoryid);
+}
+
+/**
+ * Checks whether the category is a "Top" category (with no parent).
+ *
+ * @param int $categoryid a category id.
+ * @return bool
+ * @deprecated since Moodle 4.0 MDL-71585
+ * @see qbank_managecategories\helper
+ * @todo Final deprecation on Moodle 4.4 MDL-72438
+ */
+function question_is_top_category($categoryid) {
+    debugging('Function question_is_top_category() has been deprecated and moved to qbank_managecategories plugin,
+    Please use qbank_managecategories\helper::question_is_top_category() instead.', DEBUG_DEVELOPER);
+    return \qbank_managecategories\helper::question_is_top_category($categoryid);
+}
+
+/**
+ * Ensures that this user is allowed to delete this category.
+ *
+ * @param int $todelete a category id.
+ * @deprecated since Moodle 4.0 MDL-71585
+ * @see qbank_managecategories\helper
+ * @todo Final deprecation on Moodle 4.4 MDL-72438
+ */
+function question_can_delete_cat($todelete) {
+    debugging('Function question_can_delete_cat() has been deprecated and moved to qbank_managecategories plugin,
+    Please use qbank_managecategories\helper::question_can_delete_cat() instead.', DEBUG_DEVELOPER);
+    \qbank_managecategories\helper::question_can_delete_cat($todelete);
+}
+
+/**
+ * MDL-71378 TODO: deprecate anything using param courseid
  * Common setup for all pages for editing questions.
  * @param string $baseurl the name of the script calling this funciton. For examle 'qusetion/edit.php'.
  * @param string $edittab code for this edit tab
@@ -198,6 +245,7 @@ function question_edit_setup($edittab, $baseurl, $requirecmid = false, $unused =
  */
 function question_build_edit_resources($edittab, $baseurl, $params,
         $defaultquestionsperpage = DEFAULT_QUESTIONS_PER_PAGE) {
+    //MDL-71378 TODO: deprecate courseid
     global $DB;
 
     $thispageurl = new moodle_url($baseurl);
