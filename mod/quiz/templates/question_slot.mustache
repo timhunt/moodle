@@ -24,6 +24,9 @@
         "questionicons" : "<i class='icon fa fa-search-plus fa-fw' title='Preview question' aria-label='Preview question'></i>",
         "canbeedited" : false,
         "questiondependencyicon" : "<span class='question_dependency_wrapper question_dependency_cannot_depend'></span>"
+        "bankname": "Question bank 1"
+        "issharedbank": true,
+        "bankurl": "https://example/question/edit.php?cmid=1
     }
 }}
 
@@ -33,6 +36,9 @@
     <div class="mod-indent"></div>
     <div class="activityinstance">
         {{{questionname}}}
+        <a href={{bankurl}}>
+            <span class="badge bg-{{#issharedbank}}primary{{/issharedbank}}{{^issharedbank}}success{{/issharedbank}} text-light ml-2 mt-1">{{bankname}}</span>
+        </a>
     </div>
     <span class="actions">
         {{#versionselection}}
