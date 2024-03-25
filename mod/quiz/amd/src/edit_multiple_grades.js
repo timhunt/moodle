@@ -223,8 +223,6 @@ const handleGradeItemEditStart = (e) => {
     document.querySelectorAll(SELECTORS.inplaceEditableOn).forEach(stopEditingGadeItem);
 
     editableSpan.dataset.oldContent = editableSpan.innerHTML;
-    editableSpan.classList.add('inplaceeditingon');
-
     getString('edittitleinstructions')
         .then((instructions) => {
             const uniqueId = 'gi-edit-input-' + editableSpan.closest('tr').dataset.quizGradeItemId;
@@ -236,6 +234,7 @@ const handleGradeItemEditStart = (e) => {
             const inputElement = editableSpan.querySelector('input');
             inputElement.focus();
             inputElement.select();
+            editableSpan.classList.add('inplaceeditingon');
             pending.resolve();
             return null;
         })
