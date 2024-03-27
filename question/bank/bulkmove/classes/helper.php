@@ -16,8 +16,6 @@
 
 namespace qbank_bulkmove;
 
-use cm_info;
-
 /**
  * Bulk move helper.
  *
@@ -77,44 +75,60 @@ class helper {
     }
 
     /**
-     * @param cm_info|object[] $items either a cm_info or question category record.
-     * @param int $currentselection
+     * @param iterable $iterable
+     * @param int $currentcategoryid
      * @param int $currentbankcontextid
      * @return array[] for use by \qbank_bulkmove\output\renderer::render_bulk_move_form
      */
-    public static function format_for_display(array $items, int $currentselection, int $currentbankcontextid) {
-        $currentoption = [];
-        $toreturn = [];
-        foreach ($items as $item) {
-            switch ($item) {
-                case $item instanceof cm_info:
-                    $formatted = [
-                            'id' => $item->context->id,
-                            'name' => $item->get_formatted_name(),
-                    ];
-                    break;
-                case $item instanceof \stdClass:
-                    $formatted = [
-                            'id' => $item->id,
-                            'name' => $item->name,
-                            'bankcontextid' => $item->contextid,
-                            'enabled' => $item->contextid == $currentbankcontextid ? 'enabled' : 'disabled'
-                    ];
-                    break;
-                default:
-                    throw new \Exception('Unexpected value');
+    public static function format_for_display(iterable $iterable, int $currentcategoryid, int $currentbankcontextid) {
+        $currentbank = [];
+        $currentcategory = [];
+        $formattedbanks = [];
+        $formattedcategories = [];
+
+        foreach ($iterable as $item) {
+            $formattedbank = [
+                    'id' => $item->cminfo->context->id,
+                    'name' => $item->bankname,
+            ];
+
+            foreach ($item->questioncategories as $questioncategory) {
+                $formattedcategory = [
+                        'id' => $questioncategory->id,
+                        'name' => $questioncategory->name,
+                        'bankcontextid' => $questioncategory->contextid,
+                        'enabled' => $questioncategory->contextid == $currentbankcontextid ? 'enabled' : 'disabled'
+                ];
+                if ($questioncategory->id == $currentcategoryid) {
+                    $currentcategory = $formattedcategory;
+                } else {
+                    $formattedcategories[] = $formattedcategory;
+                }
             }
-            if ($formatted['id'] == $currentselection) {
-                $currentoption = $formatted;
-                continue;
+
+            if ($item->cminfo->context->id == $currentbankcontextid) {
+                $currentbank = $formattedbank;
+            } else {
+                $formattedbanks[] = $formattedbank;
             }
-            $toreturn[] = $formatted;
-        }
-        if (!empty($currentoption)) {
-            array_unshift($toreturn, $currentoption);
         }
 
-        return $toreturn;
+        if (!empty($currentbank)) {
+            if (empty($formattedbanks)) {
+                $formattedbanks = $currentbank;
+            } else {
+                array_unshift($formattedbanks, $currentbank);
+            }
+        }
+        if (!empty($currentcategory)) {
+            if (empty($formattedcategories)) {
+                $formattedcategories = $currentcategory;
+            } else {
+                array_unshift($formattedcategories, $currentcategory);
+            }
+        }
+
+        return [$formattedbanks, $formattedcategories];
     }
 
     /**

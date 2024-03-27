@@ -54,12 +54,16 @@ class observer_test extends \advanced_testcase {
         }
 
         $viewedorder = array_reverse($banks);
+        // Check that the courseid filter works.
+        $recentlyviewed = helper::get_recently_used_open_banks($user->id, $course1->id);
+        $this->assertCount(3, $recentlyviewed);
+
         $recentlyviewed = helper::get_recently_used_open_banks($user->id);
 
         // We only keep a record of 5 maximum.
         $this->assertCount(5, $recentlyviewed);
-        foreach ($recentlyviewed as $order => $cminfo) {
-            $this->assertEquals($viewedorder[$order]->cmid, $cminfo->id);
+        foreach ($recentlyviewed as $order => $record) {
+            $this->assertEquals($viewedorder[$order]->cmid, $record->bankmodid);
         }
 
         // Now if we view one of those again it should get bumped to the front of the list.
@@ -73,12 +77,12 @@ class observer_test extends \advanced_testcase {
         // We should still have 5 maximum.
         $this->assertCount(5, $recentlyviewed);
         // The recently viewed on got bumped to the front.
-        $this->assertEquals($banks[2]->cmid, $recentlyviewed[0]->id);
+        $this->assertEquals($banks[2]->cmid, $recentlyviewed[0]->bankmodid);
         // The others got sorted accordingly behind it.
-        $this->assertEquals($banks[5]->cmid, $recentlyviewed[1]->id);
-        $this->assertEquals($banks[4]->cmid, $recentlyviewed[2]->id);
-        $this->assertEquals($banks[3]->cmid, $recentlyviewed[3]->id);
-        $this->assertEquals($banks[1]->cmid, $recentlyviewed[4]->id);
+        $this->assertEquals($banks[5]->cmid, $recentlyviewed[1]->bankmodid);
+        $this->assertEquals($banks[4]->cmid, $recentlyviewed[2]->bankmodid);
+        $this->assertEquals($banks[3]->cmid, $recentlyviewed[3]->bankmodid);
+        $this->assertEquals($banks[1]->cmid, $recentlyviewed[4]->bankmodid);
 
         // Now create a quiz and trigger the bank view of it.
         $quiz = self::getDataGenerator()->get_plugin_generator('mod_quiz')->create_instance(['course' => $course1]);
@@ -92,8 +96,8 @@ class observer_test extends \advanced_testcase {
         $this->assertCount(5, $recentlyviewed);
 
         // Make sure that we only store bank views for plugins that support FEATURE_PUBLISHES_QUESTIONS.
-        foreach ($recentlyviewed as $cminfo) {
-            $this->assertNotEquals($quiz->cmid, $cminfo->id);
+        foreach ($recentlyviewed as $record) {
+            $this->assertNotEquals($quiz->cmid, $record->bankmodid);
         }
 
         // Now delete one of the viewed bank modules and get the records again.
@@ -102,9 +106,9 @@ class observer_test extends \advanced_testcase {
         $this->assertCount(4, $recentlyviewed);
 
         // Check the order was retained.
-        $this->assertEquals($banks[5]->cmid, $recentlyviewed[0]->id);
-        $this->assertEquals($banks[4]->cmid, $recentlyviewed[1]->id);
-        $this->assertEquals($banks[3]->cmid, $recentlyviewed[2]->id);
-        $this->assertEquals($banks[1]->cmid, $recentlyviewed[3]->id);
+        $this->assertEquals($banks[5]->cmid, $recentlyviewed[0]->bankmodid);
+        $this->assertEquals($banks[4]->cmid, $recentlyviewed[1]->bankmodid);
+        $this->assertEquals($banks[3]->cmid, $recentlyviewed[2]->bankmodid);
+        $this->assertEquals($banks[1]->cmid, $recentlyviewed[3]->bankmodid);
     }
 }

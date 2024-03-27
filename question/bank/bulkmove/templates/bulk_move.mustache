@@ -64,7 +64,7 @@
     <h5>{{#str}}questioncategories, question{{/str}}</h5>
     <select class="custom-select bulk-move d-none" id="searchcategories">
         {{#allcategories}}
-            <option value="{{id}}" data-bank-contextid="{{bankcontextid}}" data-enabled={{enabled}}>{{{name}}}</option>
+            <option value="{{id}}" data-bank-contextid="{{bankcontextid}}" data-enabled="{{enabled}}">{{{name}}}</option>
         {{/allcategories}}
     </select>
     <div id="searchcatwarning" class="d-none">{{#str}}warning, qbank_bulkmove{{/str}}</div>

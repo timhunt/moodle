@@ -51,8 +51,7 @@ class edit_renderer extends \plugin_renderer_base {
      * @param \core_question\local\bank\question_edit_contexts $contexts the relevant question bank contexts.
      * @param \moodle_url $pageurl the canonical URL of this page.
      * @param array $pagevars the variables from {@link question_edit_setup()}.
-     * @param \cm_info[][] $courseopenbanks
-     * @param \cm_info[][] $allopenbanks
+     * @param iterable $allopenbanksgen
      * @return string HTML to output.
      */
     public function edit_page(
@@ -61,8 +60,7 @@ class edit_renderer extends \plugin_renderer_base {
             \core_question\local\bank\question_edit_contexts $contexts,
             \moodle_url $pageurl,
             array $pagevars,
-            array $courseopenbanks,
-            array $allopenbanks
+            iterable $allopenbanksgen
     ) {
         global $USER;
 
@@ -118,36 +116,31 @@ class edit_renderer extends \plugin_renderer_base {
 
         // Initialise the JavaScript.
         $this->initialise_editing_javascript($structure, $contexts, $pagevars, $pageurl);
-        $courseopenbanks = $this->format_banks_for_output($courseopenbanks);
-        $allopenbanks = $this->format_banks_for_output($allopenbanks);
-        $recentlyused = $this->format_banks_for_output([\core_question\sharing\helper::get_recently_used_open_banks($USER->id)]);
-        // Just show those not in the current course already.
-        $recentlyused = array_values(
-                array_udiff($recentlyused, $courseopenbanks, static fn($a, $b) => $a['bankmodid'] <=> $b['bankmodid'])
-        );
+        $recentlyused = \core_question\sharing\helper::get_recently_used_open_banks($USER->id, $structure->get_courseid());
+        [$courseopenbanks, $allopenbanks] = $this->format_banks_for_output($structure->get_courseid(), $allopenbanksgen);
 
         // Include the contents of any other popups required.
         if ($structure->can_be_edited()) {
             $thiscontext = $contexts->lowest();
             $this->page->requires->js_call_amd('mod_quiz/modal_quiz_question_bank', 'init', [
-                $thiscontext->id,
-                $quizobj->get_cm()->id,
-                $quizobj->get_cm()->id,
-                $courseopenbanks,
-                $allopenbanks,
-                $recentlyused,
+                    $thiscontext->id,
+                    $quizobj->get_cm()->id,
+                    $quizobj->get_cm()->id,
+                    $courseopenbanks,
+                    $allopenbanks,
+                    $recentlyused,
             ]);
 
             $this->page->requires->js_call_amd('mod_quiz/modal_add_random_question', 'init', [
-                $thiscontext->id,
-                $quizobj->get_cm()->id,
+                    $thiscontext->id,
+                    $quizobj->get_cm()->id,
                 $pagevars['cat'],
-                $pageurl->out_as_local_url(true),
-                $pageurl->param('cmid'),
-                $courseopenbanks,
-                $allopenbanks,
-                $recentlyused,
-                \core\plugininfo\qbank::is_plugin_enabled(\qbank_managecategories\helper::PLUGINNAME),
+                    $pageurl->out_as_local_url(true),
+                    $pageurl->param('cmid'),
+                    $courseopenbanks,
+                    $allopenbanksgen,
+                    $recentlyused,
+                    \core\plugininfo\qbank::is_plugin_enabled(\qbank_managecategories\helper::PLUGINNAME),
             ]);
 
             // Include the question chooser.
@@ -158,21 +151,27 @@ class edit_renderer extends \plugin_renderer_base {
     }
 
     /**
-     * @param \cm_info[][] $banks
+     * @param iterable $banks
      * @return array
      */
-    private function format_banks_for_output(array $banks): array {
+    private function format_banks_for_output(int $currentcourseid, iterable $banks): array {
 
-        $flattened = array_merge(...array_values($banks));
+        $allopenbanks = [];
+        $coursebanks = [];
 
-        foreach ($flattened as $bank) {
-            $foroutput[] = [
-                    'bankmodid' => $bank->id,
-                    'name' => $bank->get_formatted_name(),
+        foreach ($banks as $bank) {
+            $formatted = [
+                    'bankmodid' => $bank->cminfo->id,
+                    'name' => $bank->bankname,
             ];
+            if ($bank->cminfo->course == $currentcourseid) {
+                $coursebanks[] = $formatted;
+            } else {
+                $allopenbanks[] = $formatted;
+            }
         }
 
-        return $foroutput ?? [];
+        return [$coursebanks, $allopenbanks];
     }
 
     /**

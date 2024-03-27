@@ -134,7 +134,7 @@ class mod_qbank_mod_form extends moodleform_mod {
             }
         }
 
-        if (!empty($data['type']) && !in_array($data['type'], core_question\sharing\helper::TYPES, true)) {
+        if (!empty($data['type']) && !in_array($data['type'], core_question\sharing\helper::SHARED_TYPES, true)) {
             $errors['type'] = get_string('unknownbanktype', 'mod_qbank', $data['type']);
         }
 

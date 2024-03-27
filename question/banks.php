@@ -51,8 +51,8 @@ $allcaps = [
         'moodle/question:managecategory'
 ];
 
-[$openbanks, ] = helper::get_course_open_instances($course->id, $allcaps);
-$closedbanks = helper::get_course_closed_instances($course->id, $allcaps);
+$openbanksgenerator = helper::get_instances(helper::OPEN, [$course->id], [], $allcaps);
+$closedbanksgenerator = helper::get_instances(helper::CLOSED, [$course->id], [], $allcaps);
 
 $pageurl = new moodle_url('/question/banks.php', ['courseid' => $course->id]);
 $PAGE->set_url($pageurl);
@@ -67,8 +67,10 @@ if ($createdefault) {
 
 $output = $PAGE->get_renderer('core_question', 'bank');
 
-$openbanksrenderable = new \core_question\sharing\output\question_bank_list($openbanks);
-$closedbanksrenderable = new \core_question\sharing\output\question_bank_list($closedbanks);
+$openbanksrenderable = new \core_question\sharing\output\question_bank_list($openbanksgenerator);
+$openbanks = $openbanksrenderable->export_for_template($output);
+$closedbanksrenderable = new \core_question\sharing\output\question_bank_list($closedbanksgenerator);
+$closedbanks = $closedbanksrenderable->export_for_template($output);
 $addbankrenderable = new \core_question\sharing\output\add_bank_list($course, helper::get_open_modules());
 $createdefaultrenderable = new \single_button(
         new \moodle_url('/question/banks.php', ['createdefault' => true, 'courseid' => $course->id]),
@@ -80,9 +82,9 @@ echo $output->heading(get_string('banksincourse', 'question'));
 echo $output->render_from_template('core_question/view_banks',
         [
                 'hasopenbanks' => !empty($openbanks),
-                'openbanks' => $openbanksrenderable->export_for_template($output),
+                'openbanks' => $openbanks,
                 'hasclosedbanks' => !empty($closedbanks),
-                'closedbanks' => $closedbanksrenderable->export_for_template($output),
+                'closedbanks' => $closedbanks,
                 'addbanks' => $addbankrenderable->export_for_template($output),
                 'createdefault' => has_capability('moodle/course:manageactivities', context_course::instance($course->id)) ?
                         $createdefaultrenderable->export_for_template($output) : false,

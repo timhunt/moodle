@@ -32,11 +32,11 @@ use renderer_base;
  */
 class question_bank_list implements \renderable, \templatable {
 
-    /** @var \cm_info[][] */
-    private array $bankplugins;
+    /** @var iterable */
+    private iterable $bankinstances;
 
-    public function __construct(array $bankplugins) {
-        $this->bankplugins = $bankplugins;
+    public function __construct(iterable $bankinstances) {
+        $this->bankinstances = $bankinstances;
     }
 
     /**
@@ -46,11 +46,9 @@ class question_bank_list implements \renderable, \templatable {
     public function export_for_template(renderer_base $output): array {
 
         $banks = [];
-        foreach ($this->bankplugins as $plugin => $instances) {
-            foreach ($instances as $cminfo) {
-
-                if (plugin_supports('mod', $cminfo->modname, FEATURE_PUBLISHES_QUESTIONS)) {
-                    $actions = course_get_cm_edit_actions($cminfo);
+        foreach ($this->bankinstances as $instance) {
+                if (plugin_supports('mod', $instance->cminfo->modname, FEATURE_PUBLISHES_QUESTIONS)) {
+                    $actions = course_get_cm_edit_actions($instance->cminfo);
                     $actionmenu = new \action_menu();
                     $actionmenu->set_kebab_trigger(get_string('edit'));
                     $actionmenu->add_secondary_action($actions['update']);
@@ -62,22 +60,23 @@ class question_bank_list implements \renderable, \templatable {
                 }
 
                 $managequestions = new action_link(
-                        new \moodle_url("/mod/{$cminfo->modname}/view.php", [
-                                'id' => $cminfo->id,
+                        new \moodle_url("/mod/{$instance->cminfo->modname}/view.php", [
+                                'id' => $instance->cminfo->id,
                         ]),
-                        $cminfo->get_formatted_name(),
+                        $instance->bankname,
                 );
 
                 $banks[] = [
-                        'purpose' => plugin_supports('mod', $cminfo->modname, FEATURE_MOD_PURPOSE),
-                        'iconurl' => $cminfo->get_icon_url(),
-                        'modname' => $cminfo->get_formatted_name(),
-                        'description' => $cminfo->get_formatted_content(),
+                        'purpose' => plugin_supports('mod', $instance->cminfo->modname, FEATURE_MOD_PURPOSE),
+                        'iconurl' => $instance->cminfo->get_icon_url(),
+                        'modname' => $instance->cminfo->get_formatted_name(),
+                        'description' => $instance->cminfo->get_formatted_content(),
                         'managequestions' => $managequestions->export_for_template($output),
                         'managebank' => $managebankexport,
                 ];
             }
-        }
+
+        usort($banks, static fn($a, $b) => $a['modname'] <=> $b['modname']);
 
         return $banks;
     }

@@ -28,7 +28,6 @@ namespace core_question\sharing;
 
 use cm_info;
 use context_course;
-use core_course_category;
 use core_question\local\bank\question_edit_contexts;
 use stdClass;
 
@@ -44,11 +43,15 @@ class helper {
 
     private static array $closedmods = [];
 
+    private static \moodle_recordset $openinstances;
+
+    private static \moodle_recordset $closedinstances;
+
     /** @var string the type of qbank module that users create */
     public const STANDARD = 'standard';
 
     /**
-     * The type of module that the system creates.
+     * The type of shared bank module that the system creates.
      * These are created in course restores when no target context can be found,
      * and also for when a question category cannot be deleted safely due to questions being in use.
      *
@@ -56,10 +59,20 @@ class helper {
      */
     public const SYSTEM = 'system';
 
-    /** @var string The type of module that the system creates for previews. Not used for any other purpose. */
+    /** @var string The type of shared bank module that the system creates for previews. Not used for any other purpose. */
     public const PREVIEW = 'preview';
 
-    public const TYPES = [self::STANDARD, self::SYSTEM, self::PREVIEW];
+    /** @var array Shared bank types */
+    public const SHARED_TYPES = [self::STANDARD, self::SYSTEM, self::PREVIEW];
+
+    /** @var string Shareable plugin type */
+    public const OPEN = 'open';
+
+    /** @var string Non-shareable plugin type */
+    public const CLOSED = 'closed';
+
+    /** Plugin types */
+    public const PLUGIN_TYPES = [self::OPEN, self::CLOSED];
 
     /**
      * User preferences record key to store recently viewed question banks.
@@ -107,157 +120,132 @@ class helper {
     }
 
     /**
-     * Get instances in $courseid that implement FEATURE_PUBLISHES_QUESTIONS.
-     *
-     * @param int $courseid
-     * @param array $havingcap capabilities to check current user access for.
-     * @param bool $getcategories optionally return categories
-     * @return array
-     */
-    public static function get_course_open_instances(
-            int $courseid,
-            array $havingcap = [],
-            bool $getcategories = false
-    ): array {
-        global $DB;
-
-        $categories = [];
-        $instances = [];
-
-        foreach (self::get_open_modules() as $plugin) {
-            $sql = "SELECT cm.*
-                    FROM {course_modules} AS cm
-                    JOIN {modules} AS m ON m.id = cm.module
-                    JOIN {{$plugin}} AS p ON p.id = cm.instance
-                    WHERE m.name = :modname AND cm.course = :courseid";
-            $params = ['modname' => $plugin, 'courseid' => $courseid];
-
-            if ($plugin === 'qbank') {
-                $sql .= ' AND p.type <> :type';
-                $params['type'] = self::PREVIEW;
-            }
-
-            if ($plugininstances = $DB->get_records_sql($sql, $params)) {
-                $cminfos = array_map(static fn($cmrecord) => cm_info::create($cmrecord), $plugininstances);
-
-                if (!empty($havingcap)) {
-                    $cminfos = array_filter($cminfos, static function($cminfo) use ($havingcap) {
-                        return (new question_edit_contexts($cminfo->context))->have_one_cap($havingcap);
-                    });
-                }
-
-                if (empty($cminfos)) {
-                    continue;
-                }
-
-                usort($cminfos, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
-
-                if ($getcategories) {
-                    $contextids = array_map(static fn($cminfo) => $cminfo->context->id, $cminfos);
-                    $categories[] = self::get_categories($contextids);
-                }
-                $instances[$plugin . '_' . $courseid] = $cminfos;
-            }
-        }
-        return [$instances, $categories];
-    }
-
-    /**
-     * @param $contextids
-     * @return array
-     */
-    private static function get_categories($contextids): array {
-        global $DB;
-        if (empty($contextids)) {
-            return [];
-        }
-
-        [$insql, $inparams] = $DB->get_in_or_equal($contextids);
-        $sql = "SELECT * FROM {question_categories} WHERE contextid {$insql} AND parent <> 0";
-        return $DB->get_records_sql($sql, $inparams);
-    }
-
-    /**
-     * @param int $courseid
-     * @param array $havingcap capabilities to check against each module context for the current user.
-     * @return cm_info[][]
-     */
-    public static function get_course_closed_instances(int $courseid, array $havingcap = []): array {
-        foreach (self::get_closed_modules() as $plugin) {
-            $coursemodinfo = \course_modinfo::instance($courseid);
-            if ($plugininstances = $coursemodinfo->get_instances_of($plugin)) {
-                $plugininstances = array_filter($plugininstances, static function($instance) use ($havingcap) {
-                    global $DB;
-                    if ($instance->deletioninprogress) {
-                        return false;
-                    }
-                    if (!empty($havingcap)) {
-                        $hasacapability = (new question_edit_contexts($instance->context))->have_one_cap($havingcap);
-                        if (!$hasacapability) {
-                            return false;
-                        }
-                    }
-
-                    $categories = $DB->get_records('question_categories', ['contextid' => $instance->context->id]);
-                    foreach ($categories as $category) {
-                        if (question_category_in_use($category->id)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                if (empty($plugininstances)) {
-                    continue;
-                }
-                usort($plugininstances, static fn($a, $b) => $a->get_formatted_name() <=> $b->get_formatted_name());
-                $instances[$plugin . '_' . $courseid] = $plugininstances;
-            }
-        }
-        return $instances ?? [];
-    }
-
-    /**
-     * Get instances that exist across ALL courses that implement FEATURE_PUBLISHES_QUESTIONS.
-     *
+     * @param string $type either self::OPEN for plugin instances that implement FEATURE_PUBLISHES_QUESTIONS,
+     * or self::CLOSED for those that don't.
+     * @param array $incourseids array of course ids where you want instances included. Leave empty if you want them from all courses.
      * @param array $notincourseids array of course ids where you do not want instances included.
      * @param array $havingcap current user must have these capabilities on each bank context.
      * @param bool $getcategories optionally return the categories belonging to these banks.
-     * @return array
+     * @return iterable
      */
-    public static function get_all_open_instances(
+    public static function get_instances(
+            string $type = self::OPEN,
+            array $incourseids = [],
             array $notincourseids = [],
             array $havingcap = [],
             bool $getcategories = false
-    ): array {
-        $instances = [];
-        $allcategories = [];
-        foreach (core_course_category::get_all() as $category) {
-            foreach ($category->get_courses(['recursive', 'idonly']) as $course) {
-                if (in_array($course->id, $notincourseids)) {
-                    continue;
-                }
-                [$courseinstances, $categories] = self::get_course_open_instances($course->id, $havingcap, $getcategories);
-                if (empty($courseinstances)) {
-                    continue;
-                }
-                $allcategories[] = array_merge([], ...$categories);
+    ): iterable {
 
-                $instances[] = $courseinstances;
-            }
+        if (!in_array($type, self::PLUGIN_TYPES)) {
+            throw new \moodle_exception('Invalid type');
         }
-        $instances = array_merge([], ...$instances);
-        $allcategories = array_merge([],... $allcategories);
-        return [$instances, $allcategories];
+
+        $validopenrs = isset(self::$openinstances) && self::$openinstances->valid();
+        $validclosedrs = isset(self::$closedinstances) && self::$closedinstances->valid();
+
+        if ((!$validopenrs && $type === self::OPEN) || (!$validclosedrs && $type === self::CLOSED)) {
+            self::init_instance_records($type, $incourseids, $notincourseids, $getcategories);
+        }
+
+        $instances = $type === self::OPEN ? self::$openinstances : self::$closedinstances;
+
+        foreach ($instances as $instance) {
+            if (!empty($havingcap)) {
+                $context = \context_module::instance($instance->id);
+                if (!(new question_edit_contexts($context))->have_one_cap($havingcap)) {
+                    continue;
+                }
+            }
+
+            $cminfo = cm_info::create($instance);
+            $toreturn = self::get_return_object($cminfo, $instance->cats ?? '');
+            yield $toreturn;
+        }
+
+        if ($type === self::OPEN) {
+            self::$openinstances->close();
+        } else {
+            self::$closedinstances->close();
+        }
+    }
+
+    /**
+     * @param string $type
+     * @param array $incourseids
+     * @param array $notincourseids
+     * @param bool $getcategories
+     */
+    private static function init_instance_records(
+            string $type,
+            array $incourseids = [],
+            array $notincourseids = [],
+            bool $getcategories = false
+    ): void {
+        global $DB;
+
+        $plugins = $type === self::OPEN ? self::get_open_modules() : self::get_closed_modules();
+        $pluginssql = [];
+        $params = [];
+
+        foreach ($plugins as $key => $plugin) {
+            $moduleid = $DB->get_field('modules', 'id', ['name' => $plugin]);
+            $sql = "JOIN {{$plugin}} AS p{$key} ON p{$key}.id = cm.instance and cm.module = {$moduleid}";
+            if ($plugin === 'qbank') {
+                $sql .= " AND p{$key}.type <> '" . self::PREVIEW . "'";
+            }
+            $pluginssql[] = $sql;
+        }
+        $pluginssql = implode(' ', $pluginssql);
+
+        if ($getcategories) {
+            $select = 'SELECT cm.*,' . $DB->sql_group_concat($DB->sql_concat('qc.id', "'<->'", 'qc.name', "'<->'", 'qc.contextid'), ',') . 'AS cats';
+            $catsql = ' JOIN {context} AS c ON c.instanceid = cm.id AND c.contextlevel = ' . CONTEXT_MODULE .
+                      ' JOIN {question_categories} AS qc ON qc.contextid = c.id AND qc.parent <> 0';
+        } else {
+            $select = 'SELECT cm.*';
+            $catsql = '';
+        }
+
+        if (!empty($notincourseids)) {
+            [$notincoursesql, $notincourseparams] = $DB->get_in_or_equal($notincourseids, SQL_PARAMS_QM, 'param', false);
+            $notincoursesql = "AND cm.course {$notincoursesql}";
+            $params = array_merge($params, $notincourseparams);
+        } else {
+            $notincoursesql = '';
+        }
+
+        if (!empty($incourseids)) {
+            [$incoursesql, $incourseparams] = $DB->get_in_or_equal($incourseids);
+            $incoursesql = " AND cm.course {$incoursesql}";
+            $params = array_merge($params, $incourseparams);
+        } else {
+            $incoursesql = '';
+        }
+
+        $sql = "{$select}
+                FROM {course_modules} AS cm
+                JOIN {modules} AS m ON m.id = cm.module
+                {$pluginssql}
+                {$catsql}
+                WHERE 1=1 {$notincoursesql} {$incoursesql}
+                GROUP BY cm.id";
+
+        if ($type === self::OPEN) {
+            self::$openinstances = $DB->get_recordset_sql($sql, $params);
+        } else {
+            self::$closedinstances = $DB->get_recordset_sql($sql, $params);
+        }
     }
 
     /**
      * Get a list of recently viewed question banks that implement FEATURE_PUBLISHES_QUESTIONS.
      * If any of the stored contexts don't exist anymore then update the user preference record accordingly.
      *
-     * @param $userid
+     * @param int $userid
+     * @param int $notincourseid if supplied don't return any in this course id
      * @return cm_info[]
      */
-    public static function get_recently_used_open_banks($userid): array {
+    public static function get_recently_used_open_banks(int $userid, int $notincourseid = 0): array {
         $prefs = get_user_preferences(self::RECENTLY_VIEWED, null, $userid);
         $contextids = !empty($prefs) ? explode(',', $prefs) : [];
         if (empty($contextids)) {
@@ -274,7 +262,14 @@ class helper {
                 throw new \moodle_exception('Invalid question bank contextlevel: ' . $context->contextlevel);
             }
             [, $cm] = get_module_from_cmid($context->instanceid);
-            $toreturn[] = cm_info::create($cm);
+            $cminfo = cm_info::create($cm);
+            if (!empty($notincourseid) && $notincourseid == $cminfo->course) {
+                continue;
+            }
+            $record = new stdClass();
+            $record->bankmodid = $cminfo->id;
+            $record->name = $cminfo->get_formatted_name();
+            $toreturn[] = $record;
         }
 
         if (!empty($invalidcontexts)) {
@@ -284,6 +279,31 @@ class helper {
         }
 
         return $toreturn ?? [];
+    }
+
+    /**
+     * @param cm_info $cminfo
+     * @param string $categories
+     * @return stdClass
+     */
+    private static function get_return_object(cm_info $cminfo, string $categories = ''): stdClass {
+
+        $concatedcats = !empty($categories) ? explode(',', $categories) : [];
+        $categories = array_map(static function($concatedcategory) {
+            $values = explode('<->', $concatedcategory);
+            $cat = new stdClass();
+            $cat->id = $values[0];
+            $cat->name = $values[1];
+            $cat->contextid = $values[2];
+            return $cat;
+        }, $concatedcats);
+
+        $bank = new stdClass();
+        $bank->bankname = $cminfo->get_formatted_name();
+        $bank->cminfo = $cminfo;
+        $bank->questioncategories = $categories;
+
+        return $bank;
     }
 
     /**
@@ -341,7 +361,7 @@ class helper {
     public static function create_default_open_instance(stdClass $course, string $bankname, string $type = self::STANDARD): cm_info {
         global $DB;
 
-        if (!in_array($type, self::TYPES)) {
+        if (!in_array($type, self::SHARED_TYPES)) {
             throw new \RuntimeException('invalid type');
         }
 
@@ -383,7 +403,7 @@ class helper {
         $data->downloadcontent = DOWNLOAD_COURSE_CONTENT_ENABLED;
         $data->visibleoncoursepage = 0;
         $data->name = $bankname;
-        $data->type = in_array($type, self::TYPES) ? $type : self::STANDARD;
+        $data->type = in_array($type, self::SHARED_TYPES) ? $type : self::STANDARD;
         $data->showdescription = $type === self::STANDARD ? 0 : 1;
 
         $mod = add_moduleinfo($data, $course);
