@@ -36,21 +36,21 @@ class edit_nav_actions implements renderable, templatable {
     /** @var string option for $whichpage argument to the constructor. */
     const GRADING = 'grading';
 
-    /** @var int The course module ID. */
-    protected $cmid;
-
-    /** @var string which page this is. Either self::SUMMARY (edit.php) or self::GRADING (editgrading.php). */
-    protected $whichpage;
-
     /**
      * overrides_action constructor.
      *
      * @param int $cmid The course module id.
      * @param string $whichpage self::SUMMARY (edit.php) or self::GRADING (editgrading.php).
      */
-    public function __construct(int $cmid, string $whichpage) {
-        $this->cmid = $cmid;
-        $this->whichpage = $whichpage;
+    public function __construct(
+
+        /** @var int The course module ID. */
+        protected readonly int $cmid,
+
+        /** @var string which page this is. Either self::SUMMARY (edit.php) or self::GRADING (editgrading.php). */
+        protected readonly string $whichpage,
+
+    ) {
     }
 
     public function export_for_template(renderer_base $output): array {
@@ -64,8 +64,11 @@ class edit_nav_actions implements renderable, templatable {
             $complexgradingurl->out(false) => get_string('complexgrading', 'quiz'),
         ];
 
-        $overridesnav = new url_select($menu,
-                $this->whichpage === self::SUMMARY ? $questionsurl->out(false) : $complexgradingurl->out(false), null);
+        $overridesnav = new url_select(
+            $menu,
+            $this->whichpage === self::SUMMARY ? $questionsurl->out(false) : $complexgradingurl->out(false),
+            null
+        );
         $overridesnav->set_label(get_string('quizsetupnavigation', 'quiz'), ['class' => 'sr-only']);
 
         return [

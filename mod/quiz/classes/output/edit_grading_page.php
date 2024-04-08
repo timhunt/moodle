@@ -31,17 +31,18 @@ use templatable;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class edit_grading_page implements renderable, templatable {
-    /**
-     * @var structure information about the structure of the quiz we are manipulating.
-     */
-    public $structure = [];
 
     /**
-     * Constrcutor.
+     * Constructor.
      *
-     * @param structure $structure information about the quiz we are manipulating.
+     * @param structure $structure
      */
-    public function __construct(structure $structure) {
+    public function __construct(
+
+        /** @var structure the make-up the quiz we are manipulating. */
+        public readonly structure $structure,
+
+    ) {
     }
 
     public function export_for_template(renderer_base $output) {
