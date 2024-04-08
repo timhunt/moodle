@@ -78,7 +78,7 @@ class quiz_attempt {
      * Only available after load_questions is called, e.g. if the class is constructed
      * with $loadquestions true (the default).
      */
-    protected $quba = null;
+    protected ?question_usage_by_activity $quba = null;
 
     /**
      * @var array of slot information. These objects contain ->id (int), ->slot (int),
@@ -93,7 +93,7 @@ class quiz_attempt {
     protected $sections;
 
     /** @var grade_calculator instance for this quiz. */
-    protected $gradecalculator;
+    protected grade_calculator $gradecalculator;
 
     /**
      * @var grade_out_of[]|null can be used to store the total grade for each section.
@@ -102,7 +102,7 @@ class quiz_attempt {
      * This lets the mark totals be passed in and later used. Format of this array should
      * match what {@see grade_calculator::compute_grade_item_totals()} would return.
      */
-    protected $gradeitemmarks = null;
+    protected ?array $gradeitemmarks = null;
 
     /** @var array page no => array of slot numbers on the page in order. */
     protected $pagelayout;

@@ -609,9 +609,9 @@ class grade_calculator {
                 $grades[$qubaid][$gradeitem->id] = new grade_out_of(
                     $this->quizobj->get_quiz(),
                     $gradesdata[$qubaid][$gradeitem->id] ?? 0,
-                    $gradeitem->maxmark
+                    $gradeitem->maxmark,
+                    name: $gradeitem->name,
                 );
-                $grades[$qubaid][$gradeitem->id]->name = $gradeitem->name;
             }
         }
 
