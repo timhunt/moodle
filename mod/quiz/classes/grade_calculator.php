@@ -44,19 +44,19 @@ class grade_calculator {
     protected $quizobj;
 
     /**
-     * @var ?stdClass[] quiz_grade_items for this quiz indexed by id, sorted by sortorder.
+     * @var stdClass[]|null quiz_grade_items for this quiz indexed by id, sorted by sortorder.
      *
      * Lazy-loaded when needed. See {@see ensure_grade_items_loaded()}.
      */
-    protected $gradeitems = null;
+    protected ?array $gradeitems = null;
 
     /**
-     * @var ?stdClass[] quiz_slot for this quiz. Only ->slot and ->quizgradeitemid fields are used.
+     * @var ?stdClass[]|null quiz_slot for this quiz. Only ->slot and ->quizgradeitemid fields are used.
      *
      * This is either set by another class that already has the data, using {@see set_slots()}
      * or it is lazy-loaded when needed. See {@see ensure_slots_loaded()}.
      */
-    protected $slots = null;
+    protected ?array $slots = null;
 
     /**
      * Constructor. Recommended way to get an instance is $quizobj->get_grade_calculator();
@@ -531,8 +531,8 @@ class grade_calculator {
         // Prepare a place to store the results for each grade-item.
         $grades = [];
         foreach ($this->gradeitems as $gradeitem) {
-            $grades[$gradeitem->id] = new grade_out_of($this->quizobj->get_quiz(), 0, 0);
-            $grades[$gradeitem->id]->name = $gradeitem->name;
+            $grades[$gradeitem->id] = new grade_out_of(
+                $this->quizobj->get_quiz(), 0, 0, name: $gradeitem->name);
         }
 
         // Add up the scores.

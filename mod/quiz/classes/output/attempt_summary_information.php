@@ -223,13 +223,14 @@ class attempt_summary_information implements renderable, named_templatable {
         // Show raw marks only if they are different from the grade.
         if ($quiz->grade != $quiz->sumgrades) {
             $this->add_item('marks', get_string('marks', 'quiz'),
-                new grade_out_of($quiz, $attemptobj->get_sum_marks(), $quiz->sumgrades, grade_out_of::SHORT));
+                new grade_out_of($quiz, $attemptobj->get_sum_marks(), $quiz->sumgrades, style: grade_out_of::SHORT));
         }
 
         // Now the scaled grade.
         $this->add_item('grade', get_string('gradenoun'),
             new grade_out_of($quiz, $grade, $quiz->grade,
-                abs($quiz->grade - 100) < grade_calculator::ALMOST_ZERO ? grade_out_of::NORMAL : grade_out_of::WITH_PERCENT));
+                style: abs($quiz->grade - 100) < grade_calculator::ALMOST_ZERO ?
+                    grade_out_of::NORMAL : grade_out_of::WITH_PERCENT));
 
         return $grade;
     }
