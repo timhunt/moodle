@@ -134,7 +134,7 @@ class generator_test extends \advanced_testcase {
         ]);
 
         // Verify the grade item was created correctly.
-        $this->assertObjectHasAttribute('id', $newgradeitem);
+        $this->assertObjectHasProperty('id', $newgradeitem);
         $this->assertEquals($quiz->id, $newgradeitem->quizid);
         $this->assertEquals('Awesomeness!', $newgradeitem->name);
     }
