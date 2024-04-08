@@ -61,7 +61,7 @@ class structure {
     protected $sections = [];
 
     /** @var stdClass[] quiz_grade_items for this quiz indexed by id. */
-    protected $gradeitems = [];
+    protected array $gradeitems = [];
 
     /** @var bool caches the results of can_be_edited. */
     protected $canbeedited = null;
