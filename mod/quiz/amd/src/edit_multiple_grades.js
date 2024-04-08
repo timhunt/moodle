@@ -129,9 +129,7 @@ const updateSlotGradeItem = (
  * @param {Object} methodCall a web service call to pass to fetchMany. Must include methodCall.args.quizid.
  * @returns {Promise<Object>} a promise that resolves to the template context required to re-render the page.
  */
-const callServiceAndReturnRenderingData = (methodCall) => {
-    return callServicesAndReturnRenderingData([methodCall]);
-};
+const callServiceAndReturnRenderingData = (methodCall) => callServicesAndReturnRenderingData([methodCall]);
 
 /**
  * Make a web service call, and also call mod_quiz_get_edit_grading_page_data to get the date to re-render the page.
@@ -268,10 +266,9 @@ const handleGradeItemKeyDown = (e) => {
  * @param {Object} editGradingPageData the template context data required to re-render the page.
  * @returns {Promise<void>} a promise that will resolve when the page is updated.
  */
-const reRenderPage = (editGradingPageData) => {
-    return renderTemplate('mod_quiz/edit_grading_page', editGradingPageData)
+const reRenderPage = (editGradingPageData) =>
+    renderTemplate('mod_quiz/edit_grading_page', editGradingPageData)
         .then((html, js) => replaceNode(document.querySelector(SELECTORS.editingPageContents), html, js || ''));
-};
 
 /**
  * Handle key up in the editable.
@@ -439,9 +436,11 @@ const reallyResetAll = (button) => {
     let methodCalls = [];
 
     // Call to clear any assignments of grade items to slots (if required).
-    const slotResets = [...document.querySelectorAll(SELECTORS.gradeItemSelect)].map((select) => {
-            return {id: select.dataset.slotId, quizgradeitemid: 0};
-        });
+    const slotResets = [...document.querySelectorAll(SELECTORS.gradeItemSelect)].map(
+            (select) => ({
+                id: select.dataset.slotId,
+                quizgradeitemid: 0,
+            }));
     if (slotResets.length) {
         methodCalls.push({
             methodname: 'mod_quiz_update_slots',
