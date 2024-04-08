@@ -57,16 +57,16 @@ abstract class attempts_report_table extends \table_sql {
     protected $lateststeps = null;
 
     /**
-     * @var float[][] total mark for each grade item. Array question_usage.id => quiz_grade_item.id => mark.
+     * @var float[][]|null total mark for each grade item. Array question_usage.id => quiz_grade_item.id => mark.
      * Loaded by {@see load_grade_item_marks()}, if applicable.
      */
-    protected $gradeitemtotals = null;
+    protected ?array $gradeitemtotals = null;
 
     /** @var stdClass the quiz settings for the quiz we are reporting on. */
     protected $quiz;
 
     /** @var quiz_settings quiz settings object for this quiz. Gets set in {@see attempts_report::et_up_table_columns()}. */
-    protected $quizobj;
+    protected quiz_settings $quizobj;
 
     /** @var context_module the quiz context. */
     protected $context;

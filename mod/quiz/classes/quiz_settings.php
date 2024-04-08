@@ -66,7 +66,7 @@ class quiz_settings {
     protected $ispreviewuser = null;
 
     /** @var grade_calculator|null grade calculator for this quiz. */
-    protected $gradecalculator = null;
+    protected ?grade_calculator $gradecalculator = null;
 
     // Constructor =============================================================.
 
