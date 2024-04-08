@@ -162,7 +162,8 @@ foreach ($quizzes as $quiz) {
         $feedback = '';
         if ($quiz->grade && array_key_exists($quiz->id, $grades)) {
             if ($alloptions->marks >= question_display_options::MARK_AND_MAX) {
-                $grade = $OUTPUT->render(new grade_out_of($grades[$quiz->id], $quiz->grade, grade_out_of::SHORT));
+                $grade = $OUTPUT->render(new grade_out_of(
+                        $grades[$quiz->id], $quiz->grade, $quiz->sumgrades, style: grade_out_of::SHORT));
             }
             if ($alloptions->overallfeedback) {
                 $feedback = quiz_feedback_for_grade($grades[$quiz->id], $quiz, $context);

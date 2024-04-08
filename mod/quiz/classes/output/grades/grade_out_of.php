@@ -38,18 +38,6 @@ class grade_out_of implements renderable {
     /** @var string like normal, but with the percent equivalent in brackets. Also the lang string used */
     const WITH_PERCENT = 'outofpercent';
 
-    /** @var stdClass Quiz settings (so we can access the settings like decimal places. */
-    public stdClass $quiz;
-
-    /** @var float the grade to show. */
-    public float $grade;
-
-    /** @var float the total the grade is out of. */
-    public float $maxgrade;
-
-    /** @var string The display style, one of the consts above. */
-    public string $style;
-
     /**
      * Constructor.
      *
@@ -59,15 +47,20 @@ class grade_out_of implements renderable {
      * @param string $style which format to use, grade_out_of::NORMAL, ::SHORT or ::WITH_PERCENT.
      */
     public function __construct(
-        stdClass $quiz,
-        float $grade,
-        float $maxgrade,
-        string $style = self::NORMAL,
+
+        /** @var stdClass Quiz settings (so we can access the settings like decimal places). */
+        public readonly stdClass $quiz,
+
+        /** @var float the grade to show. */
+        public float $grade,
+
+        /** @var float the total the grade is out of. */
+        public float $maxgrade,
+
+        /** @var string The display style, one of the consts above. */
+        public readonly string $style = self::NORMAL,
+
     ) {
-        $this->quiz = $quiz;
-        $this->grade = $grade;
-        $this->maxgrade = $maxgrade;
-        $this->style = $style;
     }
 
     /**
