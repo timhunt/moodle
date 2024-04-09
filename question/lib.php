@@ -49,7 +49,6 @@ function core_question_output_fragment_question_data(array $args): string {
         return '';
     }
     [$params, $extraparams] = \core_question\local\bank\filter_condition_manager::extract_parameters_from_fragment_args($args);
-    //MDL-71378 TODO: check this
     [
         $thispageurl,
         $contexts,

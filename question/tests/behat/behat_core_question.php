@@ -53,10 +53,10 @@ class behat_core_question extends behat_question_base {
      * Convert page names to URLs for steps like 'When I am on the "[identifier]" "[page type]" page'.
      *
      * Recognised page names are:
-     * | pagetype               | name meaning               | description                              |
-     * | course question bank   | Course name                | The question bank for a course           |
-     * | course question import | Course name                | The import questions screen for a course |
-     * | course question export | Course name                | The export questions screen for a course |
+     * | pagetype        | name meaning               | description                                     |
+     * | question bank   | Question bank name         | The question bank module                        |
+     * | question import | Question bank name         | The import questions screen for a question bank |
+     * | question export | Question bank name         | The export questions screen for a question bank |
      * | preview                | Question name              | The screen to preview a question         |
      * | edit                   | Question name              | The screen to edit a question            |
      *
@@ -67,22 +67,21 @@ class behat_core_question extends behat_question_base {
      */
     protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
         switch (strtolower($type)) {
-            case 'course question bank':
-                //MDL-71378 TODO: Deprecate this
+            case 'question bank':
                 return new moodle_url('/question/edit.php',
-                        ['courseid' => $this->get_course_id($identifier)]);
+                        ['cmid' => $this->get_cm_by_activity_name('qbank', $identifier)->id]);
 
-            case 'course question categories':
+            case 'question categories':
                 return new moodle_url('/question/bank/managecategories/category.php',
-                        ['courseid' => $this->get_course_id($identifier)]);
+                        ['cmid' => $this->get_cm_by_activity_name('qbank', $identifier)->id]);
 
-            case 'course question import':
+            case 'question import':
                 return new moodle_url('/question/bank/importquestions/import.php',
-                        ['courseid' => $this->get_course_id($identifier)]);
+                        ['cmid' => $this->get_cm_by_activity_name('qbank', $identifier)->id]);
 
-            case 'course question export':
+            case 'question export':
                 return new moodle_url('/question/bank/exportquestions/export.php',
-                        ['courseid' => $this->get_course_id($identifier)]);
+                        ['cmid' => $this->get_cm_by_activity_name('qbank', $identifier)->id]);
 
             case 'preview':
                 [$questionid, $otheridtype, $otherid] = $this->find_question_by_name($identifier);

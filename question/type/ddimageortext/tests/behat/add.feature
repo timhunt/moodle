@@ -14,10 +14,13 @@ Feature: Test creating a drag and drop onto image question
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher  | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name    | intro              | course | idnumber |
+      | qbank      | Qbank 1 | Question bank 1    | C1     | qbank1   |
 
   @javascript @_file_upload
   Scenario: Create a drag and drop onto image question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I press "Create a new question ..."
     And I set the field "Drag and drop onto image" to "1"
     And I click on "Add" "button" in the "Choose a question type to add" "dialogue"
@@ -102,7 +105,7 @@ Feature: Test creating a drag and drop onto image question
 
   @javascript @_file_upload
   Scenario: Question must have at least one drag item and one drop zone
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I press "Create a new question ..."
     And I set the field "Drag and drop onto image" to "1"
     And I click on "Add" "button" in the "Choose a question type to add" "dialogue"

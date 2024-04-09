@@ -160,6 +160,8 @@ final class moodle2_test extends \advanced_testcase {
         $this->assertCount(1, $results['warnings']);
         $this->assertStringStartsWith('The questions category', $results['warnings'][0]);
 
+
+
         // Get information about the resulting course and check that it is set
         // up correctly.
         $modinfo = get_fast_modinfo($newcourseid);

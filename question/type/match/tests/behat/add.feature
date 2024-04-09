@@ -14,10 +14,13 @@ Feature: Test creating a Matching question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   @javascript
   Scenario: Create a Matching question with 3 subquestions
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Matching" question filling the form with:
       | Question name                      | match-001                                      |
       | Question text                      | Match the country with the capital city.       |

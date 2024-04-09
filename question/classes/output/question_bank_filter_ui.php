@@ -115,13 +115,13 @@ class question_bank_filter_ui extends datafilter {
      */
     public function export_for_template(renderer_base $output): stdClass {
         $defaultcategory = question_get_default_category($this->context->id);
-        $courseid = null;
-        if ($this->context->contextlevel == CONTEXT_COURSE) {
-            $courseid = $this->context->instanceid;
+
+        if ($this->context->contextlevel != CONTEXT_MODULE) {
+            debugging("Context level: {$this->context->contextlevel} is now deprecated, please use CONTEXT_MODULE");
         }
-        if (empty($courseid)) {
-            $courseid = $this->searchconditions['category']->get_course_id();
-        }
+
+        $courseid = $this->context->get_course_context()->instanceid;
+
         return (object) [
             'tableregionid' => $this->tableregionid,
             'courseid' => $courseid,

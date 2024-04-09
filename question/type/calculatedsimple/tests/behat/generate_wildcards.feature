@@ -14,15 +14,18 @@ Feature: Test creating sets of wildcard values
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity | name    | course | idnumber |
+      | qbank    | Qbank 1 | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name           |
-      | Course       | C1        | Test questions |
+      | contextlevel    | reference | name           |
+      | Activity module | qbank1    | Test questions |
     And the following "user preferences" exist:
       | user    | preference | value    |
       | teacher | htmleditor | textarea |
 
   Scenario: Add a calculated simple question and re-generate different wild card values
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Calculated simple" question filling the form with:
       | Question name         | calculatedsimple-001                |
       | Question text         | {x1} + {x2}                         |

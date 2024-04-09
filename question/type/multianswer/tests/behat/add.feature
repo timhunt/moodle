@@ -14,9 +14,12 @@ Feature: Test creating a Multianswer (Cloze) question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   Scenario: Create a Cloze question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Embedded answers (Cloze)" question filling the form with:
       | Question name        | multianswer-001                                     |
       | Question text        | {1:SHORTANSWER:=Berlin} is the capital of Germany.  |
@@ -24,7 +27,7 @@ Feature: Test creating a Multianswer (Cloze) question
     Then I should see "multianswer-001" in the "categoryquestions" "table"
 
   Scenario: Create a broken Cloze question and correct it
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I press "Create a new question ..."
     And I set the field "Embedded answers (Cloze)" to "1"
     And I press "Add"
@@ -39,7 +42,7 @@ Feature: Test creating a Multianswer (Cloze) question
     And I should see "multianswer-002" in the "categoryquestions" "table"
 
   Scenario: Try to create a Cloze question that has no answer
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I press "Create a new question ..."
     And I set the field "Embedded answers (Cloze)" to "1"
     And I press "Add"

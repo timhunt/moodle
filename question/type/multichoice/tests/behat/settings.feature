@@ -14,6 +14,9 @@ Feature: Test settings for Multiple choice question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   Scenario: Testing the settings for qtype_multichoice
     Given I log in as "admin"
@@ -29,7 +32,7 @@ Feature: Test settings for Multiple choice question
       |id_s_qtype_multichoice_showstandardinstruction | 1               |
     And I press "Save changes"
     And I log out
-    And I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    And I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Multiple choice" question filling the form with:
       | Question name              | Multi-choice-001                       |
       | Question text              | Find the capital city of England.      |

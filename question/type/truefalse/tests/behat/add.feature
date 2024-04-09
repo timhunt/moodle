@@ -14,9 +14,12 @@ Feature: Test creating a True/False question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | quiz       | Test quiz | C1     | quiz1    |
 
   Scenario: Create a True/False question with Correct answer as False
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Test quiz" "mod_quiz > question bank" page logged in as teacher
     And I add a "True/False" question filling the form with:
       | Question name                      | true-false-001                             |
       | Question text                      | Manchester is the capital city of England. |
@@ -29,7 +32,7 @@ Feature: Test creating a True/False question
 
   @javascript
   Scenario: Create a True/False question with Correct answer as True
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Test quiz" "mod_quiz > question bank" page logged in as teacher
     And I add a "True/False" question filling the form with:
       | Question name                      | true-false-002                         |
       | Question text                      | London is the capital city of England. |

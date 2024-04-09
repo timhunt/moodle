@@ -14,10 +14,13 @@ Feature: Test importing True/False questions
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name    | course | idnumber |
+      | qbank      | Qbank 1 | C1     | qbank1   |
 
   @javascript @_file_upload
   Scenario: import a True/False question.
-    When I am on the "Course 1" "core_question > course question import" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question import" page logged in as teacher
     And I set the field "id_format_xml" to "1"
     And I upload "question/type/truefalse/tests/fixtures/testquestion.moodle.xml" file to "Import" filemanager
     And I press "id_submitbutton"

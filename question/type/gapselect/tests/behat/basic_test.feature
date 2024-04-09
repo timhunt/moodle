@@ -15,10 +15,16 @@ Feature: Test all the basic functionality of this question type
       | teacher | C1     | editingteacher |
     And the following config values are set as admin:
       | enableasyncbackup | 0 |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
+    And the following "question categories" exist:
+      | contextlevel    | reference | name           |
+      | Activity module | qbank1    | Test questions |
 
   @javascript
   Scenario: Create, edit then preview a gapselect question.
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
 
     # Create a new question.
     And I add a "Select missing words" question filling the form with:
@@ -130,7 +136,9 @@ Feature: Test all the basic functionality of this question type
       | Confirmation | Filename | test_backup.mbz |
     And I restore "test_backup.mbz" backup into a new course using this options:
       | Schema | Course name | Course 2 |
-    And I am on the "Course 2 copy 1" "core_question > course question bank" page
+    And I navigate to "Question banks" in current page administration
+    And I click on "Qbank 1" "link"
+    And I apply question bank filter "Category" with value "Test questions"
     And I should see "Select missing words 001"
 
     # Edit the copy and verify the form field contents.

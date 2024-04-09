@@ -16,9 +16,12 @@ Feature: Complete an Ordering question attempt
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    And the following "activities" exist:
+      | activity | name   | intro       | course | idnumber | maxmarksduring | marksduring | maxmarksimmediately | marksimmediately | preferredbehaviour |
+      | quiz     | Quiz 1 | Quiz 1 test | C1     | quiz1    | 1              | 1           | 1                   | 1                | immediatefeedback  |
     And the following "question categories" exist:
-      | contextlevel | reference | name           |
-      | Course       | C1        | Test questions |
+      | contextlevel    | reference | name           |
+      | Activity module | quiz1     | Test questions |
     # Layouttype is a finicky setting afaik, so we'll just leave it vertical for now.
     And the following "questions" exist:
       | questioncategory | qtype    | name         | template | layouttype | selecttype | selectcount | gradingtype | showgrading | numberingstyle |
@@ -30,9 +33,6 @@ Feature: Complete an Ordering question attempt
       | Test questions   | ordering | ordering-006 | moodle   | 0          | 0          | 3           | 5           | 0           | IIII           |
       | Test questions   | ordering | ordering-007 | moodle   | 0          | 0          | 3           | 6           | 1           | abc            |
       | Test questions   | ordering | ordering-008 | moodle   | 0          | 0          | 3           | 7           | 0           | abc            |
-    And the following "activities" exist:
-      | activity | name   | intro       | course | idnumber | maxmarksduring | marksduring | maxmarksimmediately | marksimmediately | preferredbehaviour |
-      | quiz     | Quiz 1 | Quiz 1 test | C1     | quiz1    | 1              | 1           | 1                   | 1                | immediatefeedback  |
 
   @javascript
   Scenario Outline: As a student I can partially answer the question and get different grades and feedback.

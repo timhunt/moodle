@@ -8,16 +8,16 @@ Feature: Preview a quiz with multiple maker question.
     And the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
+    And the following "activities" exist:
+      | activity | name      | course | idnumber |
+      | quiz     | Test quiz | C1     | quiz1    |
     And the following "question categories" exist:
-      | contextlevel | reference | name           |
-      | Course       | C1        | Test questions |
+      | contextlevel    | reference | name           |
+      | Activity module | quiz1     | Test questions |
     And the following "questions" exist:
       | questioncategory | qtype    | name           | template |
       | Test questions   | ddmarker | Drag markers   | mkmap    |
       | Test questions   | ddmarker | Drag markers 2 | mkmap    |
-    And the following "activities" exist:
-      | activity | name      | course | idnumber |
-      | quiz     | Test quiz | C1     | quiz1    |
     And quiz "Test quiz" contains the following questions:
       | Drag markers   | 1 |
       | Drag markers 2 | 2 |

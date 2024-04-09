@@ -132,7 +132,6 @@ $string['editthiscategory'] = 'Edit this category';
 $string['emptyxml'] = 'Unknown error - empty imsmanifest.xml';
 $string['enabled'] = 'Enabled';
 $string['erroraccessingcontext'] = 'Cannot access context';
-$string['errordeletingquestionsfromcategory'] = 'Error deleting questions from category {$a}.';
 $string['errorduringpost'] = 'Error occurred during post-processing!';
 $string['errorduringpre'] = 'Error occurred during pre-processing!';
 $string['errorduringproc'] = 'Error occurred during processing!';
@@ -527,3 +526,6 @@ $string['version_selection'] = 'Version {$a->version}';
 $string['versioninfo'] = 'Version {$a->version} (of {$a->latestversion})';
 $string['versioninfolatest'] = 'Version {$a->version} (latest)';
 $string['question_version'] = 'Question version';
+
+// Deprecated since Moodle 4.5.
+$string['errordeletingquestionsfromcategory'] = 'Error deleting questions from category {$a}.';

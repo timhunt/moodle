@@ -14,10 +14,13 @@ Feature: Test creating a Select missing words question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   @javascript
   Scenario: Create a Select missing words question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Select missing words" question filling the form with:
       | Question name             | Select missing words 001   |
       | Question text             | The [[1]] [[2]] on the [[3]]. |
@@ -39,7 +42,7 @@ Feature: Test creating a Select missing words question
       | id_shuffleanswers | 1 |
 
   Scenario: Edit a Select missing words question with 2 choice and should not have empty choice.
-    Given I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    Given I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Select missing words" question filling the form with:
       | Question name            | Select missing words 002    |
       | Question text            | The [[1]] [[2]] on the mat. |

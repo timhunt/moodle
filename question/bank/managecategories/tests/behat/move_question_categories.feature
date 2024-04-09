@@ -18,17 +18,6 @@ Feature: A teacher can move question categories in the question bank
       | activity | name      | course | idnumber |
       | quiz     | Test quiz | C1     | quiz1    |
 
-  Scenario: A question category can be moved to another context
-    Given I am on the "Test quiz" "mod_quiz > question bank" page logged in as "teacher1"
-    And I select "Categories" from the "Question bank tertiary navigation" singleselect
-    And I follow "Add category"
-    And I set the following fields to these values:
-      | Name            | Test category         |
-      | Parent category | Top for Test quiz     |
-    And I press "submitbutton"
-    And I click on "Share in context for Course: Course 1" "link" in the "Test category" "list_item"
-    Then I should see "Test category" in the "//div[contains(concat(' ', normalize-space(@class), ' '), ' questioncategories ') and contains(concat(' ', normalize-space(@class), ' '), ' contextlevel50 ')]" "xpath_element"
-
   Scenario: A question category can be moved to top level
     Given I am on the "Test quiz" "mod_quiz > question bank" page logged in as "teacher1"
     And I select "Categories" from the "Question bank tertiary navigation" singleselect

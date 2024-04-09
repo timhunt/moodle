@@ -215,7 +215,7 @@ class version_test extends \advanced_testcase {
         // Move the category to qbank context.
         $contexts = new \core_question\local\bank\question_edit_contexts($bankcontext);
         $qcobject = new \qbank_managecategories\question_category_object(null,
-            new \moodle_url('/question/bank/managecategories/category.php', ['courseid' => SITEID]),
+            new \moodle_url('/question/bank/managecategories/category.php', ['cmid' => $qbank->cmid]),
             $contexts->having_one_edit_tab_cap('categories'), 0, null, 0,
             $contexts->having_cap('moodle/question:add'));
         $qcobject->move_questions_and_delete_category($qcategorychild->id, $qcategorysys->id);

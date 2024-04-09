@@ -1396,7 +1396,9 @@ class question_type {
      * required to set up and save a question of any type for testing purposes.
      * Alternate DB table prefix may be used to facilitate data deletion.
      */
+    #[\core\attribute\deprecated(replacement: null, since: '4.5', mdl: 'MDL-71378')]
     public function generate_test($name, $courseid=null) {
+        \core\deprecation::emit_deprecation_if_present([$this, __FUNCTION__]);
         $form = new stdClass();
         $form->name = $name;
         $form->questiontextformat = 1;
@@ -1406,12 +1408,8 @@ class question_type {
         $form->status = \core_question\local\bank\question_version_status::QUESTION_STATUS_READY;
         $form->generalfeedback = "Well done";
 
-        $course = get_course($courseid);
-        $qbank = \core_question\local\bank\question_bank_helper::create_default_open_instance($course,
-                get_string('defaultbank', 'core_question', ['coursename' => $course->fullname])
-        );
-        $context = context_module::instance($qbank->cmid);
-        $newcategory = question_make_default_category($context);
+        $context = context_course::instance($courseid);
+        $newcategory = question_make_default_categories(array($context));
         $form->category = $newcategory->id . ',1';
 
         $question = new stdClass();

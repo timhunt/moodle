@@ -14,7 +14,10 @@ Feature: Test creating an Ordering question
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
-    And I am on the "Course 1" "core_question > course question bank" page logged in as "teacher1"
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
+    And I am on the "Qbank 1" "core_question > question bank" page logged in as "teacher1"
 
   @javascript
   Scenario: Create an Ordering question with 6 draggable items

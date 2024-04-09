@@ -873,7 +873,6 @@ class core_tag_tag {
     }
 
     /**
-     * MDL-71378 TODO: deprecate question type tags at course context level
      * Adds a tag to an item, without overwriting the current tags.
      *
      * If the tag has already been added to the record, no changes are made.

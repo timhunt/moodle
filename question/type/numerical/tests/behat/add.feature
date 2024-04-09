@@ -17,9 +17,12 @@ Feature: Test creating a Numerical question
     And the following "language customisations" exist:
       | component       | stringid | value |
       | core_langconfig | decsep   | #     |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   Scenario: Create a Numerical question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Numerical" question filling the form with:
       | Question name                      | Numerical-001                          |
       | Question text                      | What is the average of 4, 5, 6 and 10? |
@@ -38,7 +41,7 @@ Feature: Test creating a Numerical question
 
   @javascript
   Scenario: Create a Numerical question with required units
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Numerical" question filling the form with:
       | Question name                      | Numerical-002                               |
       | Question text                      | How many meter is 1m + 20cm + 50mm?         |
@@ -72,7 +75,7 @@ Feature: Test creating a Numerical question
       | id_unitsleft                       | on the right, for example 1.00cm or 1.00km  |
 
   Scenario: Create a Numerical question with optional units
-    Given I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    Given I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     # Add the numerical question with optional units.
     And I add a "Numerical" question filling the form with:
       | Question name    | Numerical Question (optional)              |

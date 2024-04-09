@@ -14,10 +14,13 @@ Feature: Test creating a Short answer question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   @javascript
   Scenario: Create a Short answer question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Short answer" question filling the form with:
       | Question name        | shortanswer-001                           |
       | Question text        | What is the national langauge in France?  |

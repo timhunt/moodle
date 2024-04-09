@@ -79,7 +79,7 @@ class helper_test extends \advanced_testcase {
 
         $contexts = new question_edit_contexts($this->context);
         $this->qcobject = new question_category_object(null,
-            new moodle_url('/question/bank/managecategories/category.php', ['courseid' => SITEID]),
+            new moodle_url('/question/bank/managecategories/category.php', ['cmid' => $this->quiz->cmid]),
             $contexts->having_one_edit_tab_cap('categories'), 0, null, 0,
             $contexts->having_cap('moodle/question:add'));
     }
@@ -157,7 +157,7 @@ class helper_test extends \advanced_testcase {
         $qcategory1 = $this->qgenerator->create_question_category(['contextid' => $this->context->id]);
 
         // Try to delete a top category.
-        $categorytop = question_get_top_category($qcategory1->id, true)->id;
+        $categorytop = question_get_top_category($qcategory1->contextid, true)->id;
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('cannotdeletetopcat', 'question'));
         helper::question_can_delete_cat($categorytop);

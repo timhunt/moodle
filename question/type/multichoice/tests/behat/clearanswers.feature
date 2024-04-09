@@ -15,16 +15,6 @@ Feature: Clear my answers
     And the following "course enrolments" exist:
       | user    | course | role    |
       | student | C1     | student |
-    And the following "question category" exists:
-      | contextlevel  | Course          |
-      | reference     | C1              |
-      | name          | Test questions  |
-    And the following "question" exists:
-      |  questioncategory  |  Test questions    |
-      |  qtype             |  multichoice       |
-      |  name              |  Multi-choice-001  |
-      |  template          |  one_of_four       |
-      |  questiontext      |  Question One      |
     And the following "activity" exists:
       |  activity            |  quiz                |
       |  name                |  Quiz 1              |
@@ -33,6 +23,15 @@ Feature: Clear my answers
       |  idnumber            |  quiz1               |
       |  preferredbehaviour  |  immediatefeedback   |
       |  canredoquestions    |  1                   |
+    And the following "question categories" exist:
+      | contextlevel    | reference | name           |
+      | Activity module | quiz1     | Test questions |
+    And the following "question" exists:
+      |  questioncategory  |  Test questions    |
+      |  qtype             |  multichoice       |
+      |  name              |  Multi-choice-001  |
+      |  template          |  one_of_four       |
+      |  questiontext      |  Question One      |
     And quiz "Quiz 1" contains the following questions:
       | question         | page |
       | Multi-choice-001 | 1    |

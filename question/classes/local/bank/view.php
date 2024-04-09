@@ -235,6 +235,10 @@ class view {
         $this->cm = $cm;
         $this->extraparams = $extraparams;
 
+        if ($cm === null) {
+            debugging('$cm is now a required field', DEBUG_DEVELOPER);
+        }
+
         // Default filter condition.
         if (!isset($params['filter']) && isset($params['cat'])) {
             $params['filter']  = filter_condition_manager::get_default_filter($params['cat']);
@@ -251,12 +255,7 @@ class view {
         // Create the url of the new question page to forward to.
         $this->returnurl = $pageurl->out_as_local_url(false);
         $this->editquestionurl = new \moodle_url('/question/bank/editquestion/question.php', ['returnurl' => $this->returnurl]);
-        // MDL-71378 TODO: refactor this. Must require cm.
-        if ($this->cm !== null) {
-            $this->editquestionurl->param('cmid', $this->cm->id);
-        } else {
-            $this->editquestionurl->param('courseid', $this->course->id);
-        }
+        $this->editquestionurl->param('cmid', $this->cm->id);
 
         $this->lastchangedid = clean_param($pageurl->param('lastchanged'), PARAM_INT);
 
@@ -565,7 +564,7 @@ class view {
     protected function parse_subsort($sort): array {
         // Do the parsing.
         if (strpos($sort, '-') !== false) {
-            list($colname, $subsort) = explode('-', $sort, 2);
+            [$colname, $subsort] = explode('-', $sort, 2);
         } else {
             $colname = $sort;
             $subsort = '';
@@ -962,7 +961,7 @@ class view {
             DEBUG_DEVELOPER
         );
         global $DB, $OUTPUT;
-        list($categoryid, $contextid) = explode(',', $categoryandcontext);
+        [$categoryid, $contextid] = explode(',', $categoryandcontext);
         if (!$categoryid) {
             $this->print_choose_category_message();
             return false;

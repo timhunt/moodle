@@ -14,15 +14,18 @@ Feature: Test exporting Ordering questions
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name    | course | idnumber |
+      | qbank      | Qbank 1 | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name           |
-      | Course       | C1        | Test questions |
+      | contextlevel    | reference | name           |
+      | Activity module | qbank1    | Test questions |
     And the following "questions" exist:
       | questioncategory | qtype    | name   | template |
       | Test questions   | ordering | Moodle | moodle |
 
   Scenario: Export a Matching question
-    When I am on the "Course 1" "core_question > course question export" page logged in as teacher1
+    When I am on the "Qbank 1" "core_question > question export" page logged in as teacher1
     And I set the field "id_format_xml" to "1"
     And I press "Export questions to file"
     Then following "click here" should download between "1700" and "2350" bytes

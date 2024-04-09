@@ -14,10 +14,13 @@ Feature: Test importing Ordering questions
     And the following "course enrolments" exist:
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name    | course | idnumber |
+      | qbank      | Qbank 1 | C1     | qbank1   |
 
   @javascript @_file_upload
   Scenario: import Matching question.
-    When I am on the "Course 1" "core_question > course question import" page logged in as teacher1
+    When I am on the "Qbank 1" "core_question > question import" page logged in as teacher1
     And I set the field "id_format_xml" to "1"
     And I upload "question/type/ordering/tests/fixtures/testquestion.moodle.xml" file to "Import" filemanager
     And I press "id_submitbutton"
@@ -33,7 +36,7 @@ Feature: Test importing Ordering questions
 
   @javascript @_file_upload
   Scenario: Import old question.
-    When I am on the "Course 1" "core_question > course question import" page logged in as teacher1
+    When I am on the "Qbank 1" "core_question > question import" page logged in as teacher1
     And I set the field "id_format_xml" to "1"
     And I upload "question/type/ordering/tests/fixtures/testoldquestion.moodle.xml" file to "Import" filemanager
     And I press "id_submitbutton"

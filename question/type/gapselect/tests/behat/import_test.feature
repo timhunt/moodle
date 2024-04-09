@@ -14,11 +14,14 @@ Feature: Import and export select missing words questions
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name    | course | idnumber |
+      | qbank      | Qbank 1 | C1     | qbank1   |
 
   @javascript @_file_upload
   Scenario: Import and export select missing words questions
     # Import sample file.
-    When I am on the "Course 1" "core_question > course question import" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question import" page logged in as teacher
     And I set the field "id_format_xml" to "1"
     And I upload "question/type/gapselect/tests/fixtures/testquestion.moodle.xml" file to "Import" filemanager
     And I press "id_submitbutton"
@@ -29,7 +32,7 @@ Feature: Import and export select missing words questions
     And I should see "Imported Select missing words 001"
 
     # Now export again.
-    And I am on the "Course 1" "core_question > course question export" page logged in as teacher
+    And I am on the "Qbank 1" "core_question > question export" page logged in as teacher
     And I set the field "id_format_xml" to "1"
     And I press "Export questions to file"
     And following "click here" should download between "1650" and "1800" bytes

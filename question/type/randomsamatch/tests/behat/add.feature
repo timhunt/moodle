@@ -14,9 +14,12 @@ Feature: Test creating a Random short-answer matching question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
     And the following "question categories" exist:
-      | contextlevel | reference | name       |
-      | Course       | C1        | Category 1 |
+      | contextlevel    | reference | name       |
+      | Activity module | qbank1    | Category 1 |
     And the following "questions" exist:
       | questioncategory | qtype       | name                              | template |
       | Category 1       | shortanswer | Short answer question A version 1 | frogtoad |
@@ -24,7 +27,7 @@ Feature: Test creating a Random short-answer matching question
       | Category 1       | shortanswer | Short answer question C version 1 | frogtoad |
 
   Scenario: Create a too large size of options Random short-answer matching question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Random short-answer matching" question filling the form with:
       | Category                      | Category 1                   |
       | Question name                 | Random short-answer matching |
@@ -34,7 +37,7 @@ Feature: Test creating a Random short-answer matching question
     Then I should see "There is/are only 3 short answer questions in the category"
 
   Scenario: Create a Random short-answer matching question
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     # Edit the first Short answer question so a version 2 is created.
     And I am on the "Short answer question A version 1" "core_question > edit" page logged in as teacher
     And I set the following fields to these values:
@@ -66,7 +69,7 @@ Feature: Test creating a Random short-answer matching question
     And I press "id_submitbutton"
     And I should see "Short answer question C version 2"
     # Create the Random short-answer question.
-    And I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    And I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Random short-answer matching" question filling the form with:
       | Category                      | Category 1                   |
       | Question name                 | Random short-answer matching |

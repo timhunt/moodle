@@ -14,9 +14,12 @@ Feature: Test creating a Multiple choice question
     And the following "course enrolments" exist:
       | user    | course | role           |
       | teacher | C1     | editingteacher |
+    And the following "activities" exist:
+      | activity   | name      | course | idnumber |
+      | qbank      | Qbank 1   | C1     | qbank1   |
 
   Scenario: Create a Multiple choice question with multiple response
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Multiple choice" question filling the form with:
       | Question name            | Multi-choice-001                   |
       | Question text            | Find the capital cities in Europe. |
@@ -38,7 +41,7 @@ Feature: Test creating a Multiple choice question
 
   @javascript
   Scenario: Create a Multiple choice question with single response
-    When I am on the "Course 1" "core_question > course question bank" page logged in as teacher
+    When I am on the "Qbank 1" "core_question > question bank" page logged in as teacher
     And I add a "Multiple choice" question filling the form with:
       | Question name              | Multi-choice-002                       |
       | Question text              | Find the capital city of England.      |

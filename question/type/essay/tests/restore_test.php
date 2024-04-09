@@ -63,15 +63,18 @@ class restore_test extends \restore_date_testcase {
         $modinfo = get_fast_modinfo($newcourseid);
         $newqbanks = array_filter($modinfo->get_instances_of('qbank'), static fn($qbank) => $qbank->get_name() === 'Question bank 1');
         $newqbank = reset($newqbanks);
+        $newcat = $DB->get_record_select('question_categories',
+            'parent <> 0 AND contextid = :contextid',
+            ['contextid' => $newqbank->context->id]
+        );
 
         // Verify that the restored question has options.
-        $newcategory = question_make_default_category(\context_module::instance($newqbank->id));
         $newessay = $DB->get_record_sql('SELECT q.*
                                               FROM {question} q
                                               JOIN {question_versions} qv ON qv.questionid = q.id
                                               JOIN {question_bank_entries} qbe ON qbe.id = qv.questionbankentryid
                                              WHERE qbe.questioncategoryid = ?
-                                               AND q.qtype = ?', [$newcategory->id, 'essay']);
+                                               AND q.qtype = ?', [$newcat->id, 'essay']);
         $this->assertTrue($DB->record_exists('qtype_essay_options', ['questionid' => $newessay->id]));
     }
 }

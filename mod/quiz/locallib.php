@@ -1079,9 +1079,11 @@ function quiz_question_preview_url($quiz, $question, $variant = null, $restartve
         $maxmark = $question->maxmark;
     }
 
+    $context = $question->contextid ? context::instance_by_id($question->contextid) : null;
+
     // Work out the correcte preview URL.
     return \qbank_previewquestion\helper::question_preview_url($question->id, $quiz->preferredbehaviour,
-            $maxmark, $displayoptions, $variant, null, null, $restartversion);
+            $maxmark, $displayoptions, $variant, $context, null, $restartversion);
 }
 
 /**

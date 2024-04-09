@@ -72,7 +72,6 @@ class qbank_action_menu implements templatable, renderable {
      * @return array data for the template
      */
     public function export_for_template(renderer_base $output): array {
-        //MDL-71378 TODO: check this
         $questionslink = new moodle_url('/question/edit.php', $this->currenturl->params());
         $menu = [
             $questionslink->out(false) => get_string('questions', 'question'),
