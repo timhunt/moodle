@@ -68,7 +68,7 @@ class behat_core_question extends behat_question_base {
     protected function resolve_page_instance_url(string $type, string $identifier): moodle_url {
         switch (strtolower($type)) {
             case 'course question bank':
-                //MDL-71378 TODO: Deprecate this
+                //MDL-71378 TODO: update these with get_cm_by_activity_name() and all calling code.
                 return new moodle_url('/question/edit.php',
                         ['courseid' => $this->get_course_id($identifier)]);
 

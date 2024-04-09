@@ -79,7 +79,7 @@ class helper_test extends \advanced_testcase {
 
         $contexts = new question_edit_contexts($this->context);
         $this->qcobject = new question_category_object(null,
-            new moodle_url('/question/bank/managecategories/category.php', ['courseid' => SITEID]),
+            new moodle_url('/question/bank/managecategories/category.php', ['cmid' => $this->quiz->cmid]),
             $contexts->having_one_edit_tab_cap('categories'), 0, null, 0,
             $contexts->having_cap('moodle/question:add'));
     }

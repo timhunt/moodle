@@ -99,7 +99,7 @@ class question_category_object_test extends \advanced_testcase {
         $contexts = new question_edit_contexts($qbankcontext);
         $this->topcat = question_get_top_category($qbankcontext->id, true);
         $this->qcobject = new question_category_object(null,
-                new moodle_url('/question/bank/managecategories/category.php', ['courseid' => $this->course->id]),
+                new moodle_url('/question/bank/managecategories/category.php', ['cmid' => $qbank->cmid]),
                 $contexts->having_one_edit_tab_cap('categories'), 0, null, 0,
                 $contexts->having_cap('moodle/question:add'));
 

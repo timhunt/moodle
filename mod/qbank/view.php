@@ -27,5 +27,5 @@ require_once __DIR__ . '/../../config.php';
 global $CFG;
 
 // Only expect cmid when redirecting from this page.
-$url = new moodle_url('/question/edit.php', ['cmid' => optional_param('id', null, PARAM_INT)]);
+$url = new moodle_url('/question/edit.php', ['cmid' => required_param('id', PARAM_INT)]);
 redirect($url);

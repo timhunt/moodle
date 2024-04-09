@@ -1496,25 +1496,18 @@ function question_edit_url($context) {
     if (!has_any_capability(question_get_question_capabilities(), $context)) {
         return false;
     }
+
+    if ($context->contexlevel !== CONTEXT_MODULE) {
+        throw new moodle_exception("Invalid contextlevel: {$context->contextlevel} provided.");
+    }
+
     $baseurl = $CFG->wwwroot . '/question/edit.php?';
     $defaultcategory = question_get_default_category($context->id);
     if ($defaultcategory) {
         $baseurl .= 'cat=' . $defaultcategory->id . ',' . $context->id . '&amp;';
     }
-    // MDL-71378 TODO: deprecate this
-    switch ($context->contextlevel) {
-        case CONTEXT_SYSTEM:
-            return $baseurl . 'courseid=' . $SITE->id;
-        case CONTEXT_COURSECAT:
-            // This is nasty, becuase we can only edit questions in a course
-            // context at the moment, so for now we just return false.
-            return false;
-        case CONTEXT_COURSE:
-            return $baseurl . 'courseid=' . $context->instanceid;
-        case CONTEXT_MODULE:
-            return $baseurl . 'cmid=' . $context->instanceid;
-    }
 
+    return $baseurl . 'cmid=' . $context->instanceid;
 }
 
 /**

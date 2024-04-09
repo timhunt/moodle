@@ -1025,12 +1025,10 @@ class qformat_default {
             }
         }
 
-        // continue path for following error checks
-        $course = $this->course;
-        $continuepath = "{$CFG->wwwroot}/question/bank/exportquestions/export.php?courseid={$course->id}";
-
-        // did we actually process anything
+        // Did we actually process anything? Then continue path for following error checks.
         if ($count==0) {
+            $context = context::instance_by_id($contextid);
+            $continuepath = "{$CFG->wwwroot}/question/bank/exportquestions/export.php?cmid={$context->instanceid}";
             throw new \moodle_exception('noquestions', 'question', $continuepath);
         }
 

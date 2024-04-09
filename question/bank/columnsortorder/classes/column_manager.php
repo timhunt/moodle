@@ -174,6 +174,7 @@ class column_manager extends column_manager_base {
     public function get_questionbank(): view {
         $course = (object) ['id' => 0];
         $previewbank = helper::get_preview_open_instance_type(true);
+        $cm = $previewbank->get_course_module_record();
         $context = \context_module::instance($previewbank->id);
         $contexts = new question_edit_contexts($context);
         $category = question_make_default_category($contexts->lowest());
@@ -183,7 +184,7 @@ class column_manager extends column_manager_base {
             $contexts,
             new moodle_url('/question/bank/columnsortorder/sortcolumns.php'),
             $course,
-            null,
+            $cm,
             $params
         );
         return $questionbank;

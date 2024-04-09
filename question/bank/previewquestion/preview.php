@@ -321,6 +321,7 @@ if (!is_null($returnurl)) {
     $previewdata['redirect'] = true;
     $previewdata['redirecturl'] = $returnurl;
 }
+//MDL-71378- TODO review this
 $closeurl = new moodle_url('/question/edit.php', ['courseid' => $COURSE->id]);
 echo $PAGE->get_renderer('qbank_previewquestion')->render_preview_page($previewdata);
 

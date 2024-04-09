@@ -51,16 +51,8 @@ abstract class question_category_base extends base {
      */
     public function get_url() {
         $cat = $this->objectid . ',' . $this->contextid;
-        if ($this->courseid) {
-            if ($this->contextlevel == CONTEXT_MODULE) {
-                return new \moodle_url('/question/edit.php', ['cmid' => $this->contextinstanceid, 'cat' => $cat]);
-            }
-            //MDL-71378 TODO: Deprecate this
-            return new \moodle_url('/question/edit.php', ['courseid' => $this->courseid, 'cat' => $cat]);
-        }
-        //MDL-71378 TODO: Deprecate this
-        // Lets try viewing from the frontpage for contexts above course.
-        return new \moodle_url('/question/edit.php', ['courseid' => SITEID, 'cat' => $cat, 'edit' => $this->objectid]);
+
+        return new \moodle_url('/question/edit.php', ['cmid' => $this->contextinstanceid, 'cat' => $cat]);
     }
 
     /**
