@@ -434,57 +434,6 @@ function question_delete_context($contextid): array {
 }
 
 /**
- * All question categories and their questions are deleted for this course.
- *
- * @param stdClass $course an object representing the activity
- * @param bool $notused this argument is not used any more. Kept for backwards compatibility.
- * @return bool always true.
- */
-function question_delete_course($course, $notused = false): bool {
-    $coursecontext = context_course::instance($course->id);
-    question_delete_context($coursecontext->id);
-    return true;
-}
-
-/**
- * Category is about to be deleted,
- * 1/ All question categories and their questions are deleted for this course category.
- * 2/ All questions are moved to new category
- *
- * @param stdClass|core_course_category $category course category object
- * @param stdClass|core_course_category $newcategory empty means everything deleted, otherwise id of
- *      category where content moved
- * @param bool $notused this argument is no longer used. Kept for backwards compatibility.
- * @return boolean
- */
-function question_delete_course_category($category, $newcategory, $notused=false): bool {
-    global $DB;
-
-    $context = context_coursecat::instance($category->id);
-    if (empty($newcategory)) {
-        question_delete_context($context->id);
-
-    } else {
-        // Move question categories to the new context.
-        if (!$newcontext = context_coursecat::instance($newcategory->id)) {
-            return false;
-        }
-
-        // Only move question categories if there is any question category at all!
-        if ($topcategory = question_get_top_category($context->id)) {
-            $newtopcategory = question_get_top_category($newcontext->id, true);
-
-            question_move_category_to_context($topcategory->id, $context->id, $newcontext->id);
-            $DB->set_field('question_categories', 'parent', $newtopcategory->id, ['parent' => $topcategory->id]);
-            // Now delete the top category.
-            $DB->delete_records('question_categories', ['id' => $topcategory->id]);
-        }
-    }
-
-    return true;
-}
-
-/**
  * Creates a new category to save the questions in use.
  *
  * @param array $questionids of question ids
@@ -539,35 +488,17 @@ function question_delete_activity($cm, $notused = false): bool {
  * This function will handle moving all tag instances to a new context for a
  * given list of questions.
  *
- * Questions can be tagged in up to two contexts:
- * 1.) The context the question exists in.
- * 2.) The course context (if the question context is a higher context.
- *     E.g. course category context or system context.
- *
- * This means a question that exists in a higher context (e.g. course cat or
- * system context) may have multiple groups of tags in any number of child
- * course contexts.
- *
- * Questions in the course category context can be move "down" a context level
- * into one of their child course contexts or activity contexts which affects the
- * availability of that question in other courses / activities.
- *
- * In this case it makes the questions no longer available in the other course or
- * activity contexts so we need to make sure that the tag instances in those other
- * contexts are removed.
- *
  * @param stdClass[] $questions The list of question being moved (must include
  *                              the id and contextid)
- * @param context $newcontext The Moodle context the questions are being moved to
+ * @param context $newcontext The Moodle context the questions are being moved to, must be module context.
  */
 function question_move_question_tags_to_new_context(array $questions, context $newcontext): void {
-    // If the questions are moving to a new course/activity context then we need to
-    // find any existing tag instances from any unavailable course contexts and
-    // delete them because they will no longer be applicable (we don't support
-    // tagging questions across courses).
-    $instancestodelete = [];
+
+    if ($newcontext->contextlevel !== CONTEXT_MODULE) {
+        debugging("Invalid contextlevel: {$newcontext->contextlevel}", DEBUG_DEVELOPER);
+    }
+
     $instancesfornewcontext = [];
-    $newcontextparentids = $newcontext->get_parent_context_ids();
     $questionids = array_map(function($question) {
         return $question->id;
     }, $questions);
@@ -580,7 +511,6 @@ function question_move_question_tags_to_new_context(array $questions, context $n
             $tagid = $tagobject->taginstanceid;
             $tagcontextid = $tagobject->taginstancecontextid;
             $istaginnewcontext = $tagcontextid == $newcontext->id;
-            $istaginquestioncontext = $tagcontextid == $question->contextid;
 
             if ($istaginnewcontext) {
                 // This tag instance is already in the correct context so we can
@@ -588,59 +518,8 @@ function question_move_question_tags_to_new_context(array $questions, context $n
                 continue;
             }
 
-            if ($istaginquestioncontext) {
-                // This tag instance is in the question context so it needs to be
-                // updated.
-                $instancesfornewcontext[] = $tagid;
-                continue;
-            }
-
-            // These tag instances are in neither the new context nor the
-            // question context so we need to determine what to do based on
-            // the context they are in and the new question context.
-            $tagcontext = context::instance_by_id($tagcontextid);
-            $tagcoursecontext = $tagcontext->get_course_context(false);
-            // The tag is in a course context if get_course_context() returns
-            // itself.
-            $istaginstancecontextcourse = !empty($tagcoursecontext)
-                && $tagcontext->id == $tagcoursecontext->id;
-
-            if ($istaginstancecontextcourse) {
-                // If the tag instance is in a course context we need to add some
-                // special handling.
-                $tagcontextparentids = $tagcontext->get_parent_context_ids();
-                $isnewcontextaparent = in_array($newcontext->id, $tagcontextparentids);
-                $isnewcontextachild = in_array($tagcontext->id, $newcontextparentids);
-
-                if ($isnewcontextaparent) {
-                    // If the tag instance is a course context tag and the new
-                    // context is still a parent context to the tag context then
-                    // we can leave this tag where it is.
-                    continue;
-                } else if ($isnewcontextachild) {
-                    // If the new context is a child context (e.g. activity) of this
-                    // tag instance then we should move all of this tag instance
-                    // down into the activity context along with the question.
-                    $instancesfornewcontext[] = $tagid;
-                } else {
-                    // If the tag is in a course context that is no longer a parent
-                    // or child of the new context then this tag instance should be
-                    // removed.
-                    $instancestodelete[] = $tagid;
-                }
-            } else {
-                // This is a catch all for any tag instances not in the question
-                // context or a course context. These tag instances should be
-                // updated to the new context id. This will clean up old invalid
-                // data.
-                $instancesfornewcontext[] = $tagid;
-            }
+            $instancesfornewcontext[] = $tagid;
         }
-    }
-
-    if (!empty($instancestodelete)) {
-        // Delete any course context tags that may no longer be valid.
-        core_tag_tag::delete_instances_by_id($instancestodelete);
     }
 
     if (!empty($instancesfornewcontext)) {
@@ -807,6 +686,11 @@ function move_question_set_references(int $oldcategoryid, int $newcatgoryid,
 function question_move_category_to_context($categoryid, $oldcontextid, $newcontextid): void {
     global $DB;
 
+    $newcontext = context::instance_by_id($newcontextid);
+    if ($newcontext->contextlevel !== CONTEXT_MODULE) {
+        debugging("Invalid contextlevel: {$newcontext->contextlevel}, must use CONTEXT_MODULE", DEBUG_DEVELOPER);
+    }
+
     $questions = [];
     $sql = "SELECT q.id, q.qtype
               FROM {question} q
@@ -826,7 +710,6 @@ function question_move_category_to_context($categoryid, $oldcontextid, $newconte
         ];
     }
 
-    $newcontext = context::instance_by_id($newcontextid);
     question_move_question_tags_to_new_context($questions, $newcontext);
 
     $subcatids = $DB->get_records_menu('question_categories', ['parent' => $categoryid], '', 'id,1');

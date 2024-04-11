@@ -3224,7 +3224,7 @@ function search_generate_text_SQL() {
  *
  * @param array $contexts The context objects.
  * @return object|null The default category - the category in the first module context supplied in $contexts
- * @deprecated since 4.5.question_make_default_category
+ * @deprecated since Moodle 4.5
  */
 function question_make_default_categories(array $contexts): ?object {
     debugging(
@@ -3240,4 +3240,61 @@ function question_make_default_categories(array $contexts): ?object {
     }
 
     return $toreturn[0];
+}
+
+/**
+ * MDL-71378 TODO: create a deprecation tracker
+ * All question categories and their questions are deleted for this course.
+ *
+ * @param stdClass $course an object representing the activity
+ * @param bool $notused this argument is not used any more. Kept for backwards compatibility.
+ * @return bool always true.
+ */
+function question_delete_course($course, $notused = false): bool {
+    debugging(__FUNCTION__ . '() is deprecated without replacement', DEBUG_DEVELOPER);
+
+    $coursecontext = context_course::instance($course->id);
+    question_delete_context($coursecontext->id);
+    return true;
+}
+
+/**
+ * Category is about to be deleted,
+ * 1/ All question categories and their questions are deleted for this course category.
+ * 2/ All questions are moved to new category
+ *
+ * @param stdClass|core_course_category $category course category object
+ * @param stdClass|core_course_category $newcategory empty means everything deleted, otherwise id of
+ *      category where content moved
+ * @param bool $notused this argument is no longer used. Kept for backwards compatibility.
+ * @return boolean
+ * @deprecated since Moodle 4.5 MDL-71378 TODO add tracker
+ */
+function question_delete_course_category($category, $newcategory, $notused=false): bool {
+    global $DB;
+
+    debugging(__FUNCTION__ . '() is deprecated without replacement', DEBUG_DEVELOPER);
+
+    $context = context_coursecat::instance($category->id);
+    if (empty($newcategory)) {
+        question_delete_context($context->id);
+
+    } else {
+        // Move question categories to the new context.
+        if (!$newcontext = context_coursecat::instance($newcategory->id)) {
+            return false;
+        }
+
+        // Only move question categories if there is any question category at all!
+        if ($topcategory = question_get_top_category($context->id)) {
+            $newtopcategory = question_get_top_category($newcontext->id, true);
+
+            question_move_category_to_context($topcategory->id, $context->id, $newcontext->id);
+            $DB->set_field('question_categories', 'parent', $newtopcategory->id, ['parent' => $topcategory->id]);
+            // Now delete the top category.
+            $DB->delete_records('question_categories', ['id' => $topcategory->id]);
+        }
+    }
+
+    return true;
 }

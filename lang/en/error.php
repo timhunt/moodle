@@ -65,7 +65,6 @@ $string['cannotcreateuploaddir'] = 'Cannot create upload folder. The site admini
 $string['cannotcustomisefiltersblockuser'] = 'You cannot customise filters settings in user or block contexts.';
 $string['cannotdeletebackupids'] = 'Couldn\'t delete previous backup ids';
 $string['cannotdeletecategorycourse'] = 'Course \'{$a}\' failed to be deleted.';
-$string['cannotdeletecategoryquestions'] = 'Could not delete questions from category \'{$a}\'';
 $string['cannotdeletecourse'] = 'You do not have the permission to delete this course';
 $string['cannotdeletecustomfield'] = 'Error deleting custom field data';
 $string['cannotdeletedir'] = 'Cannot delete ({$a})';

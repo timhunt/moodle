@@ -132,7 +132,6 @@ $string['editthiscategory'] = 'Edit this category';
 $string['emptyxml'] = 'Unknown error - empty imsmanifest.xml';
 $string['enabled'] = 'Enabled';
 $string['erroraccessingcontext'] = 'Cannot access context';
-$string['errordeletingquestionsfromcategory'] = 'Error deleting questions from category {$a}.';
 $string['errorduringpost'] = 'Error occurred during post-processing!';
 $string['errorduringpre'] = 'Error occurred during pre-processing!';
 $string['errorduringproc'] = 'Error occurred during processing!';
