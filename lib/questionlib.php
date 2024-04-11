@@ -497,6 +497,11 @@ function question_delete_course_category($category, $newcategory, $notused=false
 function question_save_from_deletion($questionids, $newcontextid, $oldplace, $newcategory = null) {
     global $DB;
 
+    $newcontext = context::instance_by_id($newcontextid);
+    if ($newcontext->contextlevel !== CONTEXT_MODULE) {
+        throw new moodle_exception("Invalid contextlevel: {$newcontext->contextlevel} for \$newcontextid {$newcontextid}");
+    }
+
     // Make a category in the parent context to move the questions to.
     if (is_null($newcategory)) {
         $newcategory = new stdClass();

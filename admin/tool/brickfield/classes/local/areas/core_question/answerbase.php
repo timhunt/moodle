@@ -80,10 +80,18 @@ abstract class answerbase extends base {
     /**
      * Return an array of area objects that contain content at the site and system levels only. This would be question content from
      * question categories at the system context, or course category context.
+     * MDL-71378 TODO: create a deprecation tracker
      *
      * @return mixed
+     * @deprecated since moodle 4.5
      */
     public function find_system_areas(): ?\moodle_recordset {
+
+        debugging(
+                'tool_brickfield\local\areas\core_question\answerbase::find_system_areas is now deprecated and should not be used.',
+                DEBUG_DEVELOPER
+        );
+
         global $DB;
         $params = [
             'syscontext' => CONTEXT_SYSTEM,
@@ -132,8 +140,6 @@ abstract class answerbase extends base {
 
         $coursecontext = \context_course::instance($courseid);
         $param = [
-            'ctxcourse' => CONTEXT_COURSE,
-            'courseid' => $courseid,
             'module' => CONTEXT_MODULE,
             'coursecontextpath' => $DB->sql_like_escape($coursecontext->path) . '/%',
         ];
@@ -157,11 +163,8 @@ abstract class answerbase extends base {
                     ON qc.id = qbe.questioncategoryid
             INNER JOIN {context} ctx
                     ON ctx.id = qc.contextid
-                 WHERE (ctx.contextlevel = :ctxcourse
-                   AND ctx.id = qc.contextid
-                   AND ctx.instanceid = :courseid)
-                    OR (ctx.contextlevel = :module
-                   AND {$DB->sql_like('ctx.path', ':coursecontextpath')})
+                 WHERE ctx.contextlevel = :module
+                   AND {$DB->sql_like('ctx.path', ':coursecontextpath')}
               ORDER BY a.id ASC";
 
         return $DB->get_recordset_sql($sql, $param);

@@ -50,6 +50,7 @@ class questionlib_test extends \advanced_testcase {
     }
 
     /**
+     * MDL-71378 TODO update this and all calling code
      * Setup a course, a quiz, a question category and a question for testing.
      *
      * @param string $type The type of question category to create.
