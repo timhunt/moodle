@@ -568,6 +568,40 @@ class fields {
                 'mappings' => $mappings];
     }
 
+    function order_by_sql(string $usertablealias = '', string $search = null) {
+        global $DB;
+
+        if ($usertablealias) {
+            $tableprefix = $usertablealias . '.';
+        } else {
+            $tableprefix = '';
+        }
+
+        $sort = "{$tableprefix}lastname, {$tableprefix}firstname, {$tableprefix}id";
+        $params = [];
+
+        if (!$search) {
+            return [$sort, $params];
+        }
+
+        $exactconditions = [];
+        $paramkey = 'usersortexact1';
+
+        $exactconditions[] = $DB->sql_fullname($tableprefix . 'firstname', $tableprefix  . 'lastname') . ' = :' . $paramkey;
+        $params[$paramkey] = $search;
+        $paramkey++;
+
+        foreach ($this->get_required_fields() as $field) {
+            $exactconditions[] = 'LOWER(' . $field . ') = LOWER(:' . $paramkey . ')';
+            $params[$paramkey] = $search;
+            $paramkey++;
+        }
+
+        $sort = 'CASE WHEN ' . implode(' OR ', $exactconditions) . ' THEN 0 ELSE 1 END, ' . $sort;
+
+        return [$sort, $params];
+    }
+
     /**
      * Similar to {@see \moodle_database::sql_fullname} except it returns all user name fields as defined by site config, in a
      * single select statement suitable for inclusion in a query/filter for a users fullname, e.g.

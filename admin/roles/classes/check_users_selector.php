@@ -108,7 +108,7 @@ class core_role_check_users_selector extends user_selector_base {
 
         $params['contextid'] = $this->accesscontext->id;
 
-        list($sort, $sortparams) = users_order_by_sql('u', $search, $this->accesscontext, $this->userfieldsmappings);
+        [$sort, $sortparams] = $this->userfields->order_by_sql('u', $search);
         $order = ' ORDER BY ' . $sort;
 
         $result = array();

@@ -25,6 +25,9 @@
 /**
  * The default size of a user selector.
  */
+
+use core_user\fields;
+
 define('USER_SELECTOR_DEFAULT_ROWS', 20);
 
 /**
@@ -40,27 +43,40 @@ define('USER_SELECTOR_DEFAULT_ROWS', 20);
 abstract class user_selector_base {
     /** @var string The control name (and id) in the HTML. */
     protected $name;
-    /** @var array Extra fields to search on and return in addition to firstname and lastname. */
+
+    /**
+     * @var array Extra fields to search on and return in addition to firstname and lastname.
+     * @deprecated since 4.4. Get what you need from $userfields instead.
+     */
     protected $extrafields;
-    /** @var object Context used for capability checks regarding this selector (does
+
+    /** @var context Context used for capability checks regarding this selector (does
      * not necessarily restrict user list) */
     protected $accesscontext;
+
     /** @var boolean Whether the conrol should allow selection of many users, or just one. */
     protected $multiselect = true;
+
     /** @var int The height this control should have, in rows. */
     protected $rows = USER_SELECTOR_DEFAULT_ROWS;
+
     /** @var array A list of userids that should not be returned by this control. */
     protected $exclude = array();
+
     /** @var array|null A list of the users who are selected. */
     protected $selected = null;
+
     /** @var boolean When the search changes, do we keep previously selected options that do
      * not match the new search term? */
     protected $preserveselected = false;
+
     /** @var boolean If only one user matches the search, should we select them automatically. */
     protected $autoselectunique = false;
+
     /** @var int When searching, do we only match the starts of fields (better performance)
      * or do we match occurrences anywhere or do we match exact the fields. */
     protected $searchtype = USER_SEARCH_STARTS_WITH;
+
     /** @var mixed This is used by get selected users */
     protected $validatinguserids = null;
 
@@ -87,16 +103,32 @@ abstract class user_selector_base {
 
     /** @var boolean Whether to include custom user profile fields */
     protected $includecustomfields = false;
-    /** @var string User fields selects for custom fields. */
+
+    /**
+     * @var string User fields selects for custom fields.
+     * @deprecated since 4.4. Get what you need from $userfields instead.
+     */
     protected $userfieldsselects = '';
-    /** @var string User fields join for custom fields. */
+    /**
+     * @var string User fields join for custom fields.
+     * @deprecated since 4.4. Get what you need from $userfields instead.
+     */
     protected $userfieldsjoin = '';
-    /** @var array User fields params for custom fields. */
+    /**
+     * @var array User fields params for custom fields.
+     * @deprecated since 4.4. Get what you need from $userfields instead.
+     */
     protected $userfieldsparams = [];
-    /** @var array User fields mappings for custom fields. */
+    /**
+     * @var array User fields mappings for custom fields.
+     * @deprecated since 4.4. Get what you need from $userfields instead.
+     */
     protected $userfieldsmappings = [];
-    /** @var stdClass|null Object with necessary SQL components (include select, join, params, mappings for custom fields) */
-    protected $userfieldssql = null;
+
+    /**
+     * @var fields information about the profile fields being displayed and searched in this user selector.
+     */
+    protected fields $userfields;
 
     /**
      * Constructor. Each subclass must have a constructor with this signature.
@@ -135,18 +167,17 @@ abstract class user_selector_base {
         }
 
         // Populate the list of additional user identifiers to display.
+        $this->userfields = fields::for_identity($this->accesscontext, $this->includecustomfields)->with_name();
+
+        // For backwards compatibility, populate deprecated fields.
+        $this->extrafields = $this->userfields->get_required_fields([fields::PURPOSE_IDENTITY]);
         if ($this->includecustomfields) {
-            $userfieldsapi = \core_user\fields::for_identity($this->accesscontext)->with_name();
-            $this->extrafields = $userfieldsapi->get_required_fields([\core_user\fields::PURPOSE_IDENTITY]);
-            $this->userfieldssql = $userfieldsapi->get_sql('u', true, '', '', false);
             [
                 'selects' => $this->userfieldsselects,
                 'joins' => $this->userfieldsjoin,
                 'params' => $this->userfieldsparams,
                 'mappings' => $this->userfieldsmappings
-            ] = (array) $this->userfieldssql;
-        } else {
-            $this->extrafields = \core_user\fields::get_identity_fields($this->accesscontext, false);
+            ] = (array) $this->userfields->get_sql('u', true, '', '', false);
         }
 
         if (isset($options['exclude']) && is_array($options['exclude'])) {
@@ -189,7 +220,7 @@ abstract class user_selector_base {
      * @return array the list of user ids that this control will not select.
      */
     public function get_exclusions() {
-        return clone($this->exclude);
+        return $this->exclude;
     }
 
     /**
@@ -474,7 +505,7 @@ abstract class user_selector_base {
         // Raw list of fields.
         $fields = array('id');
         // Add additional name fields.
-        $fields = array_merge($fields, \core_user\fields::get_name_fields(), $this->extrafields);
+        $fields = array_merge($fields, fields::get_name_fields(), $this->extrafields);
 
         // Prepend the table alias.
         if ($u) {
@@ -496,6 +527,7 @@ abstract class user_selector_base {
      *      this uses ? style placeholders.
      */
     protected function search_sql(string $search, string $u): array {
+        return $this->userfields->get_search_sql();
         $extrafields = $this->includecustomfields
             ? array_values($this->userfieldsmappings)
             : $this->extrafields;
