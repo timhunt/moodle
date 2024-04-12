@@ -818,9 +818,14 @@ function question_load_questions($questionids, $extrafields = '', $join = '') {
  * @param object $question the question to tidy.
  * @param stdClass $category The question_categories record for the given $question.
  * @param \core_tag_tag[]|null $tagobjects The tags for the given $question.
- * @param stdClass[]|null $filtercourses The courses to filter the course tags by.
+ * @param stdClass[]|null $filtercourses deprecated argument and should not be used
  */
 function _tidy_question($question, $category, array $tagobjects = null, array $filtercourses = null): void {
+
+    if ($filtercourses !== null) {
+        debugging("Filtercourses is a deprecated argument in " . __FUNCTION__, DEBUG_DEVELOPER);
+    }
+
     // Convert numeric fields to float. This prevents these being displayed as 1.0000000.
     $question->defaultmark += 0;
     $question->penalty += 0;
@@ -861,11 +866,15 @@ function _tidy_question($question, $category, array $tagobjects = null, array $f
  * @param mixed $questions Either an array of question objects to be updated
  *         or just a single question object
  * @param bool $loadtags load the question tags from the tags table. Optional, default false.
- * @param stdClass[] $filtercourses The courses to filter the course tags by.
+ * @param stdClass[] $filtercourses deprecated argument and should not be used
  * @return bool Indicates success or failure.
  */
 function get_question_options(&$questions, $loadtags = false, $filtercourses = null) {
     global $DB;
+
+    if ($filtercourses !== null) {
+        debugging("Filtercourses is a deprecated argument in " . __FUNCTION__, DEBUG_DEVELOPER);
+    }
 
     $questionlist = is_array($questions) ? $questions : [$questions];
     $categoryids = [];
@@ -920,55 +929,24 @@ function get_question_options(&$questions, $loadtags = false, $filtercourses = n
  *
  * @param \core_tag_tag[] $tagobjects The tags for the given $question.
  * @param stdClass $categorycontext The question categories context.
- * @param stdClass[]|null $filtercourses The courses to filter the course tags by.
+ * @param stdClass[]|null $filtercourses deprecated argument and should not be used.
  * @return stdClass $sortedtagobjects Sorted tag objects.
  */
 function question_sort_tags($tagobjects, $categorycontext, $filtercourses = null): stdClass {
 
-    // Questions can have two sets of tag instances. One set at the
-    // course context level and another at the context the question
-    // belongs to (e.g. course category, system etc).
+    if ($filtercourses !== null) {
+        debugging("Filtercourses is a deprecated argument in " . __FUNCTION__, DEBUG_DEVELOPER);
+    }
+
     $sortedtagobjects = new stdClass();
-    $sortedtagobjects->coursetagobjects = [];
-    $sortedtagobjects->coursetags = [];
     $sortedtagobjects->tagobjects = [];
     $sortedtagobjects->tags = [];
     $taginstanceidstonormalise = [];
-    $filtercoursecontextids = [];
-    $hasfiltercourses = !empty($filtercourses);
-
-    if ($hasfiltercourses) {
-        // If we're being asked to filter the course tags by a set of courses
-        // then get the context ids to filter below.
-        $filtercoursecontextids = array_map(function($course) {
-            $coursecontext = context_course::instance($course->id);
-            return $coursecontext->id;
-        }, $filtercourses);
-    }
 
     foreach ($tagobjects as $tagobject) {
         $tagcontextid = $tagobject->taginstancecontextid;
         $tagcontext = context::instance_by_id($tagcontextid);
-        $tagcoursecontext = $tagcontext->get_course_context(false);
-        // This is a course tag if the tag context is a course context which
-        // doesn't match the question's context. Any tag in the question context
-        // is not considered a course tag, it belongs to the question.
-        $iscoursetag = $tagcoursecontext
-            && $tagcontext->id == $tagcoursecontext->id
-            && $tagcontext->id != $categorycontext->id;
-
-        if ($iscoursetag) {
-            // Any tag instance in a course context level is considered a course tag.
-            if (!$hasfiltercourses || in_array($tagcontextid, $filtercoursecontextids)) {
-                // Add the tag to the list of course tags if we aren't being
-                // asked to filter or if this tag is in the list of courses
-                // we're being asked to filter by.
-                $sortedtagobjects->coursetagobjects[] = $tagobject;
-                $sortedtagobjects->coursetags[$tagobject->id] = $tagobject->get_display_name();
-            }
-        } else {
-            // All non course context level tag instances or tags in the question
-            // context belong to the context that the question was created in.
+            // All tag instances belong to the context that the question was created in.
             $sortedtagobjects->tagobjects[] = $tagobject;
             $sortedtagobjects->tags[$tagobject->id] = $tagobject->get_display_name();
 
@@ -983,7 +961,7 @@ function question_sort_tags($tagobjects, $categorycontext, $filtercourses = null
                 // happen below.
                 $tagobject->taginstancecontextid = $categorycontext->id;
             }
-        }
+
     }
 
     if (!empty($taginstanceidstonormalise)) {
@@ -1094,6 +1072,11 @@ function question_get_top_category($contextid, $create = false) {
     global $DB;
     $category = $DB->get_record('question_categories', ['contextid' => $contextid, 'parent' => 0]);
 
+    $context = context::instance_by_id($contextid);
+    if ($context->contextlevel !== CONTEXT_MODULE) {
+        throw new moodle_exception("Invalid context level: {$context->contextlevel}, must be CONTEXT_MODULE");
+    }
+
     if (!$category && $create) {
         // We need to make one.
         $category = new stdClass();
@@ -1142,8 +1125,7 @@ function question_make_default_category($context): ?object {
     global $DB;
 
     if ($context->contextlevel !== CONTEXT_MODULE) {
-        debugging("Invalid context level {$context->contextlevel} category creation. Please use CONTEXT_MODULE");
-        return null;
+        throw new moodle_exception("Invalid context level: {$context->contextlevel}, must be CONTEXT_MODULE");
     }
 
     $topcategory = question_get_top_category($context->id, true);

@@ -104,10 +104,7 @@ if ($id) {
     if (!$question = $DB->get_record('question', array('id' => $id))) {
         throw new moodle_exception('questiondoesnotexist', 'question', $returnurl);
     }
-    // We can use $COURSE here because it's been initialised as part of the
-    // require_login above. Passing it as the third parameter tells the function
-    // to filter the course tags by that course.
-    get_question_options($question, true, [$COURSE]);
+    get_question_options($question, true);
 
 } else if ($categoryid && $qtype) { // Only for creating new questions.
     $question = new stdClass();
