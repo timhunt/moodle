@@ -116,13 +116,16 @@ class question_type_test extends \question_testcase {
     public function test_save_question() {
         $this->resetAfterTest();
 
-        $syscontext = \context_system::instance();
         /** @var core_question_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $category = $generator->create_question_category(['contextid' => $syscontext->id]);
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
+
+        $category = $generator->create_question_category(['contextid' => $context->id]);
 
         $fromform = \test_question_maker::get_question_form_data('ddwtos', 'missingchoiceno');
-        $fromform->category = $category->id . ',' . $syscontext->id;
+        $fromform->category = $category->id . ',' . $context->id;
 
         $question = new \stdClass();
         $question->category = $category->id;

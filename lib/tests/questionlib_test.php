@@ -257,7 +257,9 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
 
         // Setup.
-        $context = \context_system::instance();
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));
@@ -280,7 +282,9 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
 
         // Setup.
-        $context = \context_system::instance();
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));
@@ -307,8 +311,9 @@ class questionlib_test extends \advanced_testcase {
     public function test_question_delete_question_missing_context() {
         global $DB;
 
-        $coursecategory = $this->getDataGenerator()->create_category();
-        $context = $coursecategory->get_context();
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
 
         /** @var \core_question_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
@@ -510,8 +515,6 @@ class questionlib_test extends \advanced_testcase {
 
             // The question should have a full set of each tag object.
             $this->assertEquals($tags, $actualtagobjects);
-            // The question should not have any course tags.
-            $this->assertEmpty($question->coursetagobjects);
         }
     }
 
@@ -757,8 +760,9 @@ class questionlib_test extends \advanced_testcase {
          /** @var \core_question_generator $questiongenerator */
          $questiongenerator = $generator->get_plugin_generator('core_question');
 
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -841,8 +845,9 @@ class questionlib_test extends \advanced_testcase {
         $user = $generator->create_user();
         $otheruser = $generator->create_user();
         $roleid = $generator->create_role();
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -888,8 +893,9 @@ class questionlib_test extends \advanced_testcase {
         $user = $generator->create_user();
         $otheruser = $generator->create_user();
         $roleid = $generator->create_role();
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -935,8 +941,9 @@ class questionlib_test extends \advanced_testcase {
         $user = $generator->create_user();
         $otheruser = $generator->create_user();
         $roleid = $generator->create_role();
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -1040,8 +1047,9 @@ class questionlib_test extends \advanced_testcase {
         $user = $generator->create_user();
         $otheruser = $generator->create_user();
         $roleid = $generator->create_role();
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -1076,8 +1084,9 @@ class questionlib_test extends \advanced_testcase {
         $questiongenerator = $generator->get_plugin_generator('core_question');
         $user = $generator->create_user();
 
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $questioncat = $questiongenerator->create_question_category([
             'contextid' => $context->id,
         ]);
@@ -1172,8 +1181,9 @@ class questionlib_test extends \advanced_testcase {
         $generator = $this->getDataGenerator();
         /** @var \core_question_generator $questiongenerator */
         $questiongenerator = $generator->get_plugin_generator('core_question');
-        $category = $generator->create_category();
-        $context = \context_coursecat::instance($category->id);
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         // Create a top category.
         $cat0 = question_get_top_category($context->id, true);
         // Add sub-categories.
@@ -1361,7 +1371,10 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         // Setup.
-        $context = \context_system::instance();
+        $generator = self::getDataGenerator();
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));
@@ -1398,7 +1411,10 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         // Setup.
-        $context = \context_system::instance();
+        $generator = self::getDataGenerator();
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));
@@ -1428,7 +1444,10 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         // Setup.
-        $context = \context_system::instance();
+        $generator = self::getDataGenerator();
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));
@@ -1459,7 +1478,10 @@ class questionlib_test extends \advanced_testcase {
         global $DB;
         $this->resetAfterTest();
         // Setup.
-        $context = \context_system::instance();
+        $generator = self::getDataGenerator();
+        $course = $generator->create_course();
+        $qbank = $generator->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         /** @var \core_question_generator $qgen */
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $qcat = $qgen->create_question_category(array('contextid' => $context->id));

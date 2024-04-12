@@ -841,8 +841,6 @@ function _tidy_question($question, $category, array $tagobjects = null, array $f
     if (!is_null($tagobjects)) {
         $categorycontext = context::instance_by_id($category->contextid);
         $sortedtagobjects = question_sort_tags($tagobjects, $categorycontext, $filtercourses);
-        $question->coursetagobjects = $sortedtagobjects->coursetagobjects;
-        $question->coursetags = $sortedtagobjects->coursetags;
         $question->tagobjects = $sortedtagobjects->tagobjects;
         $question->tags = $sortedtagobjects->tags;
     }

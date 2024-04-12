@@ -5014,6 +5014,9 @@ class restore_create_categories_and_questions extends restore_structure_step {
         }
 
         if (empty($data->parent)) {
+            if ($context->contextlevel !== CONTEXT_MODULE) {
+                return;
+            }
             if (!$top = question_get_top_category($data->contextid)) {
                 $top = question_get_top_category($data->contextid, true);
                 $this->set_mapping('question_category_created', $oldid, $top->id, false, null, $data->contextid);
@@ -5338,8 +5341,9 @@ class restore_create_categories_and_questions extends restore_structure_step {
                     $newparent = 0; // No ctx match for both cats, no parent relationship
                 }
             }
+            $context = \core\context::instance_by_id($dbcat->contextid);
             // Here with $newparent empty, problem with contexts or remapping, set it to top cat
-            if (!$newparent && $dbcat->parent) {
+            if (!$newparent && $dbcat->parent && $context->contextlevel === CONTEXT_MODULE) {
                 $topcat = question_get_top_category($dbcat->contextid, true);
                 if ($dbcat->parent != $topcat->id) {
                     $DB->set_field('question_categories', 'parent', $topcat->id, array('id' => $dbcat->id));

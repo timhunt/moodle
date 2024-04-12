@@ -543,12 +543,14 @@ class walkthrough_test extends \qbehaviour_walkthrough_test_base {
     public function test_corrupted_question() {
         global $DB;
 
-        $syscontext = \context_system::instance();
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $category = $generator->create_question_category(['contextid' => $syscontext->id]);
+        $category = $generator->create_question_category(['contextid' => $context->id]);
 
         $fromform = test_question_maker::get_question_form_data('multianswer', 'twosubq');
-        $fromform->category = $category->id . ',' . $syscontext->id;
+        $fromform->category = $category->id . ',' . $context->id;
 
         $question = new \stdClass();
         $question->category = $category->id;

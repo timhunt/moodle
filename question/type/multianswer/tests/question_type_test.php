@@ -151,13 +151,15 @@ class question_type_test extends \advanced_testcase {
     public function test_load_question() {
         $this->resetAfterTest();
 
-        $syscontext = \context_system::instance();
         /** @var \core_question_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $category = $generator->create_question_category(['contextid' => $syscontext->id]);
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
+        $category = $generator->create_question_category(['contextid' => $context->id]);
 
         $fromform = \test_question_maker::get_question_form_data('multianswer');
-        $fromform->category = $category->id . ',' . $syscontext->id;
+        $fromform->category = $category->id . ',' . $context->id;
 
         $question = new \stdClass();
         $question->category = $category->id;
@@ -190,7 +192,7 @@ class question_type_test extends \advanced_testcase {
         $this->assertEquals($question->createdby, $questiondata->createdby);
         $this->assertEquals($question->createdby, $questiondata->modifiedby);
         $this->assertEquals('', $questiondata->idnumber);
-        $this->assertEquals($syscontext->id, $questiondata->contextid);
+        $this->assertEquals($context->id, $questiondata->contextid);
 
         // Build the expected hint base.
         $hintbase = [
@@ -404,12 +406,14 @@ class question_type_test extends \advanced_testcase {
 
         $this->resetAfterTest(true);
 
-        $syscontext = \context_system::instance();
         $generator = $this->getDataGenerator()->get_plugin_generator('core_question');
-        $category = $generator->create_question_category(['contextid' => $syscontext->id]);
+        $course = self::getDataGenerator()->create_course();
+        $qbank = self::getDataGenerator()->create_module('qbank', ['course' => $course->id]);
+        $context = \context_module::instance($qbank->cmid);
+        $category = $generator->create_question_category(['contextid' => $context->id]);
 
         $fromform = test_question_maker::get_question_form_data('multianswer', 'twosubq');
-        $fromform->category = $category->id . ',' . $syscontext->id;
+        $fromform->category = $category->id . ',' . $context->id;
 
         $question = new \stdClass();
         $question->category = $category->id;

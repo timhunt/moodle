@@ -157,7 +157,7 @@ class helper_test extends \advanced_testcase {
         $qcategory1 = $this->qgenerator->create_question_category(['contextid' => $this->context->id]);
 
         // Try to delete a top category.
-        $categorytop = question_get_top_category($qcategory1->id, true)->id;
+        $categorytop = question_get_top_category($qcategory1->contextid, true)->id;
         $this->expectException('moodle_exception');
         $this->expectExceptionMessage(get_string('cannotdeletetopcat', 'question'));
         helper::question_can_delete_cat($categorytop);
