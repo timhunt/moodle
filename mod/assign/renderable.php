@@ -140,6 +140,9 @@ class assign_user_summary implements renderable {
     /** @var bool $suspendeduser */
     public $suspendeduser;
 
+    /** @var string if given, some extra HTML to display after the link to the user's profile. */
+    public $extradisplay;
+
     /**
      * Constructor
      * @param stdClass $user
@@ -149,14 +152,18 @@ class assign_user_summary implements renderable {
      * @param int $uniqueidforuser
      * @param array $extrauserfields
      * @param bool $suspendeduser
+     * @param string $extradisplay if given, some extra HTML to display after the link to the user's profile.
      */
-    public function __construct(stdClass $user,
-                                $courseid,
-                                $viewfullnames,
-                                $blindmarking,
-                                $uniqueidforuser,
-                                $extrauserfields,
-                                $suspendeduser = false) {
+    public function __construct(
+        stdClass $user,
+        $courseid,
+        $viewfullnames,
+        $blindmarking,
+        $uniqueidforuser,
+        $extrauserfields,
+        $suspendeduser = false,
+        string $extradisplay = '',
+    ) {
         $this->user = $user;
         $this->courseid = $courseid;
         $this->viewfullnames = $viewfullnames;
@@ -164,6 +171,7 @@ class assign_user_summary implements renderable {
         $this->uniqueidforuser = $uniqueidforuser;
         $this->extrauserfields = $extrauserfields;
         $this->suspendeduser = $suspendeduser;
+        $this->extradisplay = $extradisplay;
     }
 }
 

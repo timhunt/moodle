@@ -183,6 +183,7 @@ class renderer extends \plugin_renderer_base {
             $fullname .= $suspendedicon;
             $o .= $this->output->action_link($url, $fullname);
         }
+        $o .= $summary->extradisplay;
         $o .= $this->output->box_end();
         $o .= $this->output->container_end();
 
