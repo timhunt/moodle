@@ -30,18 +30,22 @@ Feature: Grant an extension to an offline student
   @javascript
   Scenario: Granting an extension to an offline assignment
     Given the following "activities" exist:
-      | activity | course | name                 | intro                       | assignsubmission_onlinetext_enabled | assignsubmission_file_enabled | duedate    |
-      | assign   | C1     | Test assignment name | Test assignment description | 0                                   | 0                             | 1388534400 |
+      | activity | course | name                 | intro                       | assignsubmission_onlinetext_enabled | assignsubmission_file_enabled | duedate          |
+      | assign   | C1     | Test assignment name | Test assignment description | 0                                   | 0                             | ## 2014-01-01 ## |
     And I am on the "Test assignment name" Activity page logged in as teacher1
     When I follow "View all submissions"
     And I open the action menu in "Student 1" "table_row"
     And I follow "Grant extension"
-    And I should see "Student 1 (student1@example.com)"
-    And I set the field "Enable" to "1"
+    And I should see "Student 1 (student1@example.com) Currently no extension"
+    And I set the field "Extension due date" to "## 2014-02-02 ##"
     And I press "Save changes"
     Then I should see "Extension granted until:" in the "Student 1" "table_row"
+    And I open the action menu in "Student 1" "table_row"
+    And I follow "Grant extension"
+    And I should see "Student 1 (student1@example.com) Current extension: Sunday, 2 February 2014, 12:00 AM"
+    And the field "id_extensionduedate_day" matches value "2"
+    And the field "id_extensionduedate_month" matches value "February"
     And I log out
-
     And I am on the "Test assignment name" Activity page logged in as student1
     And I should see "Extension due date"
 
