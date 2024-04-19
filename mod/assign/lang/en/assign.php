@@ -233,6 +233,7 @@ $string['eventsubmissionviewed'] = 'Submission viewed.';
 $string['eventworkflowstateupdated'] = 'The state of the workflow has been updated.';
 $string['expandreviewpanel'] = 'Expand review panel';
 $string['extensionduedate'] = 'Extension due date';
+$string['extensionduedatecurrent'] = 'Current extension due date';
 $string['extensionnotafterduedate'] = 'Extension date must be after the due date';
 $string['extensionnotafterfromdate'] = 'Extension date must be after the allow submissions from date';
 $string['fixrescalednullgrades'] = 'This assignment contains some erroneous grades. You can <a href="{$a->link}">automatically fix these grades</a>. This may affect course totals.';
