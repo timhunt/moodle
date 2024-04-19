@@ -1,5 +1,9 @@
 This files describes API changes in the assign code.
 
+=== 4.5 ===
+
+* assign_user_summary now has an extradisplay field, which can be used to add some extra HTML after the user's name.
+
 === 4.3 ===
 * The following deprecated methods have been removed and should not be used any more:
   - `assign::add_to_log`
