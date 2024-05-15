@@ -1366,6 +1366,7 @@ class view {
         }
         // Pagination.
         $pageingurl = new \moodle_url($this->base_url());
+        $pageingurl->param('filter', json_encode($this->pagevars['filter']));
         $pagingbar = new \paging_bar($this->totalcount, $page, $perpage, $pageingurl);
         $pagingbar->pagevar = 'qpage';
         echo $OUTPUT->render($pagingbar);
