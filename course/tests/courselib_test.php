@@ -880,13 +880,16 @@ class courselib_test extends advanced_testcase {
         rebuild_course_cache($course->id, true);
 
         // Create some cms for testing.
+        $mod = $DB->get_records_select_menu('modules', 'id = :id', ['id' => 1], '', 'id, name');
+        $modid = key($mod);
+        $modname = $mod[$modid];
         $cmids = array();
         for ($i=0; $i<4; $i++) {
-            $cmids[$i] = $DB->insert_record('course_modules', array('course' => $course->id));
+            $cmids[$i] = $DB->insert_record('course_modules', array('course' => $course->id, 'module' => $modid));
         }
 
         // Add it to section that exists.
-        course_add_cm_to_section($course, $cmids[0], 1);
+        course_add_cm_to_section($course, $cmids[0], 1, null, $modname);
 
         // Check it got added to sequence.
         $sequence = $DB->get_field('course_sections', 'sequence', array('course' => $course->id, 'section' => 1));
@@ -894,7 +897,7 @@ class courselib_test extends advanced_testcase {
 
         // Add a second, this time using courseid variant of parameters.
         $coursecacherev = $DB->get_field('course', 'cacherev', array('id' => $course->id));
-        course_add_cm_to_section($course->id, $cmids[1], 1);
+        course_add_cm_to_section($course->id, $cmids[1], 1, null, $modname);
         $sequence = $DB->get_field('course_sections', 'sequence', array('course' => $course->id, 'section' => 1));
         $this->assertEquals($cmids[0] . ',' . $cmids[1], $sequence);
 
@@ -904,16 +907,54 @@ class courselib_test extends advanced_testcase {
         $this->assertEmpty(cache::make('core', 'coursemodinfo')->get_versioned($course->id, $newcacherev));
 
         // Add one to section that doesn't exist (this might rebuild modinfo).
-        course_add_cm_to_section($course, $cmids[2], 2);
+        course_add_cm_to_section($course, $cmids[2], 2, null, $modname);
         $this->assertEquals(3, $DB->count_records('course_sections', array('course' => $course->id)));
         $sequence = $DB->get_field('course_sections', 'sequence', array('course' => $course->id, 'section' => 2));
         $this->assertEquals($cmids[2], $sequence);
 
         // Add using the 'before' option.
-        course_add_cm_to_section($course, $cmids[3], 2, $cmids[2]);
+        course_add_cm_to_section($course, $cmids[3], 2, $cmids[2], $modname);
         $this->assertEquals(3, $DB->count_records('course_sections', array('course' => $course->id)));
         $sequence = $DB->get_field('course_sections', 'sequence', array('course' => $course->id, 'section' => 2));
         $this->assertEquals($cmids[3] . ',' . $cmids[2], $sequence);
+    }
+
+    /**
+     * Module types that have FEATURE_CAN_DISPLAY flag set to false cannot be in any section other than 0.
+     *
+     * @return void
+     */
+    public function test_add_non_display_types_to_cm_section() {
+        global $DB;
+
+        $this->resetAfterTest(true);
+        $generator = self::getDataGenerator();
+
+        // Create course with 1 section.
+        $course = self::getDataGenerator()->create_course(
+            [
+                'shortname' => 'GrowingCourse',
+                'fullname' => 'Growing Course',
+                'numsections' => 1,
+            ],
+            ['createsections' => true]
+        );
+
+        // Create the module and assert in section 0.
+        $sectionzero = $DB->get_record('course_sections', ['course' => $course->id, 'section' => 0], '*', MUST_EXIST);
+        $DB->get_record('course_sections', ['course' => $course->id, 'section' => 1], '*', MUST_EXIST);
+        $module = $generator->create_module('page', ['course' => $course, 'section' => $sectionzero->section]);
+        $cm = $DB->get_record('course_modules', ['id' => $module->cmid]);
+        $modsection = $DB->get_record('course_sections', ['id' => $cm->section]);
+        $this->assertEquals($sectionzero->section, $modsection->section);
+
+        // Try to add to section 1.
+        course_add_cm_to_section($course, $cm->id, 1, null, 'qbank');
+
+        // Assert still in section 0.
+        $cm = $DB->get_record('course_modules', ['id' => $module->cmid]);
+        $modsection = $DB->get_record('course_sections', ['id' => $cm->section]);
+        $this->assertEquals($sectionzero->section, $modsection->section);
     }
 
     public function test_reorder_sections(): void {
@@ -1322,7 +1363,26 @@ class courselib_test extends advanced_testcase {
         $this->assertTrue(in_array($cm->id, $newsequences));
     }
 
-    public function test_module_visibility(): void {
+    public function test_move_feature_cannot_display() {
+        $this->resetAfterTest(true);
+        // Setup fixture
+        $course = $this->getDataGenerator()->create_course(array('numsections'=>5), array('createsections' => true));
+        $qbank = $this->getDataGenerator()->create_module('qbank', array('course'=>$course->id));
+        $qbankcms = get_fast_modinfo($course)->get_instances_of('qbank');
+        $qbankcm = reset($qbankcms);
+
+        //Check that mods with FEATURE_CAN_DISPLAY set to false cannot be moved from section 0.
+        $newsection = get_fast_modinfo($course)->get_section_info(3);
+
+        // Try to perform the move.
+        $this->expectExceptionMessage("Modules with FEATURE_CAN_DISPLAY set to false can not be moved from section 0\n");
+        moveto_module($qbankcm, $newsection);
+        $qbankcms = get_fast_modinfo($course)->get_instances_of('qbank');
+        $qbankcm = reset($qbankcms);
+        $this->assertEquals(0, $qbankcm->sectionnum);
+    }
+
+    public function test_module_visibility() {
         $this->setAdminUser();
         $this->resetAfterTest(true);
 
@@ -2891,7 +2951,7 @@ class courselib_test extends advanced_testcase {
         $course1 = $generator->create_course(array('category' => $category->id));
         $context = $category->get_context();
 
-        list($user, $roleid) = $this->get_user_objects($generator, $context->id);
+        [$user, $roleid] = $this->get_user_objects($generator, $context->id);
         $caps = course_capability_assignment::allow('moodle/category:manage', $roleid, $context->id);
 
         $courses = $category->get_courses();
@@ -3131,6 +3191,22 @@ class courselib_test extends advanced_testcase {
         $overrides = $DB->get_records('role_assignments', ['contextid' => $cmcontext->id]);
         $newoverrides = $DB->get_records('role_assignments', ['contextid' => $newcmcontext->id]);
         $this->assertEquals(count($overrides), count($newoverrides));
+    }
+
+    /**
+     * Ensure that modules with the feature flag FEATURE_CAN_DISPLAY set to false are always duplicated into section 0.
+     */
+    public function test_duplicate_cannot_display_mods() {
+        self::setAdminUser();
+        $this->resetAfterTest();
+        $course = self::getDataGenerator()->create_course(['numsections' => 2], ['createsections' => true]);
+        $res = self::getDataGenerator()->create_module('qbank', ['course' => $course]);
+        $cm = get_coursemodule_from_id('qbank', $res->cmid, 0, false, MUST_EXIST);
+        $sectionid = get_fast_modinfo($course)->get_section_info(1)->id;
+
+        //Try to set section 1, but new module must have section 0.
+        $newcm = duplicate_module($course, $cm, $sectionid);
+        $this->assertEquals('0', $newcm->sectionnum);
     }
 
     /**
@@ -4047,7 +4123,7 @@ class courselib_test extends advanced_testcase {
         phpunit_util::run_all_adhoc_tasks();
 
         // Confirm the modules have been deleted.
-        list($insql, $assignids) = $DB->get_in_or_equal([$assign0->cmid, $assign1->cmid, $assign2->cmid]);
+        [$insql, $assignids] = $DB->get_in_or_equal([$assign0->cmid, $assign1->cmid, $assign2->cmid]);
         $cmcount = $DB->count_records_select('course_modules', 'id ' . $insql,  $assignids);
         $this->assertEmpty($cmcount);
 
@@ -4114,7 +4190,7 @@ class courselib_test extends advanced_testcase {
         // d) course_module_deleted events have both been fired.
 
         // Confirm modules have been deleted.
-        list($insql, $assignids) = $DB->get_in_or_equal([$assign0->cmid, $assign1->cmid]);
+        [$insql, $assignids] = $DB->get_in_or_equal([$assign0->cmid, $assign1->cmid]);
         $cmcount = $DB->count_records_select('course_modules', 'id ' . $insql, $assignids);
         $this->assertEmpty($cmcount);
 
@@ -5114,7 +5190,7 @@ class courselib_test extends advanced_testcase {
         $this->setUser($student);
 
         $coursesgenerator = course_get_enrolled_courses_for_logged_in_user(0, $offset, 'shortname ASC', 'shortname');
-        list($result, $processedcount) = course_filter_courses_by_timeline_classification(
+        [$result, $processedcount] = course_filter_courses_by_timeline_classification(
             $coursesgenerator,
             $classification,
             $limit
@@ -5369,7 +5445,7 @@ class courselib_test extends advanced_testcase {
         $this->setUser($student);
 
         $coursesgenerator = course_get_enrolled_courses_for_logged_in_user(0, $offset, 'shortname ASC', 'shortname');
-        list($result, $processedcount) = course_filter_courses_by_customfield(
+        [$result, $processedcount] = course_filter_courses_by_customfield(
             $coursesgenerator,
             $customfield,
             $customfieldvalue,
@@ -5582,7 +5658,7 @@ class courselib_test extends advanced_testcase {
         }
 
         $coursesgenerator = course_get_enrolled_courses_for_logged_in_user(0, $offset, 'shortname ASC', 'shortname');
-        list($result, $processedcount) = course_filter_courses_by_timeline_classification(
+        [$result, $processedcount] = course_filter_courses_by_timeline_classification(
             $coursesgenerator,
             $classification,
             $limit
@@ -5617,7 +5693,7 @@ class courselib_test extends advanced_testcase {
             'courseid' => $course->id,
         ]);
 
-        list ($min, $max) = core_course_core_calendar_get_valid_event_timestart_range($event, $course);
+        [$min, $max] = core_course_core_calendar_get_valid_event_timestart_range($event, $course);
         $this->assertEquals($course->startdate, $min[0]);
         $this->assertNull($max);
     }
@@ -5642,7 +5718,7 @@ class courselib_test extends advanced_testcase {
             'courseid' => $course->id,
         ]);
 
-        list ($min, $max) = core_course_core_calendar_get_valid_event_timestart_range($event, $course);
+        [$min, $max] = core_course_core_calendar_get_valid_event_timestart_range($event, $course);
         $this->assertEquals($course->startdate, $min[0]);
         $this->assertNull($max);
     }
@@ -7451,7 +7527,7 @@ class courselib_test extends advanced_testcase {
         $this->setAdminUser();
 
         // Use the callback function and return the data.
-        list($instance, $context, $heading, $returnurl) = component_callback(
+        [$instance, $context, $heading, $returnurl] = component_callback(
             'core_course',
             'get_communication_instance_data',
             [$course->id]

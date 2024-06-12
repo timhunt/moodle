@@ -562,6 +562,7 @@ function course_create_sections_if_missing($courseorid, $sections) {
     return formatactions::section($courseorid)->create_if_missing($sections);
 }
 
+
 /**
  * Adds an existing module to the section
  *
@@ -578,9 +579,12 @@ function course_create_sections_if_missing($courseorid, $sections) {
  * @param int|stdClass $beforemod id or object with field id corresponding to the module
  *     before which the module needs to be included. Null for inserting in the
  *     end of the section
+ * @param string $modname Optional, name of the module in the modules table. We need to do some checks
+ *      to see if this module type can be displayed to the course page.
+ *      If not passed a DB query will need to be run instead.
  * @return int The course_sections ID where the module is inserted
  */
-function course_add_cm_to_section($courseorid, $cmid, $sectionnum, $beforemod = null) {
+function course_add_cm_to_section($courseorid, $cmid, $sectionnum, $beforemod = null, $modname = '') {
     global $DB, $COURSE;
     if (is_object($beforemod)) {
         $beforemod = $beforemod->id;
@@ -590,6 +594,20 @@ function course_add_cm_to_section($courseorid, $cmid, $sectionnum, $beforemod = 
     } else {
         $courseid = $courseorid;
     }
+
+    if (!$modname) {
+        $sql = "SELECT name
+                FROM {modules} AS m
+                JOIN {course_modules} AS cm ON cm.module = m.id
+                WHERE cm.id = :cmid";
+        $modname = $DB->get_field_sql($sql, ['cmid' => $cmid], MUST_EXIST);
+    }
+
+    // Modules not visible on the course must ALWAYS be in section 0.
+    if ($sectionnum != 0 && !is_mod_type_visible_on_course($modname)) {
+        $sectionnum = 0;
+    }
+
     // Do not try to use modinfo here, there is no guarantee it is valid!
     $section = $DB->get_record('course_sections',
             array('course' => $courseid, 'section' => $sectionnum), '*', IGNORE_MISSING);
@@ -615,7 +633,6 @@ function course_add_cm_to_section($courseorid, $cmid, $sectionnum, $beforemod = 
     rebuild_course_cache($courseid, true);
     return $section->id;     // Return course_sections ID that was used.
 }
-
 /**
  * Change the group mode of a course module.
  *
@@ -1383,6 +1400,10 @@ function reorder_sections($sections, $origin_position, $target_position) {
 function moveto_module($mod, $section, $beforemod=NULL) {
     global $OUTPUT, $DB;
 
+    if ($section->section != 0 && !is_mod_type_visible_on_course($mod->modname)) {
+        throw new moodle_exception("Modules with FEATURE_CAN_DISPLAY set to false can not be moved from section 0");
+    }
+
     // Current module visibility state - return value of this function.
     $modvisible = $mod->visible;
 
@@ -1392,7 +1413,7 @@ function moveto_module($mod, $section, $beforemod=NULL) {
     }
 
     // Add the module into the new section.
-    course_add_cm_to_section($section->course, $mod->id, $section->section, $beforemod);
+    course_add_cm_to_section($section->course, $mod->id, $section->section, $beforemod, $mod->modname);
 
     // If moving to a hidden section then hide module.
     if ($mod->section != $section->id) {
@@ -3152,6 +3173,11 @@ function duplicate_module($course, $cm, int $sectionid = null, bool $changename 
     require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
     require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
     require_once($CFG->libdir . '/filelib.php');
+
+    // Plugins with this feature flag set to false must ALWAYS be in section 0.
+    if (!is_mod_type_visible_on_course($cm->modname)) {
+        $sectionid = get_fast_modinfo($course)->get_section_info(0, MUST_EXIST)->id;
+    }
 
     $a          = new stdClass();
     $a->modtype = get_string('modulename', $cm->modname);

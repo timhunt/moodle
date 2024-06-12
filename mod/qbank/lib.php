@@ -108,3 +108,28 @@ function qbank_delete_instance($id) {
 
     return true;
 }
+
+/**
+ * Remove the section breadcrumb and replace with course question bank link.
+ *
+ * @param breadcrumb_navigation_node[] $navbaritems
+ * @return breadcrumb_navigation_node[]
+ */
+function mod_qbank_extend_navbar_items(array $navbaritems): array {
+    global $PAGE, $COURSE;
+
+    $newitems = [];
+
+    foreach ($navbaritems as $item) {
+        if ($item->key === $PAGE->cm->sectionid && $item->type === navigation_node::TYPE_SECTION) {
+            $item = new breadcrumb_navigation_node([
+                'text' => get_string('questionbank_plural', 'core_question'),
+                'action' => \core_question\local\bank\question_bank_helper::get_url_for_qbank_list($COURSE->id),
+            ]);
+        }
+
+        $newitems[] = $item;
+    }
+
+    return $newitems;
+}

@@ -523,8 +523,9 @@ class core_renderer extends renderer_base {
         $mods = [];
         $activitylist = [];
         foreach ($modules as $module) {
-            // Only add activities the user can access, aren't in stealth mode and have a url (eg. mod_label does not).
-            if (!$module->uservisible || $module->is_stealth() || empty($module->url)) {
+            // Only add activities the user can access, aren't in stealth mode, are of a type that is visible on the course,
+            // and have a url (eg. mod_label does not).
+            if (!$module->uservisible || $module->is_stealth() || empty($module->url) || !$module->is_of_type_that_can_display()) {
                 continue;
             }
             $mods[$module->id] = $module;

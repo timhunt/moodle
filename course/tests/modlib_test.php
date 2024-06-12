@@ -83,6 +83,24 @@ class modlib_test extends \advanced_testcase {
     }
 
     /**
+     * Ensure that modules with flag FEATURE_CAN_DISPLAY set to false always have section set to 0,
+     * when calling prepare_new_moduleinfo_data.
+     *
+     * @return void
+     */
+    public function test_prepare_new_moduleinfo_data_with_cannot_display_types() {
+        global $DB;
+        $this->resetAfterTest(true);
+
+        self::setAdminUser();
+        $course = self::getDataGenerator()->create_course();
+        $qbankmodule = $DB->get_record('modules', ['name' => 'qbank'], '*', MUST_EXIST);
+        $sectionnumber = 1;
+        [$module, $context, $cw, $cm, $data] = prepare_new_moduleinfo_data($course, $qbankmodule->name, $sectionnumber);
+        $this->assertEquals(0, $data->section);
+    }
+
+    /**
      * Test prepare_new_moduleinfo_data with suffix (which is currently only used by the completion rules).
      * @covers ::prepare_new_moduleinfo_data
      */

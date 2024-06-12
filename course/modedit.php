@@ -192,6 +192,8 @@ if ($mform->is_cancelled()) {
         if (!empty($fromform->showgradingmanagement)) {
             $url = $fromform->gradingman->get_management_url($url);
         }
+    } else if (plugin_supports('mod', $fromform->modulename, FEATURE_PUBLISHES_QUESTIONS)) {
+        $url = \core_question\local\bank\question_bank_helper::get_url_for_qbank_list($course->id);
     } else {
         $options = [];
         if (!is_null($sectionreturn)) {

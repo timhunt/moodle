@@ -109,10 +109,17 @@ class boostnavbar implements \renderable {
         if ($this->page->context->contextlevel == CONTEXT_MODULE) {
             $this->remove('mycourses');
             $this->remove('courses');
+            //Allow the module to override the items list.
+            $this->items = component_callback($this->page->cm->modname, 'extend_navbar_items', [$this->get_items()], $this->items);
             // Remove the course category breadcrumb nodes.
             foreach ($this->items as $key => $item) {
                 // Remove if it is a course category breadcrumb node.
                 $this->remove($item->key, \breadcrumb_navigation_node::TYPE_CATEGORY);
+
+                // Modules types not visible on the course main page cannot have a section breadcrumb.
+                if (!$this->page->cm->is_of_type_that_can_display() && $item->type === navigation_node::TYPE_SECTION) {
+                    $this->remove($item->key, \breadcrumb_navigation_node::TYPE_SECTION);
+                }
             }
             $courseformat = course_get_format($this->page->course);
             $removesections = $courseformat->can_sections_be_removed_from_navigation();
@@ -148,6 +155,12 @@ class boostnavbar implements \renderable {
 
         // Make sure that the last item is not a link. Not sure if this is always a good idea.
         $this->remove_last_item_action();
+    }
+
+    private function override_section_breadcrumb_for_hidden_modules() {
+        if (!$this->page->cm->is_of_type_that_can_display()) {
+            component_callback($this->page->cm->modname, 'extend_navbar_items', [$this->get_items()], $this->items);
+        }
     }
 
     /**
