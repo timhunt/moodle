@@ -67,29 +67,19 @@ const showModal = async(e) => {
             removeOnClose: true,
             show: true,
         });
-        initModal(modal);
+        modal.getRoot()[0].addEventListener('change', updateButtonStates);
+        modal.getBodyPromise().then(updateButtonStates).catch(Notification.exception);
+
+        // TODO MDL-82204 - there is not currently a good way to add a help icon to a modal overall, so we do it this way.
+        modal.getTitlePromise().then((title) => {
+            title.append(' ' + document.getElementById(SELECTORS.regradeAttemptsButtonId).dataset.helpIcon);
+            // The next line is necessary to get a nice layout of the help icon.
+            title[0].querySelector('a').classList.add('align-baseline');
+            return title[0];
+        }).catch(Notification.exception);
     } catch (ex) {
         await Notification.exception(ex);
     }
-};
-
-/**
- * Initialize and add the event for the regrade form.
- *
- * @param {Object} modal The modal object.
- */
-const initModal = (modal) => {
-    modal.getTitlePromise().then((title) => {
-        title.append(' ' + document.getElementById(SELECTORS.regradeAttemptsButtonId).dataset.helpIcon);
-        title[0].querySelector('a').classList.add('align-baseline'); // Slightly sad this is needed.
-        return title[0];
-    }).catch(Notification.exception);
-
-    modal.getBodyPromise().then((body) => {
-        updateButtonStates();
-        body[0].querySelector('form').addEventListener('change', updateButtonStates);
-        return body[0];
-    }).catch(Notification.exception);
 };
 
 /**

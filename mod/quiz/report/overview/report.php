@@ -233,6 +233,7 @@ class quiz_overview_report extends attempts_report {
             'alert alert-info alert-block fade in');
     }
 
+    #[\Override]
     protected function process_actions($quiz, $cm, $currentgroup, \core\dml\sql_join $groupstudentsjoins,
             \core\dml\sql_join $allowedjoins, $redirecturl) {
         parent::process_actions($quiz, $cm, $currentgroup, $groupstudentsjoins, $allowedjoins, $redirecturl);
@@ -415,7 +416,7 @@ class quiz_overview_report extends attempts_report {
      *      the questions with those slots.
      */
     protected function regrade_attempts($quiz, $dryrun = false,
-            \core\dml\sql_join $groupstudentsjoins = null, $attemptids = [], ?array $slots = null) {
+            ?\core\dml\sql_join $groupstudentsjoins = null, $attemptids = [], ?array $slots = null) {
         global $DB;
         $this->unlock_session();
 
