@@ -31,7 +31,8 @@ Feature: Test importing questions from GIFT format.
     And I am on the "Course 1" "core_question > course question export" page
     And I set the field "id_format_gift" to "1"
     And I press "Export questions to file"
-    And following "click here" should download between "1500" and "1800" bytes
+    And following "click here" should download a "txt" file that:
+      | Contains | What's between orange and green in the spectrum? |
 
   @javascript @_file_upload
   Scenario: import a GIFT file which specifies the category
