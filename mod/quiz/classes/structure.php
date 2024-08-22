@@ -70,10 +70,10 @@ class structure {
     protected $canaddrandom = null;
 
     /** @var array the slotids => question categories array for all slots containing a random question. */
-    protected $questioncategories = null;
+    protected $randomslotcategories = null;
 
     /** @var array the slotids => question tags array for all slots containing a random question. */
-    protected $tags = null;
+    protected $randomslottags = null;
 
     /**
      * Create an instance of this class representing an empty quiz.
@@ -1709,127 +1709,120 @@ class structure {
     }
 
     /**
-     * Load all random questions categories and tags.
-     * If the $questioncategories array is null, this method populates $questioncategories
-     * and $tags with their ids and their names.
-     * Loops over categoryid_and_tagids_for_random_slot for all (random) slots,
-     * and then does a $DB->get_records_list and core_tag_tag::get_bulk to load them all.
-     *
-     * @return void
-     * @throws \dml_exception
-     */
-    public function load_required_categories_and_tags() {
-        global $DB;
-        // If $questioncategories is not null, we have already loaded the categories and tags.
-        if ($this->questioncategories == null) {
-            $tagids = []; // Used for the later call to \core_tag_tag::get_bulk.
-            $questioncategoriesids = []; // Used for the later call to $DB->get_records_list.
-            $randomcategoriesandtags = []; // An associative array of slotid => ['cat' => catid, 'tag' => [tagid, tagid, ...]].
-
-            // Find all random slots by first getting all slots and then removing non-random ones.
-            $allslots = $this->get_slots();
-            foreach ($allslots as $key => $slot) {
-                if ($slot->qtype != 'random') {
-                    unset($allslots[$key]);
-                }
-            }
-            // If there are no random questions, there is no need to load categories and tags.
-            if (count($allslots) == 0) {
-                return;
-            }
-            // Loop over all random slots and build the necessary arrays.
-            foreach ($allslots as $slotid => $slot) {
-                foreach ($slot->filtercondition as $name => $value) {
-                    if ($name === "filter") {
-                        // Dive down the filtercondition.
-                        foreach ($value as $filteroption => $filtervalue) {
-                            // Then, here we get category, jointype, categoryid values and the includesubcategories filteroption
-                            // as well as tags and populate $questioncategories and $tags.
-                            if ($filteroption === "qtagids") {
-                                foreach ($filtervalue as $qtagidsoption => $qtagidsvalue) {
-                                    if ($qtagidsoption === "values") {
-                                        foreach ($qtagidsvalue as $qtagidsvalueoption => $qtagidsvaluevalue) {
-                                            // Save the slot id/slot ids in questioncategoriesids,
-                                            // as a part of the associative array.
-                                            $randomcategoriesandtags[$slotid]['tag'][] = $qtagidsvaluevalue;
-                                            // Save the question tag id in tagids.
-                                            $tagids[] = $qtagidsvaluevalue;
-                                        }
-                                    }
-                                }
-                            }
-                            if ($filteroption === "category") {
-                                // Save the category id in questioncategoriesids, as a part of the associative array.
-                                $randomcategoriesandtags[$slotid]['cat'] = $filtervalue['values'];
-                                // Save the category id in questioncategoriesids, to form an array of integers.
-                                $questioncategoriesids[] = $filtervalue['values'][0];
-                            }
-                        }
-                    }
-                }
-
-                // Get names for all tags to come into consideration.
-                $rawtags = \core_tag_tag::get_bulk($tagids, 'id, rawname');
-                // Transform the raw tags into an tagid => name array.
-                foreach ($rawtags as $id => $nonametag) {
-                    $rawtags[$id] = $nonametag->get_display_name();
-                }
-
-                // Get names for all question bank categories to come into consideration.
-                $rawcategories = $DB->get_records_list('question_categories', 'id', $questioncategoriesids, 'id',
-                    'id, name, contextid, parent');
-                foreach ($rawcategories as $id => $category) {
-                    if ($category->name === 'top') {
-                        $categoryname = $DB->get_field('question_categories', 'name', ['parent' => $id]);
-                    } else {
-                        $categoryname = $category->name;
-                    }
-                    $rawcategories[$id] = $categoryname;
-                }
-
-                // Allocate the category name and the tag(s) to the slot, populate $this->questioncategories and
-                // $this->tags.
-                foreach ($randomcategoriesandtags as $slotid => $catandtags) {
-                    $this->questioncategories[$slotid] = $rawcategories[$catandtags['cat'][0]];
-                    $verbosetag = [];
-                    if (isset($catandtags['tag'])) {
-                        foreach ($catandtags['tag'] as $tagid) {
-                            $verbosetag[] = $rawtags[$tagid];
-                        }
-                        $this->tags[$slotid] = implode(", ", $verbosetag);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Get a random slot description.
-     *
-     * Calls categoryid_and_tagids_for_random_slot once for the slot of interest, and uses that,
-     * and the data stored in $this->questioncategories and $this->tags with no extra DB queries.
+     * Get a human-readable description of a random slot.
      *
      * @param int $slotid id of slot.
      * @return string that can be used to display the random slot.
      */
     public function describe_random_slot($slotid) {
-        // If the questioncategories array is null, call load_required_categories_and_tags.
-        if ($this->questioncategories == null) {
-            $this->load_required_categories_and_tags();
+        $this->ensure_random_slot_info_loaded();
+
+        if (!isset($this->randomslotcategories[$slotid])) {
+            throw new coding_exception('Called describe_random_slot on slot id ' .
+                $slotid . ' which is not a random slot.');
         }
 
         // Build the random question name with categories and tags information and return.
         $a = new stdClass();
-        $a->category = $this->questioncategories[$slotid];
+        $a->category = $this->randomslotcategories[$slotid];
         $stringid = 'randomqnamecat';
 
-        if (!empty($this->tags[$slotid])) {
-            $a->tags = $this->tags[$slotid];
+        if (!empty($this->randomslottags[$slotid])) {
+            $a->tags = $this->randomslottags[$slotid];
             $stringid = 'randomqnamecattags';
         }
 
-        $name = get_string($stringid, 'quiz', $a);
+        return shorten_text(get_string($stringid, 'quiz', $a), 255);
+    }
 
-        return shorten_text($name, 255);
+    /**
+     * Ensure that {@see load_random_slot_info()} has been called, so the data is available.
+     */
+    protected function ensure_random_slot_info_loaded() {
+        if ($this->randomslotcategories == null) {
+            $this->load_random_slot_info();
+        }
+    }
+
+    /**
+     * Load information about the question categories and tags for all random slots,
+     */
+    protected function load_random_slot_info() {
+        global $DB;
+
+        // Find the random slots.
+        $allslots = $this->get_slots();
+        foreach ($allslots as $key => $slot) {
+            if ($slot->qtype != 'random') {
+                unset($allslots[$key]);
+            }
+        }
+        if (empty($allslots)) {
+            // No random slots. Nothing to do.
+            $this->randomslotcategories = [];
+            $this->randomslottags = [];
+            return;
+        }
+
+        // Loop over all random slots to build arrays of the data we will need.
+        $tagids = [];
+        $questioncategoriesids = [];
+        $randomcategoriesandtags = []; // An associative array of slotid => ['cat' => catid, 'tag' => [tagid, tagid, ...]].
+        foreach ($allslots as $slotid => $slot) {
+            foreach ($slot->filtercondition as $name => $value) {
+                if ($name !== 'filter') {
+                    continue;
+                }
+
+                // Parse the filter condition.
+                foreach ($value as $filteroption => $filtervalue) {
+                    if ($filteroption === 'category') {
+                        $randomcategoriesandtags[$slotid]['cat'] = $filtervalue['values'];
+                        $questioncategoriesids[] = $filtervalue['values'][0];
+                    }
+
+                    if ($filteroption === 'qtagids') {
+                        foreach ($filtervalue as $qtagidsoption => $qtagidsvalue) {
+                            if ($qtagidsoption !== 'values') {
+                                continue;
+                            }
+                            foreach ($qtagidsvalue as $qtagidsvaluevalue) {
+                                $randomcategoriesandtags[$slotid]['tag'][] = $qtagidsvaluevalue;
+                                $tagids[] = $qtagidsvaluevalue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Get names for all tags into a tagid => name array.
+        $tags = \core_tag_tag::get_bulk($tagids, 'id, rawname');
+        $tagnames = array_map(fn($tag) => $tag->get_display_name(), $tags);
+
+        // Get names for all question categories.
+        $categories = $DB->get_records_list('question_categories', 'id', $questioncategoriesids,
+            'id', 'id, name, contextid, parent');
+        $categorynames = [];
+        foreach ($categories as $id => $category) {
+            if ($category->name === 'top') {
+                $categoryname = $DB->get_field('question_categories', 'name', ['parent' => $id]);
+            } else {
+                $categoryname = $category->name;
+            }
+            $categorynames[$id] = $categoryname;
+        }
+
+        // Now, put the data required for each slot into $this->randomslotcategories and $this->randomslottags.
+        foreach ($randomcategoriesandtags as $slotid => $catandtags) {
+            $this->randomslotcategories[$slotid] = $categorynames[$catandtags['cat'][0]];
+            if (isset($catandtags['tag'])) {
+                $slottagnames = [];
+                foreach ($catandtags['tag'] as $tagid) {
+                    $slottagnames[] = $tagnames[$tagid];
+                }
+                $this->randomslottags[$slotid] = implode(', ', $slottagnames);
+            }
+        }
     }
 }
