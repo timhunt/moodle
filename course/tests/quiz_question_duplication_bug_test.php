@@ -12,6 +12,8 @@ global $CFG;
 
 // Require necessary libraries for the test.
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
 require_once($CFG->dirroot . '/question/engine/lib.php');
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 require_once($CFG->dirroot . '/course/lib.php');
@@ -137,7 +139,7 @@ class quiz_question_duplication_bug_test extends advanced_testcase {
                 $module3->instance, $module3->context);
 
         foreach ($questionsCourse2SecondImport as $slot) {
-            $this->assertContains(intval($slot->questionid), $questionIdsOriginal, "Question ID {$slot->questionid} should be in the original course's question IDs.");
+            $this->assertEquals($questionsCourse2FirstImport[$slot->slot]->questionid, $slot->questionid);
         }
     }
 }
