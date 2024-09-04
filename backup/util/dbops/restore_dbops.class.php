@@ -681,8 +681,7 @@ abstract class restore_dbops {
                     print_object($questions);
 
                     // Collect all the questions for this category into memory so we only talk to the DB once.
-                    $questioncache = $DB->get_records_sql_menu('SELECT q.id,
-                                                                       q.stamp
+                    $questioncache = $DB->get_records_sql_menu('SELECT q.stamp, q.id
                                                                   FROM {question} q
                                                                   JOIN {question_versions} qv
                                                                     ON qv.questionid = q.id
@@ -695,8 +694,8 @@ abstract class restore_dbops {
                     print_object($questioncache);
 
                     foreach ($questions as $question) {
-                        if (isset($questioncache[$question->stamp." ".$question->version])) {
-                            $matchqid = $questioncache[$question->stamp." ".$question->version];
+                        if (isset($questioncache[$question->stamp])) {
+                            $matchqid = $questioncache[$question->stamp];
                         } else {
                             $matchqid = false;
                         }

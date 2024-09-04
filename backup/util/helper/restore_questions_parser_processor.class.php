@@ -52,6 +52,7 @@ class restore_questions_parser_processor extends grouped_parser_processor {
         // Set the paths we are interested on
         $this->add_path(self::CATEGORY_PATH);
         $this->add_path(self::CATEGORY_PATH . self::QUESTION_SUBPATH);
+        $this->add_path(self::CATEGORY_PATH . self::LEGACY_QUESTION_SUBPATH);
     }
 
     protected function dispatch_chunk($data) {
