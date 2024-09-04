@@ -621,10 +621,12 @@ abstract class restore_dbops {
                 $canmanagecategory = has_capability('moodle/question:managecategory', $targetcontext, $userid);
                 $canadd            = has_capability('moodle/question:add', $targetcontext, $userid);
             }
+            print_object($categories);
             // 1) Iterate over each qcat in the context, matching by stamp for the found target context
             foreach ($categories as $category) {
                 if ($category->parent == 0) {
                     $topcats++;
+                    print_object('Found one top cat.');
                 }
 
                 $matchcat = false;
@@ -635,6 +637,9 @@ abstract class restore_dbops {
                 }
                 // 2a) No match, check if user can create qcat and q
                 if (!$matchcat) {
+                    print_object('Did not find existing category to use for ' .
+                        $category->name . '. Will make one.');
+
                     // 3a) User can, mark the qcat and all dependent qs to be created in that target context
                     if ($canmanagecategory && $canadd) {
                         // Set parentitemid to targetcontext, BUT for CONTEXT_MODULE categories, where
@@ -668,7 +673,12 @@ abstract class restore_dbops {
                 // 2b) Match, mark qcat to be mapped and iterate over each q, matching by stamp and version
                 } else {
                     self::set_backup_ids_record($restoreid, 'question_category', $category->id, $matchcat->id, $targetcontext->id);
+                    print_object('Found existing category:');
+                    print_object($matchcat);
+
                     $questions = self::restore_get_questions($restoreid, $category->id);
+                    print_object('Questions in backup');
+                    print_object($questions);
 
                     // Collect all the questions for this category into memory so we only talk to the DB once.
                     $questioncache = $DB->get_records_sql_menu('SELECT q.id,
@@ -681,6 +691,8 @@ abstract class restore_dbops {
                                                                   JOIN {question_categories} qc
                                                                     ON qc.id = qbe.questioncategoryid
                                                                  WHERE qc.id = ?', array($matchcat->id));
+                    print_object('Questions already in DB');
+                    print_object($questioncache);
 
                     foreach ($questions as $question) {
                         if (isset($questioncache[$question->stamp." ".$question->version])) {
@@ -690,6 +702,7 @@ abstract class restore_dbops {
                         }
                         // 5a) No match, check if user can add q
                         if (!$matchqid) {
+                            print_object('No matching question, will create.');
                             // 6a) User can, mark the q to be created
                             if ($canadd) {
                                 // Nothing to mark, newitemid means create
@@ -718,6 +731,8 @@ abstract class restore_dbops {
 
                         // 5c) Match, mark q to be mapped.
                         } else {
+                            print_object('Matched with ' . $matchqid);
+
                             self::set_backup_ids_record($restoreid, 'question', $question->id, $matchqid);
                         }
                     }

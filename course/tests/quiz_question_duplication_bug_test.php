@@ -141,5 +141,6 @@ class quiz_question_duplication_bug_test extends advanced_testcase {
         foreach ($questionsCourse2SecondImport as $slot) {
             $this->assertEquals($questionsCourse2FirstImport[$slot->slot]->questionid, $slot->questionid);
         }
+        print_object('Got to end of test');
     }
 }
