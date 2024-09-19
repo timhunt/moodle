@@ -47,9 +47,9 @@ class behat_mod_assign_generator extends behat_generator_base {
     }
 
     /**
-     * Get the assignment cmid using an activity idnumber.
+     * Get the assignment cmid using an activity name or idnumber.
      *
-     * @param string $identifier
+     * @param string $identifier activity name or idnumber
      * @return int The cmid
      */
     protected function get_assign_id(string $identifier): int {
