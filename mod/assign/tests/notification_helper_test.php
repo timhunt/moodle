@@ -548,7 +548,7 @@ final class notification_helper_test extends \advanced_testcase {
         // User4 will submit the assignment, excluding them from the results.
         $assignmentgenerator->create_submission([
             'userid' => $user4->id,
-            'assignid' => $assignment->cmid,
+            'cmid' => $assignment->cmid,
             'status' => 'submitted',
             'timemodified' => $clock->time(),
         ]);
@@ -636,7 +636,7 @@ final class notification_helper_test extends \advanced_testcase {
         // This time, the user will submit an assignment.
         $assignmentgenerator->create_submission([
             'userid' => $user1->id,
-            'assignid' => $assignment2->cmid,
+            'cmid' => $assignment2->cmid,
             'status' => 'submitted',
             'timemodified' => $clock->time(),
         ]);
