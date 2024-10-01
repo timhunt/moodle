@@ -185,7 +185,7 @@ class MoodleQuickForm_filepicker extends HTML_QuickForm_input implements templat
         $html .= '</noscript>';
 
         if (!empty($options->accepted_types) && $options->accepted_types != '*') {
-            $html .= html_writer::tag('p', get_string('filesofthesetypes', 'form'));
+            $html .= html_writer::tag('div', get_string('filesofthesetypes', 'form'), ['class' => 'mt-1']);
             $util = new \core_form\filetypes_util();
             $filetypes = $options->accepted_types;
             $filetypedescriptions = $util->describe_file_types($filetypes);
