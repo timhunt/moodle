@@ -509,8 +509,12 @@ class tool_uploadcourse_course {
         }
 
         // Ensure we don't overflow the maximum length of the fullname field.
-        if (!empty($coursedata['fullname']) && core_text::strlen($coursedata['fullname']) > 1333) {
-            $this->error('invalidfullnametoolong', new lang_string('invalidfullnametoolong', 'tool_uploadcourse', 1333));
+        if (
+            !empty($coursedata['fullname']) &&
+            core_text::strlen($coursedata['fullname']) > \core_course\constants::FULLNAME_MAXIMUM_LENGTH
+        ) {
+            $this->error('invalidfullnametoolong', new lang_string('invalidfullnametoolong', 'tool_uploadcourse',
+                \core_course\constants::FULLNAME_MAXIMUM_LENGTH));
             return false;
         }
 

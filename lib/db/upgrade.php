@@ -1519,7 +1519,7 @@ function xmldb_main_upgrade($oldversion) {
 
     if ($oldversion < 2024111500.03) {
 
-        // Changing precision of field shortname on table course_request to (100).
+        // Changing precision of field shortname on table course_request to (255).
         $table = new xmldb_table('course_request');
         $field = new xmldb_field('shortname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, 'fullname');
 
