@@ -476,7 +476,7 @@ class file_storage_test extends \advanced_testcase {
     public function test_saveFileFromZip(): void {
 
         $ziparchive = new zip_archive();
-        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.zip');
+        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.h5p');
         $result = $ziparchive->open($path, file_archive::OPEN);
 
         $files = $ziparchive->list_files();

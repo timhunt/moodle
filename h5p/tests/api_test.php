@@ -1230,17 +1230,17 @@ class api_test extends \advanced_testcase {
                 'skipcontent' => true,
             ],
             'Invalid H5P file (as admin)' => [
-                'filename' => '/fixtures/h5ptest.zip',
+                'filename' => '/fixtures/h5ptest.h5p',
                 'expected' => false,
                 'isadmin' => true,
             ],
             'Invalid H5P file (as user)' => [
-                'filename' => '/fixtures/h5ptest.zip',
+                'filename' => '/fixtures/h5ptest.h5p',
                 'expected' => false,
                 'isadmin' => false,
             ],
             'Invalid H5P file (as user) skipping content' => [
-                'filename' => '/fixtures/h5ptest.zip',
+                'filename' => '/fixtures/h5ptest.h5p',
                 'expected' => true, // Content check is skipped so the package will be considered valid.
                 'isadmin' => false,
                 'onlyupdatelibs' => false,

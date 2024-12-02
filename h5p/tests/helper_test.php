@@ -263,7 +263,7 @@ class helper_test extends \advanced_testcase {
         $this->setUser($user);
 
         // Prepare an invalid .H5P file.
-        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.zip');
+        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.h5p');
         $file = helper::create_fake_stored_file_from_path($path, (int)$user->id);
         $factory->get_framework()->set_file($file);
         $config = (object)[
@@ -385,7 +385,7 @@ class helper_test extends \advanced_testcase {
         $this->assertCount(2, $messages->info);
 
         // When saving an invalid .h5p file, 6 errors should be raised.
-        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.zip');
+        $path = self::get_fixture_path(__NAMESPACE__, 'h5ptest.h5p');
         $file = helper::create_fake_stored_file_from_path($path);
         $factory->get_framework()->set_file($file);
         $config = (object)[

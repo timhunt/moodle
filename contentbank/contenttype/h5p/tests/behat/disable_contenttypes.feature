@@ -18,7 +18,7 @@ Feature: Disable H5P content-types from the content bank
       | contextlevel | reference | contenttype     | user     | contentname       | filepath                              |
       | Course       | C1        | contenttype_h5p | admin    | filltheblanks     | /h5p/tests/fixtures/filltheblanks.h5p |
       | Course       | C1        | contenttype_h5p | admin    | accordion         | /h5p/tests/fixtures/ipsums.h5p        |
-      | Course       | C1        | contenttype_h5p | admin    | invalidh5p        | /h5p/tests/fixtures/h5ptest.zip       |
+      | Course       | C1        | contenttype_h5p | admin    | invalidh5p        | /h5p/tests/fixtures/h5ptest.h5p       |
     And I log in as "admin"
     And I am on "Course 1" course homepage with editing mode on
     And the following config values are set as admin:
