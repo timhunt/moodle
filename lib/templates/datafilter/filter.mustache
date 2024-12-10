@@ -40,7 +40,7 @@
     }
 }}
 
-<div id="core-filter-{{uniqid}}" class="filter-group my-2 p-2 bg-light border-radius border" data-table-region="{{tableregionid}}" data-table-course-id="{{courseid}}" data-filterverb="2">
+<form id="core-filter-{{uniqid}}" class="filter-group my-2 p-2 bg-light border-radius border" data-table-region="{{tableregionid}}" data-table-course-id="{{courseid}}" data-filterverb="2">
     {{> core/datafilter/filter_match }}
 
     <div data-filterregion="filters">
@@ -53,11 +53,11 @@
             {{#pix}}t/add{{/pix}}<span class="ps-3">{{#str}}addcondition{{/str}}</span>
         </button>
         <button data-filteraction="reset" type="button" class="btn btn-secondary ms-auto me-2">{{#str}}clearfilters{{/str}}</button>
-        <button data-filteraction="apply" type="button" class="btn btn-primary">{{#str}}applyfilters{{/str}}</button>
+        <button data-filteraction="apply" type="submit" class="btn btn-primary">{{#str}}applyfilters{{/str}}</button>
     </div>
 
     {{> core/datafilter/filter_types }}
 
-</div>
+</form>
 
 
