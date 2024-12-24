@@ -35,7 +35,7 @@ require_once $CFG->dirroot.'/lib/evalmath/evalmath.class.php';
  * @copyright Petr Skoda (skodak)
   * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class calc_formula { // f
+class calc_formula { // Test
 
     // private properties
     var $_em;
