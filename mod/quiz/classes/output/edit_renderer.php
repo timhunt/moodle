@@ -867,7 +867,7 @@ class edit_renderer extends \plugin_renderer_base {
         $qtype = $structure->get_question_type_for_slot($slot);
         $slotinfo = $structure->get_slot_by_number($slot);
         $questionicons = '';
-        if ($qtype !== 'random') {
+        if ($qtype !== 'random' && $qtype !== 'missingtype') {
             $questionicons .= $this->question_preview_icon($structure->get_quiz(),
                     $structure->get_question_in_slot($slot),
                     null, null, $slotinfo->requestedversion ?: question_preview_options::ALWAYS_LATEST);
@@ -1073,10 +1073,21 @@ class edit_renderer extends \plugin_renderer_base {
         // Need plain question name without html tags for link title.
         $title = shorten_text(format_string($question->name), 100);
 
-        // Display the link itself.
-        $activitylink = $icon . html_writer::tag('span', $editicon . $instancename, ['class' => 'instancename']);
-        $output .= html_writer::link($editurl, $activitylink,
-                ['title' => get_string('editquestion', 'quiz').' '.$title]);
+        // If the question is invalid, don't show the link as it won't work.
+        if ($question->qtype === 'missingtype') {
+            $output .= html_writer::span($title);
+            $output .= html_writer::span(
+                get_string('invalidquestiontype', 'mod_quiz', $question->originalqtype),
+                'badge bg-danger text-white ml-3'
+            );
+        } else {
+
+            // Display the link itself.
+            $activitylink = $icon . html_writer::tag('span', $editicon . $instancename, ['class' => 'instancename']);
+            $output .= html_writer::link($editurl, $activitylink,
+                ['title' => get_string('editquestion', 'quiz') . ' ' . $title]);
+
+        }
 
         return $output;
     }

@@ -261,6 +261,15 @@ if (!$viewobj->quizhasquestions) {
             }
         }
     }
+
+    // If the quiz has any invalid questions, we cannot attempt it.
+    if (in_array('missingtype', $quizobj->get_all_question_types_used())) {
+        $viewobj->preventmessages[] = \html_writer::div(
+            get_string('quizinvalidquestions', 'mod_quiz'),
+            'alert alert-danger');
+        $viewobj->buttontext = '';
+    }
+
 }
 
 $viewobj->showbacktocourse = ($viewobj->buttontext === '' &&
