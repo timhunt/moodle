@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_qbank;
+namespace mod_qbank\task;
 
+use context;
 use context_course;
 use context_coursecat;
 use context_module;
@@ -371,7 +372,7 @@ final class transfer_question_categories_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setup_pre_install_data();
 
-        $task = new \mod_qbank\task\transfer_question_categories();
+        $task = new transfer_question_categories();
         $task->execute();
 
         // Site context checks.
@@ -524,5 +525,81 @@ final class transfer_question_categories_test extends \advanced_testcase {
         $this->assertEmpty($this->get_question_data([$usedunusedcats['top']->id]));
         $this->assertCount(2, $this->get_question_data([$usedunusedcats['Used Question Cat']->id]));
         $this->assertCount(2, $this->get_question_data([$usedunusedcats['Unused Question Cat']->id]));
+    }
+
+    public function test_fix_wrong_parents(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setup_pre_install_data();
+
+        // Create a second course.
+        $course2 = self::getDataGenerator()->create_course();
+        $course2context = context_course::instance($course2->id);
+
+        // In course2 we build this category structure:
+        // - $course2parentcat -- all good.
+        // - - $firstwrongchild -- incorrectly has contextid $this->coursecontext
+        // - - $secondwrongchild -- incorrectly has contextid set to a value that does not exist.
+        // - - - $wronggrandchild -- same wrong contextid as $secondwrongchild.
+        $course2parentcat = $this->create_question_category(
+            'Course2 parent cat', $course2context->id);
+        $firstwrongchild = $this->create_question_category(
+            'Child cat with wrong context', $this->coursecontext->id, $course2parentcat->id);
+        $secondwrongchild = $this->create_question_category(
+            'New course other child cat', $course2context->id + 1000, $course2parentcat->id);
+        $wronggrandchild = $this->create_question_category(
+            'Yet other course child cat', $course2context->id + 1000, $secondwrongchild->id);
+
+        // Before we clean up, we expect two categories to be picked up.
+        // $wronggrandchild is not seen, because its context matches its parent's
+        // even though both are wrong. It should still get fixed.
+        $task = new transfer_question_categories();
+        $this->assertEquals(
+            [
+                $firstwrongchild->id => $firstwrongchild->contextid,
+                $secondwrongchild->id => $secondwrongchild->contextid,
+            ],
+            $task->get_categories_in_a_different_context_to_their_parent(),
+        );
+
+        // Call the cleanup method.
+        $task->fix_wrong_parents();
+
+        // Now we expect no mismatches.
+        $this->assertEmpty($task->get_categories_in_a_different_context_to_their_parent());
+
+        // Assert that the child categories have been moved to the locations they should have been.
+        $this->assert_category_is_in_context_with_parent($this->coursecontext, null, $firstwrongchild->id);
+        $this->assert_category_is_in_context_with_parent($course2context, $course2parentcat, $secondwrongchild->id);
+        $this->assert_category_is_in_context_with_parent($course2context, $course2parentcat, $wronggrandchild->id);
+    }
+
+    /**
+     * Assert that the category with id $categoryid is in context $expectedcontext, with the given parent.
+     *
+     * @param context $expectedcontext the expected context for the category with id $categoryid.
+     * @param stdClass|null $expectedparent the expected parent category.
+     *      null means the Top category in $expectedcontext.
+     * @param int $categoryid the id of the category to check.
+     */
+    protected function assert_category_is_in_context_with_parent(
+        context $expectedcontext,
+        ?stdClass $expectedparent,
+        int $categoryid,
+    ) {
+        global $DB;
+
+        if ($expectedparent === null) {
+            $expectedparent = $DB->get_record(
+                'question_categories',
+                ['contextid' => $expectedcontext->id, 'parent' => 0],
+                '*',
+                MUST_EXIST,
+            );
+        }
+
+        $actualcategory = $DB->get_record('question_categories', ['id' => $categoryid]);
+        $this->assertEquals($expectedparent->id, $actualcategory->parent);
+        $this->assertEquals($expectedcontext->id, $actualcategory->contextid);
     }
 }

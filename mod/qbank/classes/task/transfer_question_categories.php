@@ -25,7 +25,6 @@ use core_question\local\bank\question_bank_helper;
 use stdClass;
 
 /**
- * /**
  * This script transfers question categories at CONTEXT_SITE, CONTEXT_COURSE, & CONTEXT_COURSECAT to a new qbank instance
  * context.
  *
@@ -59,6 +58,8 @@ class transfer_question_categories extends adhoc_task {
 
         require_once($CFG->dirroot . '/course/modlib.php');
         require_once($CFG->libdir . '/questionlib.php');
+
+        $this->fix_wrong_parents();
 
         $recordset = $DB->get_recordset('question_categories', ['parent' => 0]);
 
@@ -173,6 +174,89 @@ class transfer_question_categories extends adhoc_task {
 
         // Move the parent from the old top category to the new one.
         $DB->set_field('question_categories', 'parent', $newtopcategory->id, ['parent' => $oldtopcategory->id]);
+    }
+
+    /**
+     * @var array a cache [ context id => question category ] of the top category in each context.
+     * Used by get_top_category_id_for_context() to avoid repeated DB queries.
+     * 0 is cached if this context id has no corresponding top category.
+     */
+    private $topcategorycache = [];
+
+    /**
+     * Find the Top category for a context, if there is one.
+     *
+     * @param int $contextid the id of a context (which might not exist).
+     * @return int a Top category id, or 0 if none is found.
+     */
+    protected function get_top_category_id_for_context(int $contextid): int {
+        global $DB;
+
+        // Use the cache if we have already loaded this.
+        if (array_key_exists($contextid, $this->topcategorycache)) {
+            return $this->topcategorycache[$contextid];
+        }
+
+        $topcategoryid = (int) $DB->get_field('question_categories', 'id',
+            ['contextid' => $contextid, 'parent' => 0]);
+
+        $this->topcategorycache[$childcontextid] = $topcategoryid;
+        return $topcategoryid;
+    }
+
+    /**
+     * Fix the context of child categories whose contextid does not match that of their parents.
+     *
+     * Fix here means:
+     *
+     * - if the child category's context exists, and has a 'Top' category, we move the child
+     *   category to be just under that Top category. That is where they would have appeared
+     *   before, e.g. in the return from question_categorylist().
+     *
+     * - if the child category points to a context that does not exist at all, then we
+     *   instead change its context to be the same as it's parent's context. This may
+     *   break things like images in the question text of questions there, but there is
+     *   no real alternative.
+     *
+     * This is necessary because, due to old bugs, for example in backup and restoree code,
+     * we know there can be question categories in the databases of old Moodle sites with
+     * the wrong context id.
+     */
+    public function fix_wrong_parents(): void {
+        global $DB;
+
+        $categoriestofix = $this->get_categories_in_a_different_context_to_their_parent();
+        foreach ($categoriestofix as $childcategoryid => $childcontextid) {
+
+            $topcatgegoryid = $this->get_top_category_id_for_context($childcontextid);
+            if ($topcatgegoryid) {
+                // Suitable Top category in the child's current context, so move to be a parent of that.
+                $DB->set_field('question_categories', 'parent', $topcatgegoryid, ['id' => $childcategoryid]);
+
+            } else {
+                // Top not found. Change the child to have the same context as its parent.
+                // This is not efficient in DB queries, but we expect this to be a rare case, and this is simple and right.
+                $childcategory = $DB->get_record('question_categories', ['id' => $childcategoryid]);
+                $parentcontextid = $DB->get_field('question_categories', 'contextid', ['id' => $childcategory->parent]);
+                $DB->set_field('question_categories', 'contextid', $parentcontextid, ['id' => $childcategoryid]);
+            }
+        }
+    }
+
+    /**
+     * Get question categories that are in a different context to their parent.
+     *
+     * @return int[] child category id => context id of the child category.
+     */
+    public function get_categories_in_a_different_context_to_their_parent(): array {
+        global $DB;
+
+        return $DB->get_records_sql('
+            SELECT c.id, c.contextid
+              FROM {question_categories} c
+              JOIN {question_categories} p ON p.id = c.parent
+             WHERE p.contextid <> c.contextid
+        ');
     }
 
     /**
