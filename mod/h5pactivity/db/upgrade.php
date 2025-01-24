@@ -46,6 +46,7 @@
  */
 function xmldb_h5pactivity_upgrade($oldversion) {
     global $DB;
+    $dbman = $DB->get_manager();
 
     // Automatically generated Moodle v4.2.0 release upgrade line.
     // Put any upgrade step following this.
@@ -72,6 +73,19 @@ function xmldb_h5pactivity_upgrade($oldversion) {
 
     // Automatically generated Moodle v4.5.0 release upgrade line.
     // Put any upgrade step following this.
+
+    if ($oldversion < 2024121801) {
+
+        // Changing precision of field name on table h5pactivity to (1333).
+        $table = new xmldb_table('h5pactivity');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
+
+        // Launch change of precision for field fullname.
+        $dbman->change_field_precision($table, $field);
+
+        // H5Pactivity savepoint reached.
+        upgrade_mod_savepoint(true, 2024121801, 'h5pactivity');
+    }
 
     return true;
 }
