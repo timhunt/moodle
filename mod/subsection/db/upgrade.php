@@ -42,5 +42,18 @@ function xmldb_subsection_upgrade($oldversion) {
     // Automatically generated Moodle v4.5.0 release upgrade line.
     // Put any upgrade step following this.
 
+    if ($oldversion < 2024121801) {
+
+        // Changing precision of field name on table subsection to (1333).
+        $table = new xmldb_table('subsection');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
+
+        // Launch change of precision for field fullname.
+        $dbman->change_field_precision($table, $field);
+
+        // Subsection savepoint reached.
+        upgrade_mod_savepoint(true, 2024121801, 'subsection');
+    }
+
     return true;
 }
