@@ -40,6 +40,9 @@
  */
 
 function xmldb_glossary_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
+
     // Automatically generated Moodle v4.2.0 release upgrade line.
     // Put any upgrade step following this.
 
@@ -51,6 +54,19 @@ function xmldb_glossary_upgrade($oldversion) {
 
     // Automatically generated Moodle v4.5.0 release upgrade line.
     // Put any upgrade step following this.
+
+    if ($oldversion < 2024121801) {
+
+        // Changing precision of field name on table glossary to (1333).
+        $table = new xmldb_table('glossary');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
+
+        // Launch change of precision for field fullname.
+        $dbman->change_field_precision($table, $field);
+
+        // Glossary savepoint reached.
+        upgrade_mod_savepoint(true, 2024121801, 'glossary');
+    }
 
     return true;
 }
