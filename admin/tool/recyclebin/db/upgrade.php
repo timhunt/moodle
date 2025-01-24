@@ -58,5 +58,18 @@ function xmldb_tool_recyclebin_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024111500, 'tool', 'recyclebin');
     }
 
+    if ($oldversion < 2024121801) {
+
+        // Changing precision of field fullname on table tool_recyclebin_category to (255).
+        $table = new xmldb_table('tool_recyclebin_category');
+        $field = new xmldb_field('shortname', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'fullname');
+
+        // Launch change of precision for field fullname.
+        $dbman->change_field_precision($table, $field);
+
+        // Recyclebin savepoint reached.
+        upgrade_plugin_savepoint(true, 2024121801, 'tool', 'recyclebin');
+    }
+
     return true;
 }
