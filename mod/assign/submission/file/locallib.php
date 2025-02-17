@@ -381,6 +381,14 @@ class assign_submission_file extends assign_submission_plugin {
         }
     }
 
+    #[\Override]
+    public function submission_summary_for_email(stdClass $submission): string {
+        $file = new assign_files($this->assignment->get_context(), $submission->id,
+                ASSIGNSUBMISSION_FILE_FILEAREA, 'assignsubmission_file', $this->assignment->get_course(),
+                $this->assignment->get_course_module());
+        return $this->format_submission_files($file->dir);
+    }
+
     /**
      * No full submission view - the summary contains the list of files and that is the whole submission
      *
@@ -633,5 +641,29 @@ class assign_submission_file extends assign_submission_plugin {
      */
     public function allow_image_conversion() {
         return true;
+    }
+
+    /**
+     * Generates a textual representation of the submission files structure.
+     *
+     * @param array $dir An associative array representing a directory structure
+     * @return string
+     */
+    private function format_submission_files(array $dir): string {
+        if (empty($dir['subdirs']) && empty($dir['files'])) {
+            return '';
+        }
+
+        $result = '';
+        foreach ($dir['subdirs'] as $subdir) {
+            $result .= html_writer::tag('strong', s($subdir['dirname'])) . '/' . $this->format_submission_files($subdir);
+        }
+
+        foreach ($dir['files'] as $file) {
+            $result .= html_writer::tag('strong', s($file->get_filename())) .
+                    ' (' . display_size($file->get_filesize()) . ')<br>';
+        }
+
+        return $result;
     }
 }

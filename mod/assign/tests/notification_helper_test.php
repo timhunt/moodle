@@ -782,4 +782,65 @@ final class notification_helper_test extends \advanced_testcase {
         // Clear sink.
         $sink->clear();
     }
+
+    /**
+     * Test sending the assignment notification to a user with a list of the submitted files.
+     */
+    public function test_send_notification_with_summary_to_user(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator();
+        $sink = $this->redirectMessages();
+
+        // Create a course and enrol a user.
+        $course = $generator->create_course();
+        $user1 = $generator->create_user();
+        $generator->enrol_user($user1->id, $course->id, 'student');
+
+        /** @var \mod_assign_generator $assignmentgenerator */
+        $assignmentgenerator = $generator->get_plugin_generator('mod_assign');
+
+        // Create activity.
+        $assignment = $assignmentgenerator->create_instance([
+            'course' => $course->id,
+            'submissiondrafts' => 0,
+            'assignsubmission_file_enabled' => 1,
+            'assignsubmission_file_maxfiles' => 12,
+            'assignsubmission_file_maxsizebytes' => 1024 * 1024,
+            'assignsubmission_onlinetext_enabled' => 1,
+        ]);
+
+        $filename1 = 'submissionsample01.txt';
+        $filename2 = 'submissionsample02.txt';
+        $files = [
+            "mod/assign/tests/fixtures/" . $filename1,
+            "mod/assign/tests/fixtures/" . $filename2,
+        ];
+
+        // Generate submissions.
+        $assignmentgenerator->create_submission([
+            'userid' => $user1->id,
+            'cmid' => $assignment->cmid,
+            'status' => 'submitted',
+            'file' => implode(',', $files),
+            'onlinetext' => 'Some text example',
+        ]);
+
+        // Get the notifications.
+        $messages = $sink->get_messages_by_component('mod_assign');
+        $this->assertCount(1, $messages);
+
+        // Check the message contains the summary.
+        $message = reset($messages);
+        $expectedsubject = get_string('submissionreceiptcontains', 'mod_assign', ['total' => 3]);
+        $this->assertStringContainsString($expectedsubject, $message->fullmessagehtml);
+        $this->assertStringContainsString(strtoupper($expectedsubject), $message->fullmessage);
+
+        $this->assertStringContainsString(strtoupper($filename1), $message->fullmessage);
+        $this->assertStringContainsString(strtoupper($filename2), $message->fullmessage);
+        // Display word count in the summary of the online text.
+        $this->assertStringContainsString('(3 words)', $message->fullmessage);
+
+        // Clear sink.
+        $sink->clear();
+    }
 }
