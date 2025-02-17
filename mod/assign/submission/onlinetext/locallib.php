@@ -407,6 +407,18 @@ class assign_submission_onlinetext extends assign_submission_plugin {
         return '';
     }
 
+
+    #[\Override]
+    public function submission_summary_for_email(stdClass $submission): string {
+        $onlinetextsubmission = $this->get_onlinetext_submission($submission->id);
+        if ($onlinetextsubmission) {
+             return html_writer::tag('strong', get_string('onlinetext', 'assignsubmission_onlinetext')) .
+                     ' ' . get_string('numwords', 'assignsubmission_onlinetext',
+                     count_words($onlinetextsubmission->onlinetext));
+        }
+        return '';
+    }
+
     /**
      * Produce a list of files suitable for export that represent this submission.
      *

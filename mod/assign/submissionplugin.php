@@ -154,4 +154,20 @@ abstract class assign_submission_plugin extends assign_plugin {
     public function allow_image_conversion() {
         return false;
     }
+
+    /**
+     * Retrieves a summary of the submission sub-plugins.
+     *
+     * The summary of the submission sub-plugin should return simple HTML with lines joined by <br>.
+     * This content will be wrapped inside a <p> tag when used in emails.
+     *
+     * When implementing this function, consider which HTML tags are valid within a <p> tag
+     * and whether the content should also be properly represented in plain text when converted by html_to_text().
+     *
+     * @param stdClass $submission the assign_submission record being submitted.
+     * @return string
+     */
+    public function submission_summary_for_email(stdClass $submission): string {
+        return '';
+    }
 }
