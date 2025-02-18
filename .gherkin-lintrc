@@ -20,5 +20,7 @@
   "no-unnamed-scenarios": "on",
   "no-scenario-outlines-without-examples": "on",
   "no-examples-in-scenarios": "on",
-  "new-line-at-eof": ["on", "yes"]
+  "new-line-at-eof": ["on", "yes"],
+  "use-and": "on",
+  "keywords-in-logical-order": "on"
 }
