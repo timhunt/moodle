@@ -52,12 +52,11 @@ class lock {
         $this->factory = $factory;
         $this->key = $key;
         $this->released = false;
-        $caller = debug_backtrace(true, 2)[1];
-        if ($caller && array_key_exists('file', $caller ) ) {
-            $this->caller = $caller['file'] . ' on line ' . $caller['line'];
-        } else if ($caller && array_key_exists('class', $caller)) {
-            $this->caller = $caller['class'] . $caller['type'] . $caller['function'];
-        }
+
+        // Track where the lock was raised, so we can report un-released locks in a helpful way.
+        $backtrace = debug_backtrace();
+        array_shift($backtrace);
+        $this->caller = format_backtrace($backtrace, true);
     }
 
     /**
@@ -120,7 +119,6 @@ class lock {
             if ($withexception) {
                 throw new \core\exception\coding_exception(<<<EOF
                     A lock was created but not released at: {$this->caller}
-
                     Code should look like:
 
                         \$factory = \core\lock\lock_config::get_lock_factory('type');
@@ -135,6 +133,7 @@ class lock {
      * Print debugging if this lock falls out of scope before being released.
      */
     public function __destruct() {
-        $this->release_if_not_released(defined('PHPUNIT_TEST'));
+        global $CFG;
+        $this->release_if_not_released(defined('BEHAT_SITE_RUNNING') || PHPUNIT_TEST || $CFG->debugdeveloper);
     }
 }
