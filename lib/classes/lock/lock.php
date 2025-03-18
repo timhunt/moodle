@@ -54,9 +54,7 @@ class lock {
         $this->released = false;
 
         // Track where the lock was raised, so we can report un-released locks in a helpful way.
-        $backtrace = debug_backtrace();
-        array_shift($backtrace);
-        $this->caller = format_backtrace($backtrace, true);
+        $this->caller = format_backtrace(debug_backtrace(), true);
     }
 
     /**
