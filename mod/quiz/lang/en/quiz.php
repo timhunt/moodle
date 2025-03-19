@@ -517,7 +517,6 @@ $string['invalidattemptid'] = 'No such attempt ID exists';
 $string['invalidcategory'] = 'Category ID is invalid';
 $string['invalidoverrideid'] = 'Invalid override ID.';
 $string['invalidquestionid'] = 'Invalid question id';
-$string['invalidquestiontype'] = 'Invalid question type: {$a}';
 $string['invalidquizid'] = 'Invalid quiz ID';
 $string['invalidrandomslot'] = 'Invalid random question slot id.';
 $string['invalidsource'] = 'The source is not accepted as valid.';
