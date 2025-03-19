@@ -409,14 +409,23 @@ class assign_submission_onlinetext extends assign_submission_plugin {
 
 
     #[\Override]
-    public function submission_summary_for_email(stdClass $submission): string {
+    public function submission_summary_for_messages(stdClass $submission): array {
+        global $PAGE;
+
         $onlinetextsubmission = $this->get_onlinetext_submission($submission->id);
-        if ($onlinetextsubmission) {
-             return html_writer::tag('strong', get_string('onlinetext', 'assignsubmission_onlinetext')) .
-                     ' ' . get_string('numwords', 'assignsubmission_onlinetext',
-                     count_words($onlinetextsubmission->onlinetext));
+        if (!$onlinetextsubmission || !$onlinetextsubmission->onlinetext) {
+            return ['', ''];
         }
-        return '';
+
+        $renderer = $PAGE->get_renderer('mod_assign');
+        $templatecontext = ['wordcount' => count_words($onlinetextsubmission->onlinetext)];
+        return [
+            // Mustache strips off all trailing whitespace, but we want a newline at the end.
+            $renderer->render_from_template(
+               'assignsubmission_onlinetext/email_summary_text', $templatecontext) . "\n",
+            $renderer->render_from_template(
+               'assignsubmission_onlinetext/email_summary_html', $templatecontext),
+        ];
     }
 
     /**

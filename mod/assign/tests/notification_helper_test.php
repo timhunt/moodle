@@ -792,7 +792,7 @@ final class notification_helper_test extends \advanced_testcase {
         $sink = $this->redirectMessages();
 
         // Create a course and enrol a user.
-        $course = $generator->create_course();
+        $course = $generator->create_course(['shortname' => 'A100']);
         $user1 = $generator->create_user();
         $generator->enrol_user($user1->id, $course->id, 'student');
 
@@ -802,6 +802,7 @@ final class notification_helper_test extends \advanced_testcase {
         // Create activity.
         $assignment = $assignmentgenerator->create_instance([
             'course' => $course->id,
+            'name' => 'Assignment 1',
             'submissiondrafts' => 0,
             'assignsubmission_file_enabled' => 1,
             'assignsubmission_file_maxfiles' => 12,
@@ -828,17 +829,49 @@ final class notification_helper_test extends \advanced_testcase {
         // Get the notifications.
         $messages = $sink->get_messages_by_component('mod_assign');
         $this->assertCount(1, $messages);
-
-        // Check the message contains the summary.
         $message = reset($messages);
-        $expectedsubject = get_string('submissionreceiptcontains', 'mod_assign', ['total' => 3]);
-        $this->assertStringContainsString($expectedsubject, $message->fullmessagehtml);
-        $this->assertStringContainsString(strtoupper($expectedsubject), $message->fullmessage);
 
-        $this->assertStringContainsString(strtoupper($filename1), $message->fullmessage);
-        $this->assertStringContainsString(strtoupper($filename2), $message->fullmessage);
-        // Display word count in the summary of the online text.
-        $this->assertStringContainsString('(3 words)', $message->fullmessage);
+        // Check the subject line and short message.
+        $this->assertEquals('Assignment Submission Confirmation - Assignment 1', $message->subject);
+        $this->assertEquals('Assignment Submission Confirmation - Assignment 1', $message->smallmessage);
+
+        // Check the plain text message.
+        $this->assertEquals('A100 -> Assignment -> Assignment 1
+---------------------------------------------------------------------
+You have submitted an assignment submission for \'Assignment 1\'.
+
+You can see the status of your assignment submission:
+
+    https://www.example.com/moodle/mod/assign/view.php?id=' . $assignment->cmid . '
+
+Your submission contains:
+
+Online text
+(3 words)
+
+File submissions
+* submissionsample01.txt (42 bytes)
+* submissionsample02.txt (42 bytes)
+
+
+---------------------------------------------------------------------
+', $message->fullmessage);
+
+        $expectedfragments = [
+            '<p>Your assignment for <strong>Assignment 1</strong> has been successfully submitted.</p>',
+            '<p>You can view your submission and check its status on the <a href="' .
+                'https://www.example.com/moodle/mod/assign/view.php?id=' .
+                $assignment->cmid . '">assignment page</a>.</p>',
+            '<h2>Your submission contains:</h2>',
+            '<h3>Online text</h3>',
+            '<p>(3 words)</p>',
+            '<h3>File submissions</h3>',
+            '<li>submissionsample01.txt (42 bytes)</li>',
+            '<li>submissionsample02.txt (42 bytes)</li>',
+        ];
+        foreach ($expectedfragments as $html) {
+            $this->assertStringContainsString($html, $message->fullmessagehtml);
+        }
 
         // Clear sink.
         $sink->clear();

@@ -6465,7 +6465,7 @@ class assign {
      * @param string $assignmentname
      * @param bool $blindmarking
      * @param int $uniqueidforuser
-     * @param array $extrainfo
+     * @param array $extrainfo extra values to pass to any language strings or templates used in preparing the message.
      * @return void
      */
     public static function send_assignment_notification($userfrom,
@@ -6559,7 +6559,7 @@ class assign {
      * @param string $messagetype
      * @param string $eventtype
      * @param int $updatetime
-     * @param array $extrainfo
+     * @param array $extrainfo extra values to pass to any language strings or templates used in preparing the message.
      * @return void
      */
     public function send_notification($userfrom, $userto, $messagetype, $eventtype, $updatetime, $extrainfo = []) {
@@ -6627,8 +6627,7 @@ class assign {
             $user = $USER;
         }
         // Prepare extra data for submission receipt notification.
-        $extrainfo['submissionsummaryhtml'] = $this->get_submission_summary($submission);
-        $extrainfo['submissionsummarytext'] = html_to_text($extrainfo['submissionsummaryhtml']);
+        $extrainfo = $this->get_submission_summaries_for_messages($submission);
         if ($submission->userid == $USER->id) {
             $this->send_notification(core_user::get_noreply_user(),
                                      $user,
@@ -6647,39 +6646,49 @@ class assign {
     }
 
     /**
-     * Retrieves a summary of the submission.
+     * Produce a summary of a submission that can be used in messages.
      *
      * This function iterates through all enabled submission plugins and calls their
      * `get_submission_summary` method (if implemented). It aggregates the results
      * into a formatted summary string.
      *
-     * @param stdClass $submission Assign submission
-     * @return string A simple HTML summary
+     * @param stdClass $submission the submission the message is about.
+     * @param stdClass $submission the assign_submission record being submitted.
+     * @return string[] with two elements:
+     *      'submissionsummarytext' => a plain text summary,
+     *      'submissionsummaryhtml' => an HTML summary.
      */
-    protected function get_submission_summary(stdClass $submission): string {
-        $summary = [];
+    protected function get_submission_summaries_for_messages(stdClass $submission): array {
+        $textsummaries = [];
+        $htmlsummaries = [];
         foreach ($this->submissionplugins as $plugin) {
             if ($plugin->is_enabled() && $plugin->is_visible()) {
-                $pluginsummary = $plugin->submission_summary_for_email($submission);
-                if (!empty($pluginsummary)) {
-                    $summary[] = $pluginsummary;
+                [$textsummary, $htmlsummary] = $plugin->submission_summary_for_messages($submission);
+                if ($textsummary) {
+                    $textsummaries[] = $textsummary;
+                }
+                if ($htmlsummary) {
+                    $htmlsummaries[] = $htmlsummary;
                 }
             }
         }
 
-        if (empty($summary)) {
-            return '';
+        $textsummary = '';
+        if ($textsummaries) {
+            $textsummary = get_string('submissioncontains', 'assign') . "\n\n" .
+                implode("\n", $textsummaries);
         }
 
-        // Process submission summary by splitting items, removing empty values, and formatting them into a bullet point list.
-        $flattenedsummary = array_filter(array_map('trim', preg_split('/<br\s*\/?>/i',
-                implode('<br>', $summary))));
-        // Wrap summary items in <ul><li> elements for bullets.
-        $bulletlist = '<ul><li>' . implode('</li><li>', $flattenedsummary) . '</li></ul>';
+        $htmlsummary = '';
+        if ($htmlsummaries) {
+            $htmlsummary = html_writer::tag('h2', get_string('submissioncontains', 'assign')) .
+                implode('', $htmlsummaries);
+        }
 
-        return html_writer::tag('strong', get_string('submissionreceiptcontains', 'assign', [
-                'total' => count($flattenedsummary),
-                ])) . '<br>' . $bulletlist;
+        return [
+            'submissionsummarytext' => $textsummary,
+            'submissionsummaryhtml' => $htmlsummary,
+        ];
     }
 
     /**

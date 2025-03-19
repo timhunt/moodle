@@ -382,11 +382,60 @@ class assign_submission_file extends assign_submission_plugin {
     }
 
     #[\Override]
-    public function submission_summary_for_email(stdClass $submission): string {
-        $file = new assign_files($this->assignment->get_context(), $submission->id,
+    public function submission_summary_for_messages(stdClass $submission): array {
+        global $PAGE;
+        $files = new assign_files($this->assignment->get_context(), $submission->id,
                 ASSIGNSUBMISSION_FILE_FILEAREA, 'assignsubmission_file', $this->assignment->get_course(),
                 $this->assignment->get_course_module());
-        return $this->format_submission_files($file->dir);
+
+        $filelist = $this->flatten_list_of_files($files->dir);
+        if (!$filelist) {
+            return ['', ''];
+        }
+
+        $renderer = $PAGE->get_renderer('mod_assign');
+        $templatecontext = ['files' =>  $filelist];
+        return [
+            // Mustache strips off all trailing whitespace, but we want a newline at the end.
+            $renderer->render_from_template(
+               'assignsubmission_file/email_summary_text', $templatecontext) . "\n",
+            $renderer->render_from_template(
+               'assignsubmission_file/email_summary_html', $templatecontext),
+        ];
+    }
+
+    /**
+     * Turn the hierarchical list of files into a flat array.
+     *
+     * The returned array looks like
+     * [
+     *     ['filepath' => 'File 1.docx', 'filesize' => '12.3KB'],
+     *     ['filepath' => 'subdir/extra data.txt, 'filesize' => '456B'],
+     * ].
+     *
+     * @param array $dir as returned by {@see file_storage::get_area_tree()}.
+     * @return array as above.
+     */
+    private function flatten_list_of_files(array $dir): array {
+        if (empty($dir['subdirs']) && empty($dir['files'])) {
+            return [];
+        }
+
+        $filessummary = [];
+        /** @var stored_file $file */
+        foreach ($dir['files'] as $file) {
+            $filessummary[] = [
+                'filepath' => ltrim($file->get_filepath(), '/') . $file->get_filename(),
+                'filesize' => display_size($file->get_filesize()),
+            ];
+        }
+
+        foreach ($dir['subdirs'] as $subdir) {
+            $files = $this->format_submission_files($subdir);
+            $filessummary = array_merge($filessummary, $files);
+        }
+
+        return $filessummary;
     }
 
     /**
@@ -641,29 +690,5 @@ class assign_submission_file extends assign_submission_plugin {
      */
     public function allow_image_conversion() {
         return true;
-    }
-
-    /**
-     * Generates a textual representation of the submission files structure.
-     *
-     * @param array $dir An associative array representing a directory structure
-     * @return string
-     */
-    private function format_submission_files(array $dir): string {
-        if (empty($dir['subdirs']) && empty($dir['files'])) {
-            return '';
-        }
-
-        $result = '';
-        foreach ($dir['subdirs'] as $subdir) {
-            $result .= html_writer::tag('strong', s($subdir['dirname'])) . '/' . $this->format_submission_files($subdir);
-        }
-
-        foreach ($dir['files'] as $file) {
-            $result .= html_writer::tag('strong', s($file->get_filename())) .
-                    ' (' . display_size($file->get_filesize()) . ')<br>';
-        }
-
-        return $result;
     }
 }

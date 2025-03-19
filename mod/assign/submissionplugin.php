@@ -156,18 +156,20 @@ abstract class assign_submission_plugin extends assign_plugin {
     }
 
     /**
-     * Retrieves a summary of the submission sub-plugins.
+     * Summarise a submission for inclusion in messages.
      *
-     * The summary of the submission sub-plugin should return simple HTML with lines joined by <br>.
-     * This content will be wrapped inside a <p> tag when used in emails.
+     * Moodle messages can be sent as either HTML or plain text, so you need to
+     * produce two versions of the summary.
      *
-     * When implementing this function, consider which HTML tags are valid within a <p> tag
-     * and whether the content should also be properly represented in plain text when converted by html_to_text().
+     * If there is nothing in the submission from your plugin return an array of two empty strings.
      *
-     * @param stdClass $submission the assign_submission record being submitted.
-     * @return string
+     * The plain text version should finish in a newline character.
+     * The HTML version should have block-level elements like headings or <p>s as the outer elements.
+     *
+     * @param stdClass $submission the assign_submission record for the submission the message is about.
+     * @return string[] with two elements, a plain text summary and an HTML summary.
      */
-    public function submission_summary_for_email(stdClass $submission): string {
-        return '';
+    public function submission_summary_for_messages(stdClass $submission): array {
+        return ['', ''];
     }
 }
