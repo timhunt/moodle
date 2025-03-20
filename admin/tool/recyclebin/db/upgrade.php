@@ -58,5 +58,18 @@ function xmldb_tool_recyclebin_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024111500, 'tool', 'recyclebin');
     }
 
+    if ($oldversion < 2024121801) {
+
+        // Changing precision of field name on table tool_recyclebin_course to (1333).
+        $table = new xmldb_table('tool_recyclebin_course');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, null, null, null, 'module');
+
+        // Launch change of precision for field name.
+        $dbman->change_field_precision($table, $field);
+
+        // Recyclebin savepoint reached.
+        upgrade_plugin_savepoint(true, 2024121801, 'tool', 'recyclebin');
+    }
+
     return true;
 }
