@@ -55,9 +55,9 @@ function xmldb_wiki_upgrade($oldversion) {
 
         // Changing precision of field name on table wiki to (1333).
         $table = new xmldb_table('wiki');
-        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, 'Wiki', 'course');
 
-        // Launch change of precision for field fullname.
+        // Launch change of precision for field name.
         $dbman->change_field_precision($table, $field);
 
         // Wiki savepoint reached.

@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die;
 
 $plugin->component = 'mod_book'; // Full name of the plugin (used for diagnostics)
-$plugin->version   = 2024121802; // The current module version (Date: YYYYMMDDXX).
+$plugin->version   = 2024121801; // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2024100100; // Requires this Moodle version.
 $plugin->cron      = 0;          // Period for cron to check this module (secs)

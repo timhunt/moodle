@@ -80,10 +80,10 @@ function xmldb_h5pactivity_upgrade($oldversion) {
         $table = new xmldb_table('h5pactivity');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
 
-        // Launch change of precision for field fullname.
+        // Launch change of precision for field name.
         $dbman->change_field_precision($table, $field);
 
-        // H5Pactivity savepoint reached.
+        // H5pactivity savepoint reached.
         upgrade_mod_savepoint(true, 2024121801, 'h5pactivity');
     }
 

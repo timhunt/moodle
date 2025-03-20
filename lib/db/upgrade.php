@@ -1446,8 +1446,6 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025022100.02);
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     // Uninstall auth_cas and remove dependencies.
     if ($oldversion < 2025030500.00) {
         if (!file_exists($CFG->dirroot . "/auth/cas/version.php")) {
@@ -1602,10 +1600,9 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025031800.00);
     }
 
-    if ($oldversion < 2025031800.01) {
+    if ($oldversion < 2025031800.02) {
 
         // Changing precision of field name on table badge to (1333).
-
         $table = new xmldb_table('badge');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'id');
 
@@ -1613,7 +1610,6 @@ function xmldb_main_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Changing precision of field issuername on table badge to (1333).
-
         $table = new xmldb_table('badge');
         $field = new xmldb_field('issuername', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'usermodified');
 
@@ -1621,7 +1617,6 @@ function xmldb_main_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Changing precision of field name on table course_sections to (1333).
-
         $table = new xmldb_table('course_sections');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, null, null, null, 'section');
 
@@ -1629,7 +1624,7 @@ function xmldb_main_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Main savepoint reached.
-        upgrade_main_savepoint(true, 2025031800.01);
+        upgrade_main_savepoint(true, 2025031800.02);
     }
 
     return true;

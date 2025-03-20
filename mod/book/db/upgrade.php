@@ -46,20 +46,13 @@ function xmldb_book_upgrade($oldversion) {
     if ($oldversion < 2024121801) {
 
         // Changing precision of field name on table book to (1333).
-
         $table = new xmldb_table('book');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
 
         // Launch change of precision for field name.
         $dbman->change_field_precision($table, $field);
 
-        // Book savepoint reached.
-        upgrade_mod_savepoint(true, 2024121801, 'book');
-    }
-
-    if ($oldversion < 2024121802) {
         // Changing precision of field title on table book_chapters to (1333).
-
         $table = new xmldb_table('book_chapters');
         $field = new xmldb_field('title', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'subchapter');
 
@@ -67,7 +60,7 @@ function xmldb_book_upgrade($oldversion) {
         $dbman->change_field_precision($table, $field);
 
         // Book savepoint reached.
-        upgrade_mod_savepoint(true, 2024121802, 'book');
+        upgrade_mod_savepoint(true, 2024121801, 'book');
     }
 
     return true;

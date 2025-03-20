@@ -128,7 +128,7 @@ function xmldb_lti_upgrade($oldversion) {
         $table = new xmldb_table('lti');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
 
-        // Launch change of precision for field fullname.
+        // Launch change of precision for field name.
         $dbman->change_field_precision($table, $field);
 
         // Lti savepoint reached.

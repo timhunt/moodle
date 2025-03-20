@@ -54,7 +54,7 @@ function xmldb_workshop_upgrade($oldversion) {
         $table = new xmldb_table('workshop');
         $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '1333', null, XMLDB_NOTNULL, null, null, 'course');
 
-        // Launch change of precision for field fullname.
+        // Launch change of precision for field name.
         $dbman->change_field_precision($table, $field);
 
         // Workshop savepoint reached.
