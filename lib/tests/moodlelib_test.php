@@ -3850,7 +3850,7 @@ EOF;
      * @dataProvider count_words_testcases
      * @param int $expectedcount number of words in $string.
      * @param string $string the test string to count the words of.
-     * @param int|null $format
+     * @param int|null $format FORMAT_... constant to pass to count_words.
      */
     public function test_count_words(int $expectedcount, string $string, $format = null): void {
         $this->assertEquals($expectedcount, count_words($string, $format),
@@ -3912,6 +3912,8 @@ EOT;
             [1, '<span>a</span><span>b</span>', FORMAT_MARKDOWN],
             [1, 'aa <argh <bleh>pokus</bleh>'],
             [2, 'aa <argh <bleh>pokus</bleh>', FORMAT_HTML],
+            [3, 'x < 1', FORMAT_PLAIN],
+            [4, 'word starting <less than', FORMAT_PLAIN],
             [6, $copypasted],
             [6, $copypasted, FORMAT_PLAIN],
             [3, $copypasted, FORMAT_HTML],

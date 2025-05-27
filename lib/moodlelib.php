@@ -7813,11 +7813,14 @@ function moodle_setlocale($locale='') {
 /**
  * Count words in a string.
  *
- * Words are defined as things between whitespace.
+ * Words are defined as things between whitespace. Developments have tried to ensure that this
+ * method gives the same results Libre Office, MS Word, etc. However, word-counting rules are
+ * subtle, and not identical between languages, so there may be differences in non-English langauges.
  *
  * @category string
  * @param string $string The text to be searched for words. May be HTML.
- * @param int|null $format
+ * @param int|null $format a FORMAT_... constant. In the API this is optional,
+ *      but really, it is required to get accurate results, so should be passed.
  * @return int The count of words in the specified string
  */
 function count_words($string, $format = null) {
