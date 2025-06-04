@@ -1005,4 +1005,40 @@ abstract class testing_util {
 
         return $env;
     }
+
+    /**
+     * This method detects common errors when defining capabilities, and throws an exception if present.
+     *
+     * - Capability added to access.php, but without the corresponding string.
+     * - Capability name not of the expected pattern.
+     *
+     * @throws coding_exception if any capability is not defined correctly.
+     */
+    public static function verify_capability_definitions(): void {
+        global $DB;
+        foreach ($DB->get_records('capabilities') as $capability) {
+            // Check if the capability name is valid.
+            if (!preg_match('~^(\w+)/(\w+):(\w+)$~', $capability->name, $matches)) {
+                throw new coding_exception('Invalid capability name: ' . $capability->name);
+            }
+
+            // This logic matches get_capability_string from accesslib.php.
+            [, $type, $name, $capname] = $matches;
+
+            if ($type === 'moodle') {
+                $component = 'core_role';
+            } else if ($type === 'quizreport') {
+                $component = 'quiz_' . $name;
+            } else {
+                $component = $type . '_' . $name;
+            }
+
+            $stringname = $name . ':' . $capname;
+
+            // Check if the capability string exists.
+            if (!get_string_manager()->string_exists($stringname, $component)) {
+                throw new coding_exception('Capability string not defined for: ' . $capability->name);
+            }
+        }
+    }
 }

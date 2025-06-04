@@ -154,5 +154,6 @@ if ($diag) {
 
 } else if ($install) {
     phpunit_util::install_site();
+    phpunit_util::verify_capability_definitions();
     exit(0);
 }
