@@ -1008,8 +1008,10 @@ final class events_test extends \advanced_testcase {
         $sink = $this->redirectEvents();
         $assign->submit_for_grading($data, array());
         $events = $sink->get_events();
-        $event = reset($events);
+        $event = array_shift($events);
+        $this->assertInstanceOf('\mod_assign\event\assessable_submitted', $event);
 
+        $event = array_shift($events);
         // Check that the event contains the expected values.
         $this->assertInstanceOf('\mod_assign\event\statement_accepted', $event);
         $this->assertEquals($assign->get_context(), $event->get_context());
