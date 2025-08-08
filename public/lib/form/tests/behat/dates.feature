@@ -6,7 +6,8 @@ Feature: Setting and validating date fields
     Given I log in as "admin"
 
   Scenario: Setting moodleform date fields by field label
-    Given I am on fixture page "/lib/form/tests/behat/fixtures/dates_form.php"
+    When I am on fixture page "/lib/form/tests/behat/fixtures/dates_form.php"
+    And the field "Pre-set value" matches value "## 2025-01-01 00:00 ##"
     And I set the following fields to these values:
       | Simple only date                            | ## 2023-07-31 ##       |
       | simpleoptionaldateonly[enabled]             | 1                      |
@@ -26,7 +27,7 @@ Feature: Setting and validating date fields
       | Group2 date and time                        | ## 2023-07-31 11:15 ## |
       | dategroup2[group2optionaldatetime][enabled] | 1                      |
       | Group2 optional date and time               | ## 2023-08-31 14:45 ## |
-    When I press "Send form"
+    And I press "Send form"
     Then I should see "simpledateonly: 1690732800"
     And I should see "simpleoptionaldateonly: 1693411200"
     And I should see "simpledatetime: 1690773300"
