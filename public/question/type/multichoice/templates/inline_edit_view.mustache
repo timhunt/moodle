@@ -29,6 +29,7 @@
         "questionid": 123,
         "questionname": "Simple question",
         "questiontext": "<p>What is the answer?</p>",
+        "defaultmark": 1.00,
         "answers": [
             {
                 "id": 200,
@@ -43,12 +44,31 @@
         ]
     }
 }}
-
-<div class="qtext" data-question-id="{{questionid}}">
-    {{{questiontext}}}
-    <ul class="ablock">
-        {{#answers}}
-            <li data-answer-id="{{id}}">{{{answer}}}</li>
-        {{/answers}}
-    </ul>
+<div data-question-id="{{questionid}}" class="que multichoice">
+    <div class="info">
+        <h3 class="no">Question <span>{{{questionname}}}</span></h3>
+        <div class="grade">Marked out of {{defaultmark}}</div>
+        {{#help}}
+            {{>core_question/question_version_info}}
+        {{/help}}
+        <span class="badge bg-primary text-light">v1 (latest)</span>
+    </div>
+    <div class="content">
+        <div class="formulation clearfix">
+            <h4 class="accesshide">Question text</h4>
+            <input type="hidden" name="q37:7_:sequencecheck" value="1" id="yui_3_18_1_1_1756822888619_24">
+            <div class="qtext">
+                <div class="clearfix">
+                    <p>{{{questiontext}}}</p>
+                </div>
+            </div>
+            <div class="ablock">
+                <ul class="ablock">
+                    {{#answers}}
+                        <li data-answer-id="{{id}}">{{{answer}}}</li>
+                    {{/answers}}
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>

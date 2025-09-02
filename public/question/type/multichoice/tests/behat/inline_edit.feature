@@ -28,6 +28,9 @@ Feature: Inline editing of a multiple-choice question
   Scenario: Initial view of editing a multiple-choice question
     When I am on the "Multi-choice" "qtype_multichoice > edit test" page logged in as teacher
     Then I should see "Test of editing question Multi-choice"
+    And I should see "Question Multi-choice"
+    And I should see "Marked out of 1"
+    And I should see "v1 (latest)"
     And I should see "Which is the oddest number?"
     And "One" "list_item" should exist
     And "Two" "list_item" should exist

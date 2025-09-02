@@ -19,6 +19,7 @@ namespace qtype_multichoice\output;
 use core\output\renderable;
 use core\output\renderer_base;
 use core\output\templatable;
+use core_question\output\question_version_info;
 use question_utils;
 use stdClass;
 
@@ -44,14 +45,17 @@ class inline_edit_view implements renderable, templatable {
 
     #[\Override]
     public function export_for_template(renderer_base $output): array {
+        $question = \question_bank::make_question($this->questiondata);
         $data = [
             'questionid' => $this->questiondata->id,
-            'questionname' => $this->questiondata->name,
+            'questionname' => format_string($this->questiondata->name),
             'questiontext' => format_text(
                 $this->questiondata->questiontext,
                 $this->questiondata->questiontextformat,
             ),
+            'defaultmark' => $this->questiondata->defaultmark,
             'answers' => [],
+            'versioninfo' => (new question_version_info($question))->export_for_template($output),
         ];
         foreach ($this->questiondata->options->answers as $answer) {
             $data['answers'][] = [
