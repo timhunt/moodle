@@ -46,7 +46,9 @@
 
 <div class="qtext" data-question-id="{{questionid}}">
     {{{questiontext}}}
-    <div class="ablock" id="{{ablockid}}">
-        TODO.
-    </div>
+    <ul class="ablock">
+        {{#answers}}
+            <li data-answer-id="{{id}}">{{{answer}}}</li>
+        {{/answers}}
+    </ul>
 </div>

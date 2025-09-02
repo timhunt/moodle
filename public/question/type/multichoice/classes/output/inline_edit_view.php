@@ -56,7 +56,7 @@ class inline_edit_view implements renderable, templatable {
         foreach ($this->questiondata->options->answers as $answer) {
             $data['answers'][] = [
                 'id' => $answer->id,
-                'answer' => $answer->answer,
+                'answer' => format_text($answer->answer, $answer->answerformat),
                 'isright' => $answer->fraction > 1 - question_utils::MARK_TOLERANCE,
             ];
         }
