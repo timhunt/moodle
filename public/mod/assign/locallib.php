@@ -6918,11 +6918,11 @@ class assign {
         }
 
         if ($submission->status != ASSIGN_SUBMISSION_STATUS_SUBMITTED) {
-            $this->submit_submission($submission, $userid, $instance);
-
             if (!empty($data->submissionstatement) && $USER->id == $userid) {
                 \mod_assign\event\statement_accepted::create_from_submission($this, $submission)->trigger();
             }
+
+            $this->submit_submission($submission, $userid);
 
             return true;
         }
