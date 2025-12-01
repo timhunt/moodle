@@ -707,6 +707,47 @@ final class adhoc_task_test extends \advanced_testcase {
     }
 
     /**
+     * Test that, after a permanent failure, queue_adhoc_task(..., checkforexisting: true) works.
+     */
+    public function test_queue_adhoc_task_if_not_scheduled_after_failure(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        // Schedule adhoc task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertNotEmpty(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord1 = manager::get_queued_adhoc_task_record($task);
+        $this->assertObjectHasProperty('id', $taskrecord1);
+
+        // Verify again that re-scheduling the same task does nothing.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertFalse(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord2 = manager::get_queued_adhoc_task_record($task);
+        $this->assertEquals($taskrecord1->id, $taskrecord2->id);
+
+        // Now mark the task permanently failed.
+        $DB->update_record('task_adhoc', (object) [
+            'id' => $taskrecord1->id,
+            'faildelay' => 86400,
+            'attemptsavailable' => 0,
+        ]);
+
+        // Now, schedule the task again. Should create a new task.
+        $task = new adhoc_test_task();
+        $task->set_custom_data(['courseid' => 10]);
+        $this->assertNotEmpty(manager::queue_adhoc_task($task, true));
+        $this->assertEquals(1, count(manager::get_adhoc_tasks('core\task\adhoc_test_task')));
+        $taskrecord3 = manager::get_queued_adhoc_task_record($task);
+        $this->assertNotEquals($taskrecord1->id, $taskrecord3->id);
+        $this->assertEquals(0, $taskrecord3->faildelay);
+        $this->assertEquals(12, $taskrecord3->attemptsavailable);
+    }
+
+    /**
      * Test that when no userid is specified, it returns empty from the DB
      * too.
      * @covers \core\task\adhoc_task

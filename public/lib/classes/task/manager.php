@@ -189,7 +189,11 @@ class manager {
     }
 
     /**
-     * Checks if the task with the same classname, component and customdata is already scheduled
+     * Checks if the task with the same classname, component and customdata is already scheduled.
+     *
+     * Note, this method will return tasks which have failed and used up all available retries.
+     * If this matters to you, check for
+     * ($existingrecord->attemptsavailable >= 0 || $existingrecord->attemptsavailable !== null).
      *
      * @param adhoc_task $task
      * @return \stdClass|false
@@ -223,8 +227,13 @@ class manager {
 
         if ($existingrecord = self::get_queued_adhoc_task_record($task)) {
             // Only update the next run time if it is explicitly set on the task.
+            // and the existing task instance has not permanently failed.
             $nextruntime = $task->get_next_run_time();
-            if ($nextruntime && ($existingrecord->nextruntime != $nextruntime)) {
+            if (
+                $nextruntime &&
+                ($existingrecord->nextruntime != $nextruntime) &&
+                ($existingrecord->attemptsavailable > 0 || $existingrecord->attemptsavailable === null)
+            ) {
                 $DB->set_field('task_adhoc', 'nextruntime', $nextruntime, ['id' => $existingrecord->id]);
             }
         } else {
@@ -238,7 +247,8 @@ class manager {
      *
      * @param \core\task\adhoc_task $task - The new adhoc task information to store.
      * @param bool $checkforexisting - If set to true and the task with the same user, classname, component and customdata
-     *     is already scheduled then it will not schedule a new task. Can be used only for ASAP tasks.
+     *     is already scheduled (and has not giving up re-trying after failures) then it will not schedule a new task.
+     *     Can be used only for ASAP tasks.
      * @return boolean - True if the config was saved.
      */
     public static function queue_adhoc_task(adhoc_task $task, $checkforexisting = false) {
@@ -268,8 +278,14 @@ class manager {
         $record->timecreated = $clock->time();
 
         // Check if the same task is already scheduled.
-        if ($checkforexisting && self::task_is_scheduled($task)) {
-            return false;
+        if ($checkforexisting && ($existingrecord = self::get_queued_adhoc_task_record($task))) {
+            if ($existingrecord->attemptsavailable > 0 || $existingrecord->attemptsavailable === null) {
+                // Task was scheduled before, and is still waiting to run.
+                return false;
+            } else {
+                // Task was scheduled before, but has permanently failed. We should requeue, so delete the old record.
+                self::delete_adhoc_task($existingrecord->id);
+            }
         }
 
         // Queue the task.
