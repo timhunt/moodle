@@ -99,3 +99,4 @@ invalidfiletype,core_repository
 moodlenetprofile,core_user
 moodlenetprofile_help,core_user
 privacy:metadata:moodlenetprofile,core_user
+originalextensionchange,core_repository
