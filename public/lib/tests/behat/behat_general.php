@@ -1283,11 +1283,12 @@ EOF;
             // If a task was successful it will be removed.
             // If it failed then it will still exist.
             if ($DB->record_exists('task_adhoc', ['id' => $task->get_id()])) {
-                // End ouptut buffering and flush the current buffer.
+                // End output buffering and flush the current buffer.
                 // This should be from just the current task.
+                $errordetails = ob_get_contents();
                 ob_end_flush();
 
-                throw new DriverException('An adhoc task failed', 0);
+                throw new DriverException("An adhoc task failed. mtrace() output:\n\n" . $errordetails);
             }
         }
         ob_end_clean();
