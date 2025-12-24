@@ -1313,6 +1313,31 @@ M.form_filemanager.init = function(Y, options) {
                 }.bind(this));
             }
         },
+        /**
+         * Generate the display for file size
+         *
+         * @param int size The size to convert to human readable form
+         * @return string
+         */
+        displaySize: function(size) {
+            // This is snippet of code (with some changes) is from the display_size function in moodlelib.
+            const gb = M.util.get_string('sizegb', 'moodle'),
+                mb = M.util.get_string('sizemb', 'moodle'),
+                kb = M.util.get_string('sizekb', 'moodle'),
+                b = M.util.get_string('sizeb', 'moodle');
+
+            if (size >= 1073741824) {
+                size = Math.round(size / 1073741824 * 10) / 10 + gb;
+            } else if (size >= 1048576) {
+                size = Math.round(size / 1048576 * 10) / 10 + mb;
+            } else if (size >= 1024) {
+                size = Math.round(size / 1024 * 10) / 10 + kb;
+            } else {
+                size = parseInt(size, 10) + ' ' + b;
+            }
+
+            return size;
+        },
     });
 
     // finally init everything needed

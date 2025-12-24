@@ -26,7 +26,7 @@ Feature: In an assignment, students can upload files for assessment
       | assignsubmission_onlinetext_enabled | 0                       |
       | assignsubmission_file_enabled       | 1                       |
       | assignsubmission_file_maxfiles      | 2                       |
-      | assignsubmission_file_maxsizebytes  | 1000000                 |
+      | assignsubmission_file_maxsizebytes  | 10240                   |
       | assignsubmission_file_filetypes     | .txt,.csv,.docx         |
     And I am on the "Test assignment name" Activity page logged in as student1
     When I press "Add submission"
@@ -54,3 +54,10 @@ Feature: In an assignment, students can upload files for assessment
     And I press "Save changes"
     And "emptyupdated.docx" "link" should not exist
     And "upload_users.csv" "link" should exist
+    And I press "Edit submission"
+    And I click on "Add..." "link"
+    And I select "Upload a file" repository in file picker
+    And I set the field "Attachment" to "#dirroot#/lib/tests/fixtures/timezonewindows.xml"
+    And I should see "The file 'timezonewindows.xml' is not an accepted file type." in the "Error when uploading file" "dialogue"
+    And I should see "The file timezonewindows.xml is too large. The maximum size you can upload is 10KB." in the "Error when uploading file" "dialogue"
+    And I click on "OK" "button" in the "Error when uploading file" "dialogue"

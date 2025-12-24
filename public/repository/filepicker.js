@@ -1964,6 +1964,52 @@ M.core_filepicker.init = function(Y, options) {
             if (data.upload.label && content.one('.fp-file label')) {
                 content.one('.fp-file label').setContent(data.upload.label);
             }
+            // Add event listener for file validation (size and type).
+            const fileInput = content.one('.fp-file input');
+            const acceptedTypes = this.options.accepted_types;
+            const maxFileSize = this.options.maxbytes || null;
+            fileInput.on('change', function(e) {
+                let filemanager = Y.one('#filemanager-' + client_id) || Y.one('#filepicker-wrapper-' + client_id);
+                let title = '';
+                const fileTypesDescription = filemanager.get('parentNode').one('.form-filetypes-descriptions');
+                const file = e._event.target.files[0];
+                let errors = [];
+                if (!file) {
+                    return;
+                }
+                // Validate file type.
+                if (acceptedTypes && acceptedTypes.length > 0) {
+                    const validType = acceptedTypes.some(function(type) {
+                        // Accept both MIME and extension.
+                        return file.type === type || file.name.toLowerCase().endsWith(type.toLowerCase());
+                    });
+                    if (!validType) {
+                        errors.push(M.util.get_string('invalidfiletypewithaccepted', 'repository', {
+                            filename: file.name,
+                            acceptedfiletypes: fileTypesDescription ? fileTypesDescription.getContent() : '',
+                        }));
+                    }
+                    title = M.util.get_string('invalidfiletypetitle', 'repository');
+                }
+                // Validate file size.
+                if (maxFileSize && maxFileSize != -1 && file.size > maxFileSize) {
+                    errors.push(M.util.get_string('maxbytesfile', 'error', {
+                        file: file.name,
+                        size: this.options.magicscope.displaySize(maxFileSize),
+                    }));
+                    title = M.util.get_string('errorfileuploadtitle', 'repository');
+                }
+                if (errors.length > 0) {
+                    // Show error message and clear input.
+                    fileInput.set('value', '');
+                    Y.use('moodle-core-notification-alert', function() {
+                        return new M.core.alert({
+                            title: title,
+                            message: errors.join(''),
+                        });
+                    });
+                }
+            }, this);
             content.one('.fp-saveas input').set('name', 'title');
             content.one('.fp-setauthor input').setAttrs({name:'author', value:this.options.author});
             content.one('.fp-setlicense select').set('name', 'license');

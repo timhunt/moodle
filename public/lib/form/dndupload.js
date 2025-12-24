@@ -678,6 +678,8 @@ M.form_dndupload.init = function(Y, options) {
             }
             if (errorCode === 'invalidfiletypewithaccepted') {
                 header = M.util.get_string('invalidfiletypetitle', 'repository');
+            } else if (errorCode === 'errorfileuploadtitle') {
+                header = M.util.get_string('errorfileuploadtitle', 'repository');
             }
             if (errorCode === 'uploaderrorfoldersnotsupported') {
                 header = M.util.get_string('upload_error_folders_not_supported_title', 'repository_upload');
@@ -719,14 +721,39 @@ M.form_dndupload.init = function(Y, options) {
             // Loop through the files and find any name clashes with existing files.
             var i;
             for (i=0; i<files.length; i++) {
+                let errors = [];
+                let errorCode = '';
+                if (this.options.acceptedtypes.length > 0 &&
+                    this.options.acceptedtypes.indexOf(this.getFileExtension(files[i].name)) === -1) {
+
+                    let filemanager = Y.one('#filemanager-' + this.options.clientid)
+                        || Y.one('#filepicker-wrapper-' + this.options.clientid);
+
+                    const fileTypesDescription = filemanager
+                        .get('parentNode')
+                        .one('.form-filetypes-descriptions');
+
+                    errors.push(
+                        M.util.get_string('invalidfiletypewithaccepted', 'repository', {
+                            filename: files[i].name,
+                            acceptedfiletypes: fileTypesDescription ? fileTypesDescription.getContent() : '',
+                        })
+                    );
+                    errorCode = 'invalidfiletypewithaccepted';
+                }
                 if (this.options.maxbytes > 0 && files[i].size > this.options.maxbytes) {
-                    // Check filesize before attempting to upload.
-                    var maxbytesdisplay = this.display_size(this.options.maxbytes);
-                    this.print_msg(M.util.get_string('maxbytesfile', 'error', {
+                    const maxbytesdisplay = this.filemanagerhelper.displaySize(this.options.maxbytes);
+                    errors.push(
+                        M.util.get_string('maxbytesfile', 'error', {
                             file: files[i].name,
-                            size: maxbytesdisplay
-                        }), 'error');
-                    this.uploadqueue = []; // No uploads if one file is too big.
+                            size: maxbytesdisplay,
+                        })
+                    );
+                    errorCode = 'errorfileuploadtitle';
+                }
+                if (errors.length > 0) {
+                    this.print_msg(errors.join(''), 'error', errorCode);
+                    this.uploadqueue = [];
                     return;
                 }
 
@@ -741,11 +768,11 @@ M.form_dndupload.init = function(Y, options) {
             }
             return true;
         },
-
         /**
          * Generate the display for file size
          * @param int size The size to convert to human readable form
          * @return string
+         * @deprecated Since Moodle 5.2 MDL-78671. Please use filemanager.displaySize() instead.
          */
         display_size: function(size) {
             // This is snippet of code (with some changes) is from the display_size function in moodlelib.
@@ -766,7 +793,16 @@ M.form_dndupload.init = function(Y, options) {
 
             return size;
         },
-
+        /**
+         * Get the file extension from a filename.
+         *
+         * @param {string} filename - The full name of the file (e.g. "document.pdf").
+         * @returns {string} The file extension in lower-case including the dot.
+         */
+        getFileExtension: function(filename) {
+            let idx = filename.lastIndexOf('.');
+            return idx !== -1 ? filename.substring(idx).toLowerCase() : '';
+        },
         /**
          * Add a single file to the uploadqueue, whilst checking the maxfiles limit
          * @param File file - the file to add

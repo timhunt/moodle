@@ -114,6 +114,7 @@ $string['entername'] = 'Please enter folder name';
 $string['enternewname'] = 'Please enter the new file name';
 $string['error'] = 'An unknown error occurred!';
 $string['errordoublereference'] = 'Unable to overwrite file with a link because links to this file already exist.';
+$string['errorfileuploadtitle'] = 'Error when uploading file';
 $string['errornotyourfile'] = 'You can only pick files which you added.';
 $string['erroruniquename'] = 'Repository instance name should be unique';
 $string['errorpostmaxsize'] = 'The file you tried to upload is too large for the server to process.';
