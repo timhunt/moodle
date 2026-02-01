@@ -563,19 +563,13 @@ final class questionusage_autosave_test extends \qbehaviour_walkthrough_test_bas
 
         // Now commit the other transaction.
         $this->expectException('dml_write_exception');
-        $this->save_quba($DB2);
-        $transaction2->allow_commit();
-
-        // Now re-load and check how that is re-displayed.
-        $this->load_quba();
-        $this->check_current_state(question_state::$complete);
-        $this->check_current_mark(null);
-        $this->check_step_count(2);
-        $this->render();
-        $this->check_output_contains_text_input('answer', 'autosaved response 1');
-        $this->check_output_contains_hidden_input(':sequencecheck', 1);
-
-        $DB2->dispose();
+        try {
+            $this->save_quba($DB2);
+            // Should never get here.
+            $transaction2->allow_commit();
+        } finally {
+            $DB2->dispose();
+        }
     }
 
     public function test_autosave_with_wrong_seq_number_ignored(): void {
