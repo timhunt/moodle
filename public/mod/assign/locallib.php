@@ -2910,7 +2910,7 @@ class assign {
 
         if (!empty($submissions)) {
 
-            mtrace('Processing ' . count($submissions) . ' assignment submissions ...');
+            mtrace('Sending notifications for ' . count($submissions) . ' graded assignments ...');
 
             // Preload courses we are going to need those.
             $courseids = array();
@@ -2939,7 +2939,9 @@ class assign {
             // Message students about new feedback.
             foreach ($submissions as $submission) {
 
-                mtrace("Processing assignment submission $submission->id ...");
+                mtrace(
+                    "Processing assignment grade $submission->id for user $submission->userid on assign cm $submission->cmid..."
+                );
 
                 // Do not cache user lookups - could be too many.
                 if (!$user = $DB->get_record('user', array('id'=>$submission->userid))) {
@@ -2957,6 +2959,8 @@ class assign {
                     // Context has not yet been preloaded. Do so now.
                     context_helper::preload_from_record($course);
                 }
+                mtrace('  user ' . fullname($user) . ' , assign ' . $submission->name .
+                    ' in course ' . $course->shortname);
 
                 // Override the language and timezone of the "current" user, so that
                 // mail is customised for the receiver.
@@ -2984,6 +2988,7 @@ class assign {
 
                 if (!$cm->uservisible) {
                     // Hold mail notification for assignments the user cannot access until later.
+                    mtrace('Assign not visible to user');
                     continue;
                 }
 
@@ -3011,6 +3016,7 @@ class assign {
                     }
                 }
                 $showusers = $submission->blindmarking && !$submission->revealidentities;
+                mtrace('Sending ' . $messagetype . ' notification');
                 self::send_assignment_notification($grader,
                                                    $user,
                                                    $messagetype,
