@@ -236,9 +236,7 @@ class filetypes_util {
         }
 
         $data = [];
-
         $allowedextensions = [];
-
         foreach ($descriptions as $desc => $exts) {
             sort($exts);
             $data[] = (object)[

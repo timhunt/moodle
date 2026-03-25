@@ -866,9 +866,9 @@ M.form_filemanager.init = function(Y, options) {
                     var originalextension = (originalfilenamearr.length > 1) ? originalfilenamearr.pop() : "";
                     var newfilenamearr = newfilename.split('.');
                     var newextension = (newfilenamearr.length > 1) ? newfilenamearr.pop() : "";
-                    let filemanager = Y.one('#filemanager-' + this.client_id)
+                    const fileManager = Y.one('#filemanager-' + this.client_id)
                         || Y.one('#filepicker-wrapper-' + this.client_id);
-                    const fileTypesDescription = filemanager.get('parentNode').one('.form-filetypes-descriptions');
+                    const fileTypesDescription = fileManager.get('parentNode').one('.form-filetypes-descriptions');
                     let acceptedTypes = fileTypesDescription
                         ? fileTypesDescription.getAttribute('data-all-allowed-extensions')
                         : '';

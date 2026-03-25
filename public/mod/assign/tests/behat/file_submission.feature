@@ -41,7 +41,7 @@ Feature: In an assignment, students can upload files for assessment
     And I set the field "Name" to "emptyupdated.docx"
     And I press "Update"
     And I should see "Changing the file extension from '.txt' to '.docx' may result in a file which cannot be opened."
-    And I click on "Rename" "button" in the "Rename file changing the extension?" "dialogue"
+    And I click on "Rename" "button" in the "Rename file?" "dialogue"
     And I should see "emptyupdated.docx"
     And ".ffilemanager .fm-maxfiles .fp-btn-add" "css_element" should not be visible
     And I press "Save changes"
